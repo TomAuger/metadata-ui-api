@@ -4,26 +4,39 @@
  * Description: Feature-as-a-plugin offering Forms & Fields for WordPress, initially forms for post admin edit but later for users, comments, taxonomy terms, options, etc.
  */
 
+/**
+ * @todo - Add an autoloader for most of these:
+ */
 require( dirname( __FILE__ ) . '/functions.php' );
 
 require( dirname( __FILE__ ) . '/base/class-metadata-base.php');
-require( dirname( __FILE__ ) . '/base/class-storage-base.php' );
-require( dirname( __FILE__ ) . '/base/class-field-base.php' );
-require( dirname( __FILE__ ) . '/base/class-form-view-base.php' );
-require( dirname( __FILE__ ) . '/base/class-field-view-base.php' );
 
 require( dirname( __FILE__ ) . '/core/class-object-type.php' );
-require( dirname( __FILE__ ) . '/core/class-form.php' );
 require( dirname( __FILE__ ) . '/core/class-html-element.php' );
+require( dirname( __FILE__ ) . '/core/class-registry.php' );
+
+require( dirname( __FILE__ ) . '/base/class-storage-base.php' );
+require( dirname( __FILE__ ) . '/base/class-field-base.php' );
+require( dirname( __FILE__ ) . '/base/class-field-feature-base.php' );
+require( dirname( __FILE__ ) . '/base/class-form-view-base.php' );
+require( dirname( __FILE__ ) . '/base/class-field-view-base.php' );
 
 require( dirname( __FILE__ ) . '/storage/class-core-storage.php' );
 require( dirname( __FILE__ ) . '/storage/class-meta-storage.php' );
 require( dirname( __FILE__ ) . '/storage/class-option-storage.php' );
 
+require( dirname( __FILE__ ) . '/forms/class-form.php' );
+
 require( dirname( __FILE__ ) . '/fields/class-text-field.php' );
 require( dirname( __FILE__ ) . '/fields/class-textarea-field.php' );
 require( dirname( __FILE__ ) . '/fields/class-url-field.php' );
 require( dirname( __FILE__ ) . '/fields/class-date-field.php' );
+
+require( dirname( __FILE__ ) . '/features/class-field-input-feature.php' );
+require( dirname( __FILE__ ) . '/features/class-field-label-feature.php' );
+require( dirname( __FILE__ ) . '/features/class-field-help-feature.php' );
+require( dirname( __FILE__ ) . '/features/class-field-message-feature.php' );
+require( dirname( __FILE__ ) . '/features/class-field-infobox-feature.php' );
 
 require( dirname( __FILE__ ) . '/views/class-form-view.php' );
 require( dirname( __FILE__ ) . '/views/class-field-view.php' );
@@ -44,17 +57,17 @@ class WP_Metadata {
   private static $_field_index = array();
 
   /**
-   *
-   */
-  private static $_object_type_fields = array();
-
-  /**
    * @var array
    */
   private static $_form_index = array();
 
   /**
-   *
+   * @var array
+   */
+  private static $_object_type_fields = array();
+
+  /**
+   * @var array
    */
   private static $_object_type_forms = array();
 
@@ -64,9 +77,9 @@ class WP_Metadata {
   private static $_field_types = array();
 
   /**
-   * @var array
+   * @var WP_Registry
    */
-  private static $_features = array();
+  private static $_feature_type_registry = array();
 
   /**
    * @var array
@@ -88,24 +101,31 @@ class WP_Metadata {
    */
   static function on_load() {
 
+//    self::$_object_type_field_registry = new WP_Registry();
+//    self::$_object_type_form_registry = new WP_Registry();
+//    self::$_view_registry = new WP_Registry();
+
     /*
      * Register field classes
      */
+    //self::$_field_type_registry = new WP_Registry();
     self::register_field_type( 'text',      'WP_Text_Field' );
     self::register_field_type( 'textarea',  'WP_TextArea_Field' );
     self::register_field_type( 'url',       'WP_Url_Field' );
     self::register_field_type( 'date',      'WP_Date_Field' );
 
 
-    self::register_field_feature( 'control',  'WP_Control_Feature' );
-    self::register_field_feature( 'label',    'WP_Label_Feature' );
-    self::register_field_feature( 'message',  'WP_Message_Feature' );
-    self::register_field_feature( 'help',     'WP_Help_Feature' );
-    self::register_field_feature( 'infobox',  'WP_Infobox_Feature' );
+    self::initialize_feature_type_registry();
+    self::register_feature_type( 'input',    'WP_Field_Input_Feature' );
+    self::register_feature_type( 'label',    'WP_Field_Label_Feature' );
+    self::register_feature_type( 'message',  'WP_Field_Message_Feature' );
+    self::register_feature_type( 'help',     'WP_Field_Help_Feature' );
+    self::register_feature_type( 'infobox',  'WP_Field_Infobox_Feature' );
 
     /*
      * Register "storage" classes
      */
+    //self::$_storage_registry = new WP_Registry();
     self::register_storage( 'meta', 'WP_Meta_Storage' );
     self::register_storage( 'core', 'WP_Core_Storage' );
     self::register_storage( 'option', 'WP_Option_Storage' );
@@ -162,10 +182,10 @@ class WP_Metadata {
    */
   static function _edit_post_form( $post ) {
     $post_type = $post->post_type;
-    self::_ensure_post_type_default_form( $post_type );
+    self::_ensure_post_type_default_form( $post_type, $post );
     $form_name = preg_replace( '#^edit_form_(.*)$#', '$1', current_action() );
     if ( $form_name == get_post_type_object( $post_type )->default_form ) {
-      if ( $form = get_post_form( 'default', $post_type ) ) {
+      if ( $form = get_post_form( 'default', $post_type, array( 'object' => $post ) ) ) {
         $form->the_form();
       }
     }
@@ -184,16 +204,18 @@ class WP_Metadata {
    *
    * @internal
    * @param string $post_type
+   * @param WP_Post $post
    */
-  static function _ensure_post_type_default_form( $post_type ) {
+  static function _ensure_post_type_default_form( $post_type, $post ) {
     $object_type = wp_get_post_object_type( $post_type );
     if ( ! self::has_default_post_form( $post_type ) ) {
       self::register_form( 'default', $object_type );
     }
     $form = self::get_form( 'default', $object_type );
     if ( 0 == count( $form->fields ) && count( self::$_object_type_fields[$object_type] ) ) {
+      $field_args = array( 'storage_object' => $post );
       foreach( self::$_object_type_fields[$object_type] as $field_name => $field ) {
-        $form->add_field( $field_name, self::get_field( $field_name, $object_type ) );
+        $form->add_field( $field_name, self::get_field( $field_name, $object_type, $field_args ) );
       }
     }
   }
@@ -329,6 +351,9 @@ class WP_Metadata {
     if ( is_numeric( $form_args ) && isset( self::$_form_index[$form_index = $form_args['form_index']] ) ) {
       $form_args = self::$_form_index[$form_index];
     }
+    /**
+     * @todo Support more than one type of form. Maybe. If needed.
+     */
     $form = new WP_Form( $form_name, $object_type, $form_args );
     return $form;
   }
@@ -368,14 +393,6 @@ class WP_Metadata {
   }
 
   /**
-   * @param string $feature_name Name of Feature
-   * @param string $feature_class Classname
-   */
-  static function register_field_feature( $feature_name, $feature_class ) {
-    self::$_features[$feature_name] = $feature_class;
-  }
-
-  /**
    * @param string $storage_name - Name of storage
    * @param bool|string $storage_args - Classname
    */
@@ -387,11 +404,11 @@ class WP_Metadata {
    * @param string $tag_name
    * @param array $attributes
    * @param mixed $value
-   * @return Sunrise_Html_Element
+   * @return WP_Html_Element
    */
-  static function element_html( $tag_name, $attributes, $value ) {
-    $html_element = self::html_element( $tag_name, $attributes, $value, true );
-    return $html_element->element_html();
+  static function get_element_html( $tag_name, $attributes, $value ) {
+    $html_element = self::get_html_element( $tag_name, $attributes, $value, true );
+    return $html_element->get_element_html();
   }
 
   /**
@@ -399,14 +416,14 @@ class WP_Metadata {
    * @param array $attributes
    * @param null,mixed $value
    * @param bool $reuse
-   * @return Sunrise_Html_Element
+   * @return WP_Html_Element
    */
-  static function html_element( $tag_name, $attributes = array(), $value = null, $reuse = false ) {
+  static function get_html_element( $tag_name, $attributes = array(), $value = null, $reuse = false ) {
     if ( ! $reuse ) {
       $element = new WP_Html_Element( $tag_name, $attributes, $value );
     } else {
       /**
-       * @var Sunrise_Html_Element $reusable_element
+       * @var WP_Html_Element $reusable_element
        */
       static $reusable_element = false;
       if ( ! $reusable_element ) {
@@ -530,46 +547,28 @@ class WP_Metadata {
       : false;
   }
 
+  /*********************************************/
+  /***  Field Feature Type Registry Methods  ***/
+  /*********************************************/
 
-//  /**
-//   * @param string $class_name The class name for the object that will be delegated to by the main class.
-//   * @return array
-//   */
-//  static function delegates_exist( $class_name ) {
-//    if ( isset( self::$_delegates[$class_name] ) ) {
-//      $delegates_exist = is_array( self::$_delegates[$class_name] ) && ! empty( self::$_delegates[$class_name] );
-//    } else {
-//      $delegates_exist = false;
-//    }
-//    return $delegates_exist;
-//  }
-//
-//  /**
-//   * @param string $class_name The class name for the object that will be delegated to by the main class.
-//   * @return array
-//   */
-//  static function get_delegates( $class_name ) {
-//    return isset( self::$_delegates[$class_name] ) ? self::$_delegates[$class_name] : false;
-//  }
-//
-//  /**
-//   * Register a class to be used to delegate calls to by a main class.
-//   *
-//   * WP_Field_Base::register_delegate_prefix( 'html_', '_html_element' );
-//   *
-//   * @param string $delegate_prefix The prefix for args passed in as $args to the main object's constructor, i.e. 'html_'
-//   * @param string $property_name The name of the property used to hold the delegated element, i.e. '_html_element'
-//   * @param string $associated_class
-//   * @param bool|string $associated_class
-//   */
-//  static function register_delegate_prefix( $delegate_prefix, $property_name, $associated_class = false ) {
-//    if ( ! $associated_class ) {
-//      $associated_class = get_called_class();
-//    }
-//    if ( ! isset( self::$_delegates[$associated_class][$delegate_prefix] ) ) {
-//      self::$_delegates[$associated_class][$delegate_prefix] = $property_name;
-//    }
-//  }
+  /**
+   *
+   */
+  static function initialize_feature_type_registry() {
+    self::$_feature_type_registry = new WP_Registry();
+  }
+
+  /**
+   * @param string $feature_type Name of Feature
+   * @param string $feature_class Classname
+   */
+  static function register_feature_type( $feature_type, $feature_class ) {
+    self::$_feature_type_registry->register_item( $feature_type, $feature_class );
+  }
+
+  static function get_feature_type( $feature_type ) {
+    return self::$_feature_type_registry->get_item( $feature_type );
+  }
 
 }
 WP_Metadata::on_load();

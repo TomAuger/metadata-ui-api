@@ -30,14 +30,14 @@ abstract class WP_Metadata_Base {
    *
    * @return array
    */
-  function NO_PREFIX() {
+  static function NO_PREFIX() {
     return array();
   }
 
   /**
    * @return array
    */
-  function DELEGATES() {
+  static function DELEGATES() {
     return array();
   }
 
@@ -46,17 +46,15 @@ abstract class WP_Metadata_Base {
    */
   function __construct( $args = array() ) {
     $args = wp_parse_args( $args, $this->_call_lineage_value( 'default_args', array(), $args ) );
-    if ( $this->_call_lineage_value( 'do_assign', true, $args ) ) {
+    if ( $this->_call_lineage_value( 'do_assign_args', true, $args ) ) {
+      $args = $this->_call_lineage_collect_array_elements( 'pre_prefix_args', $args );
       $args = $this->prefix_args( $args );
-      $args = $this->parse_delegate_args( $args );
-      $this->_call_lineage( 'assign', $this->_call_lineage_collect_array_elements( 'pre_assign', $args ) );
+      $args = $this->_call_lineage_collect_array_elements( 'pre_delegate_args', $args );
+      $args = $this->delegate_args( $args );
+      $args = $this->_call_lineage_collect_array_elements( 'pre_assign_args', $args );
+      $this->_call_lineage( 'assign_args', $args );
     }
-    $this->_call_lineage( 'initialize', $args );
-
-    /**
-     * $this->assign() and $this->initialize() had their chance to inspect delegated args so free the memory now.
-     */
-    $this->delegated_args = null;
+    $this->_call_lineage( 'initialize_args', $args );
   }
 
   /**
@@ -68,14 +66,12 @@ abstract class WP_Metadata_Base {
    *
    * @return array
    */
-  function prefix() {
+  function get_prefix() {
     return $this->constant( 'PREFIX' );
   }
 
   /**
    * Gets array of field names that should not get a prefix.
-   *
-   * Intended to be used by subclasses.
    *
    * @return array
    */
@@ -125,7 +121,7 @@ abstract class WP_Metadata_Base {
    * @return array
    */
   function prefix_args( $args ) {
-    if ( false !== ( $delegate_prefix = $this->prefix() ) ) {
+    if ( false !== ( $delegate_prefix = $this->get_prefix() ) ) {
       $no_prefix = implode( '|', $this->get_no_prefix() );
       foreach ( $args as $name => $value ) {
         /**
@@ -147,7 +143,7 @@ abstract class WP_Metadata_Base {
    *
    * @return mixed
    */
-  function parse_delegate_args( $args ) {
+  function delegate_args( $args ) {
     /*
      * Looking for $args that are targeting delegate properties.
      * Look for them based on their var prefix (i.e. 'html_').
@@ -157,7 +153,8 @@ abstract class WP_Metadata_Base {
      */
     if ( count( $delegates = $this->get_delegates() ) ) {
       foreach ( $delegates as $delegate_prefix => $delegate_property ) {
-        if ( property_exists( $this, $delegate_property ) ) {
+        if ( property_exists( $this, $delegate_property ) || isset( $this->$delegate_property ) ) {
+          $this->delegated_args[$delegate_property] = array();
           $match_regex   = '#^' . preg_quote( $delegate_prefix ) . '(.*)$#';
           $delegate_args = array();
           foreach ( $args as $arg_name => $arg_value ) {
@@ -166,7 +163,7 @@ abstract class WP_Metadata_Base {
               unset( $args[$arg_name] );
             }
           }
-          $this->delegated_args[$delegate_prefix] = $delegate_args;
+          $this->delegated_args[$delegate_property] = $delegate_args;
         }
       }
     }
@@ -178,7 +175,7 @@ abstract class WP_Metadata_Base {
    *
    * @param array $args An array of name/value pairs that can be used to initialize an object's properties.
    */
-  function assign( $args ) {
+  function assign_args( $args ) {
     /*
      * Assign the arg values to properties, if they exist.
      * If no property exists capture value in the $this->extra[] array.
@@ -301,7 +298,7 @@ abstract class WP_Metadata_Base {
    * @param array $elements
    * @return array
    */
-  private function _call_lineage_collect_array_elements( $method_name, $elements = array() ) {
+  protected function _call_lineage_collect_array_elements( $method_name, $elements = array() ) {
     $lineage = wp_get_class_lineage( get_class( $this ), true );
     foreach( $lineage as $ancestor ) {
       if ( $this->_has_own_method( $ancestor, $method_name ) ) {

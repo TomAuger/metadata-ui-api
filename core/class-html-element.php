@@ -41,6 +41,7 @@ class WP_Html_Element extends WP_Metadata_Base {
    */
   function __construct( $tag_name, $attributes = array(), $value = null ) {
     $this->reset_element( $tag_name, $attributes, $value );
+    parent::__construct( $attributes );
   }
 
   /**
@@ -63,10 +64,10 @@ class WP_Html_Element extends WP_Metadata_Base {
   }
 
   /**
-   * @return array
+   * @return string
    */
-  function element_html() {
-    $html = "<{$this->tag_name} " . $this->attributes_html() . '>';
+  function get_element_html() {
+    $html = "<{$this->tag_name} " . $this->get_attributes_html() . '>';
     if ( ! $this->is_void_element() ) {
       $value = is_callable( $this->element_value ) ? call_user_func( $this->element_value, $this ) : $this->element_value;
       $html .= "{$value}</{$this->tag_name}>";
@@ -77,7 +78,7 @@ class WP_Html_Element extends WP_Metadata_Base {
   /**
    * @return array
    */
-  function attributes_html() {
+  function get_attributes_html() {
     $valid_attributes = WP_Metadata::get_html_attributes( $this->tag_name );
     $html = array();
     $attributes = array_filter( $this->attributes() );

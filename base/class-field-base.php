@@ -10,6 +10,16 @@ class WP_Field_Base extends WP_Metadata_Base {
   /**
    *
    */
+  const FIELD_TYPE = 'text';
+
+  /**
+   *
+   */
+  const HTML_TYPE = 'text';
+
+  /**
+   *
+   */
   const PREFIX = 'field_';
 
   /**
@@ -48,6 +58,11 @@ class WP_Field_Base extends WP_Metadata_Base {
   var $object_type = false;
 
   /**
+   * @var string|WP_Field_View_Base
+   */
+  var $view = false;
+
+  /**
    * @var bool|int
    */
   protected $_field_index = false;
@@ -58,14 +73,16 @@ class WP_Field_Base extends WP_Metadata_Base {
   protected $_value = null;
 
   /**
-   * @var string|WP_Field_View_Base
+   * Returns an array of delegate properties and with their $args prefix for this class.
+   *
+   * @return array
    */
-  protected $_field_view = false;
-
-  /**
-   * @var array
-   */
-  static protected $_field_views;
+  static function DELEGATES() {
+    return array(
+      'view_'     => 'view',
+      'storage_'  => 'storage',
+    );
+  }
 
   /**
    * Array of field names that should not get a prefix.
@@ -74,7 +91,7 @@ class WP_Field_Base extends WP_Metadata_Base {
    *
    * @return array
    */
-  function NO_PREFIX() {
+  static function NO_PREFIX() {
     return array( 'value' );
   }
 
@@ -87,20 +104,13 @@ class WP_Field_Base extends WP_Metadata_Base {
     $field_args['field_name'] = $field_name;
     $this->field_args = $field_args;
     parent::__construct( $field_args );
-    if ( ! is_object( $this->_field_view ) ) {
+    /**
+     * @todo Update to a storage factory based on 'storage' $arg.
+     */
+    $this->storage = new WP_Meta_Storage( $this, $this->delegated_args['storage'] );
+    if ( ! is_object( $this->view ) ) {
       $this->set_field_view( 'default' );
     }
-  }
-
-  /**
-   * Returns an array of delegate properties and with their $args prefix for this class.
-   *
-   * @return array
-   */
-  function DELEGATES() {
-    return array(
-      'view_' => '_field_view',
-    );
   }
 
   /**
@@ -108,13 +118,41 @@ class WP_Field_Base extends WP_Metadata_Base {
    * @param array $view_args
    */
   function set_field_view( $view_name, $view_args = array() ) {
-    if ( ! $this->field_view_exists( $view_name) ) {
-      $this->_field_view = false;
+    if ( ! $this->field_view_exists( $view_name ) ) {
+      $this->view = false;
     } else {
-      $field_view_class = $this->get_field_view( $view_name );
-      $this->_field_view = new $field_view_class( $view_name, $view_args );
-      $this->_field_view->field = $this;
+      $view_args['view_name'] = $view_name;
+      $view_args['field'] = $this;  // This is redundant, but that's okay
+      $this->view = $this->make_field_view( $view_name, $view_args );
     }
+  }
+
+  /**
+   * @param string $feature_type
+   * @param array $feature_args
+   *
+   * @return null|WP_Field_Feature_Base
+   */
+  function make_field_feature( $feature_type, $feature_args ) {
+    if ( $feature_class = WP_Metadata::get_feature_type( $feature_type ) ) {
+      $feature = new $feature_class( $this, $feature_args );
+    } else {
+      $feature = null;
+    }
+    return $feature;
+  }
+
+
+  /**
+   * @param string $view_name
+   * @param array $view_args
+   * @return WP_Field_View
+   */
+  function make_field_view( $view_name, $view_args = array() ) {
+    $field_view_class = $this->get_field_view( $view_name );
+    $view = new $field_view_class( $view_name, $view_args );
+    $view->field = $this;   // This is redundant, but that's okay
+    return $view;
   }
 
   /**
@@ -160,10 +198,17 @@ class WP_Field_Base extends WP_Metadata_Base {
   }
 
   /**
+   * @return bool|string
+   */
+  function storage_key() {
+    return $this->field_name;
+  }
+
+  /**
    *
    */
   function get_value() {
-    return $this->storage->get_value( $this->field_name );
+    return $this->storage->get_value( $this->storage_key() );
   }
 
   /**
@@ -181,7 +226,7 @@ class WP_Field_Base extends WP_Metadata_Base {
       $this->set_value( $value );
     }
     if ( $this->has_storage() ) {
-      $this->storage->update_value( $this->field_name, $this->value() );
+      $this->storage->update_value( $this->storage_key(), $this->value() );
     }
   }
 
@@ -212,8 +257,8 @@ class WP_Field_Base extends WP_Metadata_Base {
    * @return mixed
    */
   function __get( $property_name ) {
-    return property_exists( $this->_field_view, $property_name )
-      ? $this->_field_view->$property_name
+    return property_exists( $this->view, $property_name )
+      ? $this->view->$property_name
       : null;
   }
 
@@ -225,8 +270,8 @@ class WP_Field_Base extends WP_Metadata_Base {
    * @return mixed
    */
   function __set( $property_name, $value ) {
-    return property_exists( $this->_field_view, $property_name )
-      ? $this->_field_view->$property_name = $value
+    return property_exists( $this->view, $property_name )
+      ? $this->view->$property_name = $value
       : null;
   }
 
@@ -238,8 +283,8 @@ class WP_Field_Base extends WP_Metadata_Base {
    * @return mixed
    */
   function __call( $method_name, $args = array() ) {
-    return method_exists( $this->_field_view, $method_name )
-      ? call_user_func_array( array( $this->_field_view, $method_name ), $args )
+    return method_exists( $this->view, $method_name )
+      ? call_user_func_array( array( $this->view, $method_name ), $args )
       : null;
   }
 

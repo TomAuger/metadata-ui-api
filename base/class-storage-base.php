@@ -8,7 +8,7 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
   /**
    *
    */
-  const OBJECT_ID = 'unspecified';
+  const OBJECT_ID = 'ID';
 
   /**
    * @var WP_Post|WP_User|object
@@ -18,7 +18,7 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
   /**
    * @var WP_Field_Base
    */
-  var $owner;
+  var $field;
 
   /**
    * $storage_arg names that should not get a prefix.
@@ -27,26 +27,33 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
    *
    * @return array
    */
-  function NO_PREFIX() {
+  static function NO_PREFIX() {
     return array(
+      'field',
       'object',
-      'owner',
     );
   }
 
   /**
-   * @param string $field_name
+   * @param WP_Field_Base $field
+   * @param array $storage_args
+   */
+  function __construct( $field, $storage_args = array() ) {
+    $this->field = $field;
+    parent::__construct( $storage_args );
+  }
+
+  /**
    * @return mixed $value
    */
-  function get_value( $field_name ) {
+  function get_value() {
     return null;
   }
 
   /**
-   * @param string $field_name
    * @param null|mixed $value
    */
-  function update_value( $field_name, $value = null ) {
+  function update_value( $value = null ) {
   }
 
   /**
@@ -54,11 +61,11 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
    *
    * Most common example of a field key would be a meta key.
    *
-   * @param string $field_name
+   * @param string $storage_key
    * @return string
    */
-  function field_key( $field_name ) {
-    return "_{$field_name}";
+  function storage_key() {
+    return "_{$this->field->field_name}";
   }
 
   /**

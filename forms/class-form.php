@@ -46,7 +46,7 @@ class WP_Form extends WP_Metadata_Base {
    *
    * @return array
    */
-  function NO_PREFIX() {
+  static function NO_PREFIX() {
     return array( 'fields' );
   }
 
@@ -68,7 +68,7 @@ class WP_Form extends WP_Metadata_Base {
       $this->_form_view = false;
     } else {
       $form_view_class = $this->get_form_view( $view_name );
-      $this->_form_view = new $form_view_class( $view_name, $this );
+      $this->_form_view = new $form_view_class( $this, $view_name );
     }
   }
 

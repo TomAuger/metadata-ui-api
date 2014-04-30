@@ -28,7 +28,7 @@ final class WP_Object_Type {
    */
   function __construct( $object_type = false ) {
     if ( $object_type ) {
-      $this->assign( $object_type );
+      $this->assign_type( $object_type );
     }
   }
 
@@ -41,7 +41,7 @@ final class WP_Object_Type {
    *
    * @param bool|string|array|WP_Object_Type $object_type
    */
-  function assign( $object_type = false ) {
+  function assign_type( $object_type = false ) {
 
     if ( empty( $object_type ) ) {
       global $post;

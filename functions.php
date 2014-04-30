@@ -119,7 +119,7 @@ function register_post_form( $form_name, $post_type = false, $form_args = array(
  * @param string $post_type
  * @return WP_Form
  */
-function get_post_form( $form_name, $post_type ) {
-  return WP_Metadata::get_form( $form_name, wp_get_post_object_type( $post_type ) );
+function get_post_form( $form_name, $post_type, $form_args = array() ) {
+  return WP_Metadata::get_form( $form_name, wp_get_post_object_type( $post_type ), $form_args );
 }
 

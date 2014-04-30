@@ -6,19 +6,17 @@
 class WP_Core_Storage extends WP_Storage_Base {
 
   /**
-   * @param string $field_name
    * @return mixed $value
    */
-  function get_value( $field_name ) {
-    return $this->has_field( $field_name ) ? $this->object->{$field_name} : null;
+  function get_value() {
+    return $this->has_field() ? $this->object->{$this->field->field_name} : null;
   }
 
   /**
-   * @param string $field_name
    * @param null|mixed $value
    */
-  function update_value( $field_name, $value = null ) {
-    if ( $this->has_field( $field_name ) && 0 < intval( $this->object_id() ) ) {
+  function update_value( $value = null ) {
+    if ( $this->has_field( $field_name = $this->field->field_name ) && 0 < intval( $this->object_id() ) ) {
       /**
        * @var wpdb $wpdb
        */
@@ -32,10 +30,10 @@ class WP_Core_Storage extends WP_Storage_Base {
   }
 
   /**
-   * @param $field_name
    * @return bool
    */
-  function has_field( $field_name ) {
+  function has_field() {
+    $field_name = $this->field->field_name;
     return property_exists( $this->object, $field_name ) && parent::has_field( $field_name );
   }
 

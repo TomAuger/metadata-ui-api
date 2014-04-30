@@ -20,7 +20,6 @@ class WP_Taxonomy_Storage extends WP_Storage_Base {
   }
 
   /**
-   * @param string $field_name
    * @param null|mixed $value
    */
   function update_value( $value = null ) {
@@ -30,11 +29,10 @@ class WP_Taxonomy_Storage extends WP_Storage_Base {
   /**
    * Taxonomy Terms are the Field names.
    *
-   * @param string $field_name
    * @return string
    */
-  function field_key( $field_name ) {
-    return $field_name;
+  function storage_key() {
+    return null;
   }
 
 }

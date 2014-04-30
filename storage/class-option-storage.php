@@ -19,7 +19,7 @@ class WP_Option_Storage extends WP_Storage_Base {
    * @return mixed $value
    */
   function get_value() {
-    return get_option(  $this->field_key(), true );
+    return get_option(  $this->storage_key(), true );
   }
 
   /**
@@ -27,7 +27,7 @@ class WP_Option_Storage extends WP_Storage_Base {
    * @param null|mixed $value
    */
   function update_value( $value = null ) {
-    update_option( $this->field_key(), esc_sql( $value ) );
+    update_option( $this->storage_key(), esc_sql( $value ) );
   }
 
   /**
@@ -37,8 +37,8 @@ class WP_Option_Storage extends WP_Storage_Base {
    *
    * @return string
    */
-  function field_key() {
-    $field = $this->owner;
+  function storage_key() {
+    $field = $this->field;
     $object_type = $field->object_type;
     if ( $group = $object_type->subtype ) {
       $option_name = "_{WP_Metadata::$prefix}{$group}[{$field->field_name}]";
