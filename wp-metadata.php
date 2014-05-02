@@ -570,5 +570,48 @@ class WP_Metadata {
     return self::$_feature_type_registry->get_item( $feature_type );
   }
 
+  /*********************************************/
+  /***                                       ***/
+  /*********************************************/
+  /**
+   * Extract args with specified prefixes.
+   *
+   * Look for $args based on their prefixes (i.e. 'html_').
+   * If found capture the non-prefixed key and value into $extracted_args for return.
+   * (Stripping the prefix allows for nested values, i.e. 'label_html_class')
+   *
+   * @param array $prefixed_args
+   * @param array $prefixes
+   * @param array $args
+   *
+   * @return mixed
+   */
+  static function extract_prefixed_args( $prefixed_args, $prefixes, $args = array() ) {
+    $extracted_args = array();
+    $args = wp_parse_args( $args, array(
+      'strip_prefix' => true,
+    ));
+    if ( count( $prefixes ) ) {
+      foreach ( $prefixes as $prefix ) {
+        $prefix = rtrim( $prefix, '_' );
+        $extracted_args = array();
+        $match_regex = '#^' . preg_quote( $prefix ) . '_(.*)$#';
+        $delegate_args = array();
+        foreach( $prefixed_args as $arg_name => $arg_value ) {
+          if ( preg_match( $match_regex, $arg_name, $match ) ) {
+            if ( $args['strip_prefix'] ) {
+              $extracted_args[$prefix][ $match[1] ] = $arg_value;
+            } else {
+              $extracted_args[$prefix][ $arg_name ] = $arg_value;
+            }
+//            unset( $prefixed_args[$arg_name] );
+          }
+        }
+      }
+    }
+    return $extracted_args;
+  }
+
+
 }
 WP_Metadata::on_load();

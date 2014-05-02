@@ -144,29 +144,9 @@ abstract class WP_Metadata_Base {
    * @return mixed
    */
   function delegate_args( $args ) {
-    /*
-     * Looking for $args that are targeting delegate properties.
-     * Look for them based on their var prefix (i.e. 'html_').
-     * If found capture the non-prefixed key and value into $property_args to instantiate delegated property.
-     * (Stripping the prefix on delegation allows for nested values, i.e. 'label_html_size')
-     * Also if found, capture to $this->delegated_args array so other assign() in subclasses can
-     */
-    if ( count( $delegates = $this->get_delegates() ) ) {
-      foreach ( $delegates as $delegate_prefix => $delegate_property ) {
-        if ( property_exists( $this, $delegate_property ) || isset( $this->$delegate_property ) ) {
-          $this->delegated_args[$delegate_property] = array();
-          $match_regex   = '#^' . preg_quote( $delegate_prefix ) . '(.*)$#';
-          $delegate_args = array();
-          foreach ( $args as $arg_name => $arg_value ) {
-            if ( preg_match( $match_regex, $arg_name, $match ) ) {
-              $delegate_args[$match[1]] = $arg_value;
-              unset( $args[$arg_name] );
-            }
-          }
-          $this->delegated_args[$delegate_property] = $delegate_args;
-        }
-      }
-    }
+    $class = get_class( $this ) ;
+    $delegates = $this->get_delegates();
+    $this->delegated_args = WP_Metadata::extract_prefixed_args( $args, $delegates );
     return $args;
   }
 

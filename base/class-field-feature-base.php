@@ -11,6 +11,11 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
   const HTML_TAG = 'div';
 
   /**
+   *
+   */
+  const OUTER_TAG = 'div';
+
+  /**
    * @var WP_Field_Base
    */
   var $field;
@@ -57,6 +62,14 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
       $this->html_element = WP_Metadata::get_html_element( $this->html_tag(), $attributes, $this->html_value() );
     }
 
+  }
+
+  /**
+   * Return the HTML tag to be wrapper around the field.
+   * @return array
+   */
+  function outer_tag() {
+    return $this->constant( 'OUTER_TAG' );
   }
 
   /**
