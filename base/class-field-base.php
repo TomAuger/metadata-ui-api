@@ -79,9 +79,16 @@ class WP_Field_Base extends WP_Metadata_Base {
    */
   static function DELEGATES() {
     return array(
-      'view_'     => 'view',
-      'storage_'  => 'storage',
+      'view'     => 'view',
+      'storage'  => 'storage',
     );
+  }
+
+  /**
+   * @return array|void
+   */
+  function get_delegates() {
+    return array_merge( self::DELEGATES(), $this->get_view_delegates() );
   }
 
   /**
@@ -102,15 +109,44 @@ class WP_Field_Base extends WP_Metadata_Base {
   function __construct( $field_name, $field_args = array() ) {
     $this->register_field_view( 'default', 'WP_Field_View' );
     $field_args['field_name'] = $field_name;
+    $this->view = $field_args['view'] = ! empty( $field_args['view'] ) ? $field_args['view'] : 'default';
     $this->field_args = $field_args;
     parent::__construct( $field_args );
+    $this->_initialize_field_storage( $field_args );
+    //$this->set_field_view( $this->view, $this->get_view_args() );
+  }
+
+  function _initialize_field_storage( $field_args ) {
     /**
-     * @todo Update to a storage factory based on 'storage' $arg.
+     * @todo Update to instantiate via storage factory.
      */
-    $this->storage = new WP_Meta_Storage( $this, $this->delegated_args['storage'] );
-    if ( ! is_object( $this->view ) ) {
-      $this->set_field_view( 'default' );
-    }
+    $this->storage = new WP_Meta_Storage( $this, $this->get_storage_args() );
+  }
+
+  /**
+   * @return array
+   */
+  function get_storage_args() {
+    return $this->delegated_args['storage'];
+  }
+
+  /**
+   * @return array
+   */
+  function get_view_args() {
+    return array_merge(
+      $this->delegated_args['view'],
+      WP_Metadata::extract_prefixed_args( $this->field_args, $this->get_view_delegates() )
+    );
+  }
+
+  /**
+   * @return array
+   */
+  function get_view_delegates() {
+    $delegates = call_user_func( array( $this->get_view_class(), 'DELEGATES' ) );
+    $delegates['view'] = 'view';
+    return $delegates;
   }
 
   /**
@@ -149,7 +185,7 @@ class WP_Field_Base extends WP_Metadata_Base {
    * @return WP_Field_View
    */
   function make_field_view( $view_name, $view_args = array() ) {
-    $field_view_class = $this->get_field_view( $view_name );
+    $field_view_class = $this->get_view_class( $view_name );
     $view = new $field_view_class( $view_name, $view_args );
     $view->field = $this;   // This is redundant, but that's okay
     return $view;
@@ -180,11 +216,16 @@ class WP_Field_Base extends WP_Metadata_Base {
   /**
    * Retrieve the class name for a named view.
    *
-   * @param string $view_name The name of the view that is unique for this class.
+   * @param bool|string $view_name The name of the view that is unique for this class.
    * @return string
    */
-  function get_field_view( $view_name ) {
-    return WP_Metadata::get_view( 'field', $view_name, get_class( $this ) );
+  function get_view_class( $view_name = false ) {
+    if ( ! $view_name ) {
+      $view_name = $this->view;
+    }
+    return is_object( $this->view )
+      ? get_class( $this->view )
+      : WP_Metadata::get_view_class( 'field', $view_name, get_class( $this ) );
   }
 
   /**

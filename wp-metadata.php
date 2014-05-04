@@ -536,12 +536,12 @@ class WP_Metadata {
   /**
    * Retrieve the class name for a named view.
    *
-   * @param string $view_name The name of the view that is unique for this class.
    * @param string $view_type Type of view
+   * @param string $view_name The name of the view that is unique for this class.
    * @param string $associated_class
    * @return string
    */
-  static function get_view( $view_type, $view_name, $associated_class ) {
+  static function get_view_class( $view_type, $view_name, $associated_class ) {
     return self::view_exists( $view_type, $view_name, $associated_class )
       ? self::$_views[$view_type][$associated_class][$view_name]
       : false;
@@ -571,7 +571,7 @@ class WP_Metadata {
   }
 
   /*********************************************/
-  /***                                       ***/
+  /*** Prefix related methods                ***/
   /*********************************************/
   /**
    * Extract args with specified prefixes.
@@ -591,25 +591,27 @@ class WP_Metadata {
     $args = wp_parse_args( $args, array(
       'strip_prefix' => true,
     ));
+    if ( ! is_array( $prefixes ) ) {
+      $prefixes = array( $prefixes );
+    }
     if ( count( $prefixes ) ) {
-      foreach ( $prefixes as $prefix ) {
-        $prefix = rtrim( $prefix, '_' );
-        $extracted_args = array();
-        $match_regex = '#^' . preg_quote( $prefix ) . '_(.*)$#';
-        $delegate_args = array();
-        foreach( $prefixed_args as $arg_name => $arg_value ) {
-          if ( preg_match( $match_regex, $arg_name, $match ) ) {
-            if ( $args['strip_prefix'] ) {
-              $extracted_args[$prefix][ $match[1] ] = $arg_value;
-            } else {
-              $extracted_args[$prefix][ $arg_name ] = $arg_value;
-            }
-//            unset( $prefixed_args[$arg_name] );
+      $extracted_args = array_fill_keys( array_keys( $prefixes ), array() );
+      $match_regex = '#^(' . implode( '|', $prefixes ) . ')_(.*)$#';
+      $delegate_args = array();
+      foreach( $prefixed_args as $arg_name => $arg_value ) {
+        if ( preg_match( $match_regex, $arg_name, $match ) ) {
+          if ( $args['strip_prefix'] || 2 <= substr_count( $arg_name, '_' ) ) {
+            $extracted_args[ $match[1] ][ $match[2] ] = $arg_value;
+          } else {
+            $extracted_args[ $match[1] ][ $arg_name ] = $arg_value;
           }
         }
       }
     }
     return $extracted_args;
+  }
+
+  static function strip_arg_prefixes( $prefixed_args, $prefixes ) {
   }
 
 

@@ -19,11 +19,6 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
   /**
    * @var string
    */
-  var $form_name = '';
-
-  /**
-   * @var string
-   */
   var $form_method = 'post';
 
   /**
@@ -71,7 +66,7 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
    * @return bool|string
    */
   function html_id() {
-    return str_replace( '_', '-', $this->form_name ) . '-' . $this->html_class();
+    return str_replace( '_', '-', $this->html_name() ) . '-' . $this->html_class();
   }
 
   /**
@@ -85,7 +80,7 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
    * @return bool|string
    */
   function html_name() {
-    return $this->form_name;
+    return $this->form->form_name;
   }
 
 }

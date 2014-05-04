@@ -67,7 +67,7 @@ class WP_Form extends WP_Metadata_Base {
     if ( ! $this->form_view_exists( $view_name ) ) {
       $this->_form_view = false;
     } else {
-      $form_view_class = $this->get_form_view( $view_name );
+      $form_view_class = $this->get_form_view_class( $view_name );
       $this->_form_view = new $form_view_class( $this, $view_name );
     }
   }
@@ -100,8 +100,8 @@ class WP_Form extends WP_Metadata_Base {
    * @param string $view_name The name of the view that is unique for this class.
    * @return string
    */
-  function get_form_view( $view_name ) {
-    return WP_Metadata::get_view( 'form', $view_name, get_class( $this ) );
+  function get_form_view_class( $view_name ) {
+    return WP_Metadata::get_view_class( 'form', $view_name, get_class( $this ) );
   }
 
   /**

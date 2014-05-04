@@ -41,6 +41,13 @@ For this branch there is no documentation ready yet.
 
     }
 
+##FAQ 
+
+### Q: No Hooks in Work-in-Progress?
+A: At this point we are avoid adding any hooks so we can first finalize the architecture.
+
+
+
 ## Contributing
 
 We welcome contributions. That being said, be aware that any functionality that is missing, we're probably already aware of. Take a look through existing issues, and feel free to open up a new one to discuss the changes you'd like to make. After discussion in an issue we'll be happy to review a pull request.
