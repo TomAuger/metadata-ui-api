@@ -45,6 +45,7 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
    * @return string
    */
   function get_form_fields_html() {
+    $fields_html = array();
     /**
      * @var WP_Field_Base $field
      */

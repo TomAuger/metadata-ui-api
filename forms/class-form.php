@@ -35,9 +35,31 @@ class WP_Form extends WP_Metadata_Base {
   var $form_index;
 
   /**
+   * @var string
+   */
+  var $storage_type;
+
+  /**
+   * @var WP_Post|object
+   */
+  var $storage_object;
+
+  /**
    * @var array
    */
   protected $_form_view;
+
+  /**
+   *
+   */
+  private $_initialized = false;
+
+  /**
+   * @return array
+   */
+  static function DELEGATES() {
+    return array( 'storage' => 'storage' );
+  }
 
   /**
    * $form_arg names that should not get a prefix.
@@ -58,6 +80,30 @@ class WP_Form extends WP_Metadata_Base {
     if ( ! is_object( $this->_form_view ) ) {
       $this->set_form_view( 'default' );
     }
+    /**
+     * @todo This needs to be moved/changes later once we understand how forms will be constructed.
+     */
+    $this->_initialize_form_fields( $object_type );
+  }
+
+  /**
+   * @param string $object_type
+   * @param bool|array $field_names
+   */
+  function _initialize_form_fields( $object_type, $field_names = false ) {
+    $this->fields = array();
+    if ( ! $field_names ) {
+      $field_names =  WP_Metadata::get_field_names( $object_type );
+    }
+    foreach( $field_names as $field_name ) {
+      $field = WP_Metadata::get_field( $field_name, $object_type, array(
+        'storage_type'    => $this->storage_type,
+        'storage_object'  => $this->storage_object
+      ));
+      if ( is_object( $field ) ) {
+        $this->add_field( $field );
+      }
+    }
   }
 
   /**
@@ -69,6 +115,21 @@ class WP_Form extends WP_Metadata_Base {
     } else {
       $form_view_class = $this->get_form_view_class( $view_name );
       $this->_form_view = new $form_view_class( $this, $view_name );
+    }
+  }
+
+
+  /**
+   * @param WP_Post|object $object
+   */
+  function set_storage_object( $object ) {
+    /**
+     * @var WP_Field_Base $field
+     */
+    foreach( $this->fields as $field ) {
+      if ( ! is_object( $field->storage->object ) ) {
+        $field->storage->object = $object;
+      }
     }
   }
 
@@ -105,10 +166,9 @@ class WP_Form extends WP_Metadata_Base {
   }
 
   /**
-   * @param string $field_name
    * @param WP_Field_Base $field
    */
-  function add_field( $field_name, $field ) {
+  function add_field( $field ) {
     $this->fields[$field->field_name] = $field;
   }
 

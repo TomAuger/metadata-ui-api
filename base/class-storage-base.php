@@ -18,7 +18,7 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
   /**
    * @var WP_Field_Base
    */
-  var $field;
+  var $owner;
 
   /**
    * $storage_arg names that should not get a prefix.
@@ -29,17 +29,17 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
    */
   static function NO_PREFIX() {
     return array(
-      'field',
+      'owner',
       'object',
     );
   }
 
   /**
-   * @param WP_Field_Base $field
+   * @param WP_Metadata_Base $owner
    * @param array $storage_args
    */
-  function __construct( $field, $storage_args = array() ) {
-    $this->field = $field;
+  function __construct( $owner, $storage_args = array() ) {
+    $this->owner = $owner;
     parent::__construct( $storage_args );
   }
 
@@ -57,15 +57,14 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
   }
 
   /**
-   * Name used for field key.
+   * Name used for owner key.
    *
-   * Most common example of a field key would be a meta key.
+   * Most common example of a owner key would be a meta key.
    *
-   * @param string $storage_key
    * @return string
    */
   function storage_key() {
-    return "_{$this->field->field_name}";
+    return '_' . $this->owner->storage_key();
   }
 
   /**

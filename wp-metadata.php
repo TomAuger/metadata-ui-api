@@ -54,12 +54,12 @@ class WP_Metadata {
   /**
    * @var array
    */
-  private static $_field_index = array();
+  private static $_form_args = array();
 
   /**
    * @var array
    */
-  private static $_form_index = array();
+  private static $_field_args = array();
 
   /**
    * @var array
@@ -182,42 +182,27 @@ class WP_Metadata {
    */
   static function _edit_post_form( $post ) {
     $post_type = $post->post_type;
-    self::_ensure_post_type_default_form( $post_type, $post );
-    $form_name = preg_replace( '#^edit_form_(.*)$#', '$1', current_action() );
-    if ( $form_name == get_post_type_object( $post_type )->default_form ) {
-      if ( $form = get_post_form( 'default', $post_type, array( 'object' => $post ) ) ) {
-        $form->the_form();
-      }
-    }
-  }
-
-  /**
-   * @param string $post_type
-   * @return bool
-   */
-  static function has_default_post_form( $post_type ) {
-    return ! empty( self::$_object_type_forms[wp_get_post_object_type( $post_type )] );
-  }
-
-  /**
-   * Ensures that the post type has a default form. Registers the default form if needed and adds fields.
-   *
-   * @internal
-   * @param string $post_type
-   * @param WP_Post $post
-   */
-  static function _ensure_post_type_default_form( $post_type, $post ) {
     $object_type = wp_get_post_object_type( $post_type );
-    if ( ! self::has_default_post_form( $post_type ) ) {
-      self::register_form( 'default', $object_type );
-    }
-    $form = self::get_form( 'default', $object_type );
-    if ( 0 == count( $form->fields ) && count( self::$_object_type_fields[$object_type] ) ) {
-      $field_args = array( 'storage_object' => $post );
-      foreach( self::$_object_type_fields[$object_type] as $field_name => $field ) {
-        $form->add_field( $field_name, self::get_field( $field_name, $object_type, $field_args ) );
+    $current_form = preg_replace( '#^edit_form_(.*)$#', '$1', current_action() );
+    if ( $current_form == get_post_type_object( $post_type )->default_form ) {
+      if ( ! self::form_registered( $current_form, $object_type ) ) {
+        self::register_form( $current_form, $object_type );
       }
+      $form = self::get_form( $current_form, $object_type );
+      $form->set_storage_object( $post );
+      $form->the_form();
     }
+  }
+
+  /**
+   * @param string $object_type
+   *
+   * @return array
+   */
+  static function get_field_names( $object_type ) {
+    return isset( self::$_object_type_fields[$object_type] )
+      ? array_keys( self::$_object_type_fields[$object_type] )
+      : array();
   }
 
   /**
@@ -229,15 +214,32 @@ class WP_Metadata {
    * @return WP_Field_Base
    */
   static function get_field( $field_name, $object_type, $field_args = array() ) {
-    $field = false;
-    if ( isset( self::$_object_type_fields[$object_type][$field_name] ) ) {
-      $field = self::$_object_type_fields[$object_type][$field_name];
-      if ( ! is_subclass_of( $field, 'WP_Field_Base' ) ) {
-        $field = self::make_field( $field_name, $object_type, $field_args );
-        self::$_object_type_fields[$object_type][$field_name] = $field;
-      }
-    }
+    $field_index = self::get_field_index( $field_name, $object_type );
+    $field_args = wp_parse_args( $field_args, self::get_field_args( $field_index ) );
+    $field = self::make_field( $field_name, $object_type, $field_args );
     return $field;
+  }
+
+  /**
+   * @param int $field_index
+   *
+   * @return bool|array
+   */
+  static function get_field_args( $field_index ) {
+    return isset( self::$_field_args[$field_index] ) ? self::$_field_args[$field_index] : false;
+  }
+
+  /**
+   * Retrieve a field
+   *
+   * @param string $field_name
+   * @param string|WP_Object_Type $object_type
+   * @return int
+   */
+  static function get_field_index( $field_name, $object_type ) {
+    return isset( self::$_object_type_fields[$object_type][$field_name] )
+      ? self::$_object_type_fields[$object_type][$field_name]
+      : false;
   }
 
   /**
@@ -251,51 +253,45 @@ class WP_Metadata {
    */
   static function make_field( $field_name, $object_type, $field_args = array() ) {
     $field = false;
-    if ( isset( self::$_object_type_fields[$object_type][$field_name] ) ) {
-      $field = self::$_object_type_fields[$object_type][$field_name];
-      if ( is_numeric( $field ) && isset( self::$_field_index[$field] ) ) {
-        $field_args = array_merge( self::$_field_index[$field], $field_args );
-      }
-      if ( ! isset( $field_args['field_type'] ) ) {
-        /*
-         * We have to do this normalization of the 'type' $arg prior to
-         * the Field classes __construct() because it drives the class used
-         * to instantiate the Field. All other $args can be normalized
-         * in the Field class constructor.
-         */
-        if ( ! isset( $field_args['type'] ) ) {
-          $field_args['field_type'] = 'text';
-        } else {
-          $field_args['field_type'] = $field_args['type'];
-          unset( $field_args['type'] );
-        }
-      }
+    if ( ! isset( $field_args['field_type'] ) ) {
       /*
-       * @var string|object $field_type If string, a class. If object a filepath to load a class and $args
+       * We have to do this normalization of the 'type' $arg prior to
+       * the Field classes __construct() because it drives the class used
+       * to instantiate the Field. All other $args can be normalized
+       * in the Field class constructor.
        */
-      $field_type = self::_get_field_type( $field_args['field_type'] );
-      if ( is_object( $field_type ) ) {
-        /**
-         * Field type is Class name with external filepath
-         */
-        if ( $field_type->filepath ) {
-          require_once( $field_type->filepath );
-        }
-        $field_type = $field_type->field_args;
+      if ( ! isset( $field_args['type'] ) ) {
+        $field_args['field_type'] = 'text';
+      } else {
+        $field_args['field_type'] = $field_args['type'];
+        unset( $field_args['type'] );
       }
-      if ( is_string( $field_type ) && class_exists( $field_type ) ) {
-        /**
-         * Field type is a Class name
-         */
-        $field = new $field_type( $field_name, $field_args );
+    }
+    /*
+     * @var string|object $field_type If string, a class. If object a filepath to load a class and $args
+     */
+    $field_type = self::_get_field_type( $field_args['field_type'] );
+    if ( is_object( $field_type ) ) {
+      /**
+       * Field type is Class name with external filepath
+       */
+      if ( $field_type->filepath ) {
+        require_once( $field_type->filepath );
+      }
+      $field_type = $field_type->field_args;
+    }
+    if ( is_string( $field_type ) && class_exists( $field_type ) ) {
+      /**
+       * Field type is a Class name
+       */
+      $field = new $field_type( $field_name, $field_args );
 
-      } else if ( is_array( $field_type ) ) {
-        /**
-         * Field type is a 'Prototype'
-         */
-        $field_args = wp_parse_args( $field_args, $field_type );
-        $field = self::make_field( $field_name, $object_type, $field_args );
-      }
+    } else if ( is_array( $field_type ) ) {
+      /**
+       * Field type is a 'Prototype'
+       */
+      $field_args = wp_parse_args( $field_args, $field_type );
+      $field = self::make_field( $field_name, $object_type, $field_args );
     }
     return $field;
   }
@@ -309,35 +305,50 @@ class WP_Metadata {
   }
 
   /**
+   * @param string $form_name
+   * @param string|WP_Object_Type $object_type
+   *
+   * @return bool
+   */
+  static function form_registered(  $form_name, $object_type ) {
+    return false !== self::get_form_index( $form_name, $object_type );
+  }
+
+  /**
    * Retrieve a form
    *
    * @param string $form_name
    * @param string|WP_Object_Type $object_type
    * @param array $form_args
    * @return WP_Form
-   *
-   * @todo Incorporate $form_args into object caching.
    */
   static function get_form( $form_name, $object_type, $form_args = array() ) {
-    $form = false;
-    if ( isset( self::$_object_type_forms[$object_type][$form_name] ) ) {
-      $form = self::$_object_type_forms[$object_type][$form_name];
-      if ( ! is_a( $form, 'WP_Form' ) ) {
-        if ( is_numeric( $form ) ) {
-          $form_args['form_index'] = $form;
-        } else if ( is_array( $form ) ) {
-          $form_args = wp_parse_args( $form_args, $form );
-        } else {
-          /**
-           * This is here for debugging only; do not expect this to happen.
-           */
-          $form_args['form'] = $form;
-        }
-        $form = self::make_form( $form_name, $object_type, $form_args );
-        self::$_object_type_forms[$object_type][$form_name] = $form;
-      }
-    }
+    $form_index = self::get_form_index( $form_name, $object_type );
+    $form_args = wp_parse_args( $form_args, self::get_form_args( $form_index ) );
+    $form = self::make_form( $form_name, $object_type, $form_args );
     return $form;
+  }
+
+  /**
+   * @param int $form_index
+   *
+   * @return bool|array
+   */
+  static function get_form_args( $form_index ) {
+    return isset( self::$_form_args[$form_index] ) ? self::$_form_args[$form_index] : false;
+  }
+
+  /**
+   * Retrieve a form
+   *
+   * @param string $form_name
+   * @param string|WP_Object_Type $object_type
+   * @return int
+   */
+  static function get_form_index( $form_name, $object_type ) {
+    return isset( self::$_object_type_forms[$object_type][$form_name] )
+      ? self::$_object_type_forms[$object_type][$form_name]
+      : false;
   }
 
   /**
@@ -347,10 +358,6 @@ class WP_Metadata {
    * @return WP_Form
    */
   static function make_form( $form_name, $object_type, $form_args = array() ) {
-    $form = false;
-    if ( is_numeric( $form_args ) && isset( self::$_form_index[$form_index = $form_args['form_index']] ) ) {
-      $form_args = self::$_form_index[$form_index];
-    }
     /**
      * @todo Support more than one type of form. Maybe. If needed.
      */
@@ -366,9 +373,9 @@ class WP_Metadata {
   static function register_field( $field_name, $object_type, $field_args = array() ) {
     $field_args['field_name'] = $field_name;
     $field_args['object_type'] = $object_type;
-    $field_args['field_index'] = count( self::$_field_index );
+    $field_args['field_index'] = count( self::$_field_args );
     self::$_object_type_fields[$object_type][$field_name] = $field_args['field_index'];
-    self::$_field_index[] = $field_args;
+    self::$_field_args[] = $field_args;
   }
 
   /**
@@ -379,9 +386,9 @@ class WP_Metadata {
   static function register_form( $form_name, $object_type, $form_args = array() ) {
     $form_args['form_name'] = $form_name;
     $form_args['object_type'] = $object_type;
-    $form_args['form_index'] = count( self::$_form_index );
+    $form_args['form_index'] = count( self::$_form_args );
     self::$_object_type_forms[$object_type][$form_name] = $form_args['form_index'];
-    self::$_form_index[] = $form_args;
+    self::$_form_args[] = $form_args;
   }
 
   /**
