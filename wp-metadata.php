@@ -200,6 +200,7 @@ class WP_Metadata {
    * @return array
    */
   static function get_field_names( $object_type ) {
+    $object_type = (string)$object_type;
     return isset( self::$_object_type_fields[$object_type] )
       ? array_keys( self::$_object_type_fields[$object_type] )
       : array();
@@ -237,6 +238,7 @@ class WP_Metadata {
    * @return int
    */
   static function get_field_index( $field_name, $object_type ) {
+    $object_type = (string)$object_type;
     return isset( self::$_object_type_fields[$object_type][$field_name] )
       ? self::$_object_type_fields[$object_type][$field_name]
       : false;

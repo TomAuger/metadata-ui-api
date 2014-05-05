@@ -84,6 +84,16 @@ class WP_Field_Base extends WP_Metadata_Base {
     );
   }
 
+
+  /**
+   * @return array
+   */
+  static function ABBREVIATIONS() {
+    return array(
+      'label' => 'label_text'
+    );
+  }
+
   /**
    * @return array|void
    */
@@ -107,20 +117,37 @@ class WP_Field_Base extends WP_Metadata_Base {
    * @param array $field_args
    */
   function __construct( $field_name, $field_args = array() ) {
-    $this->register_field_view( 'default', 'WP_Field_View' );
     $field_args['field_name'] = $field_name;
-    $this->view = $field_args['view'] = ! empty( $field_args['view'] ) ? $field_args['view'] : 'default';
-    $this->field_args = $field_args;
     parent::__construct( $field_args );
-    $this->_initialize_field_storage( $field_args );
-    //$this->set_field_view( $this->view, $this->get_view_args() );
   }
 
-  function _initialize_field_storage( $field_args ) {
+  /**
+   * @param array $field_args
+   * @return array
+   */
+  function pre_delegate_args( $field_args ) {
+    if ( ! empty( $field_args['view'] ) ) {
+      $this->view = $field_args['view'];
+      unset( $field_args['view'] );
+    } else {
+      $this->view = 'default';
+    }
+    return $field_args;
+  }
+
+  /**
+   * Register the default view for this class.
+   */
+  function initialize_class() {
+    $this->register_field_view( 'default', 'WP_Field_View' );
+  }
+
+  function initialize( $field_args ) {
     /**
      * @todo Update to instantiate via storage factory.
      */
     $this->storage = new WP_Meta_Storage( $this, $this->get_storage_args() );
+    $this->set_field_view( $this->view, $this->get_view_args() );
   }
 
   /**
@@ -136,7 +163,7 @@ class WP_Field_Base extends WP_Metadata_Base {
   function get_view_args() {
     return array_merge(
       $this->delegated_args['view'],
-      WP_Metadata::extract_prefixed_args( $this->field_args, $this->get_view_delegates() )
+      WP_Metadata::extract_prefixed_args( $this->args, $this->get_view_delegates() )
     );
   }
 

@@ -15,21 +15,19 @@ class WP_Field_Label_Feature extends WP_Field_Feature_Base {
    */
   var $label_text;
 
-//  /**
-//   * @return string
-//   */
-//  function get_feature_html() {
-//    $label_html = $this->html_element->get_element_html();
-//    //WP_Metadata::extract_prefixed_args( $args, )
-//    return WP_Metadata::get_element_html( $this->wrapper_tag(), array(), $label_html );
-//  }
-
   /**
    * @param WP_Field_Base $field
    * @param array $attributes
    */
   function __construct( $field, $attributes = array() ) {
     parent::__construct( $field, $attributes );
+  }
+
+  /**
+   * @return mixed|string
+   */
+  function html_value() {
+    return $this->label_text;
   }
 
 }

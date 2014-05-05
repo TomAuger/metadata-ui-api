@@ -40,7 +40,10 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
    * @return array
    */
   static function DELEGATES() {
-    return array( 'html' => 'html_element' );
+    return array(
+      'html'    => 'html_element',
+      'wrapper' => 'wrapper',
+    );
   }
 
   /**

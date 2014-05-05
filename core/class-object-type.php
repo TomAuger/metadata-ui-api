@@ -113,7 +113,7 @@ final class WP_Object_Type {
    * @return string
    */
   function __toString() {
-   return "{$this->object_type}/{$this->subtype}";
+   return "{$this->object_type}:{$this->subtype}";
   }
 
 }

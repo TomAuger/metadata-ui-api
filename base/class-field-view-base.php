@@ -91,6 +91,29 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
     }
 
   }
+
+
+  /**
+   * @param $args
+   */
+  function initialize( $args ) {
+    foreach( $this->get_feature_types() as $feature_type ) {
+      $this->delegated_args[$feature_type]['feature_type'] = $feature_type;
+      $feature = $this->field->make_field_feature( $feature_type, $this->get_feature_args( $feature_type ) );
+      $this->features[$feature_type] = $feature;
+    }
+  }
+
+  /**
+   * @param string $feature_type
+   *
+   * @return array
+   */
+  function get_feature_args( $feature_type ) {
+    $feature_args = array_merge( $this->field->delegated_args[$feature_type], $this->delegated_args[$feature_type] );
+    return $feature_args;
+  }
+
   /**
    * Return the HTML tag to be wrapper around the field.
    * @return array
@@ -121,17 +144,6 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
     return "{$this->field->field_name}-wrapper";
   }
 
-
-  /**
-   * @param $args
-   */
-  function initialize_args( $args ) {
-    foreach( $this->get_feature_types() as $feature_type ) {
-      $this->delegated_args[$feature_type]['feature_type'] = $feature_type;
-      $feature = $this->field->make_field_feature( $feature_type, $this->delegated_args[$feature_type] );
-      $this->features[$feature_type] = $feature;
-    }
-  }
 
   /**
    * Delegate to $field explicitly since it is defined in base class.

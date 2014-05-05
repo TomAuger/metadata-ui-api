@@ -16,12 +16,22 @@ abstract class WP_Metadata_Base {
   /**
    * @var array
    */
-  var $extra = array();
+  var $args = array();
+
+  /**
+   * @var array
+   */
+  var $extra_args = array();
 
   /**
    * @var array
    */
   var $delegated_args = array();
+
+  /**
+   * @var bool
+   */
+  private $_done_once = array();
 
   /**
    * Array of field names that should not get a prefix.
@@ -42,19 +52,33 @@ abstract class WP_Metadata_Base {
   }
 
   /**
+   * @return array
+   */
+  static function ABBREVIATIONS() {
+    return array();
+  }
+
+  /**
    * @param array $args
    */
   function __construct( $args = array() ) {
+    if ( ! isset( $this->_done_once[$this_class = get_class( $this )] ) ) {
+      $this->_done_once[$this_class] = true;
+      $this->_call_lineage( 'initialize_class' );
+    }
     $args = wp_parse_args( $args, $this->_call_lineage_value( 'default_args', array(), $args ) );
     if ( $this->_call_lineage_value( 'do_assign_args', true, $args ) ) {
+      $args = $this->_call_lineage_collect_array_elements( 'pre_expand_args', $args );
+      $args = $this->expand_args( $args );
       $args = $this->_call_lineage_collect_array_elements( 'pre_prefix_args', $args );
       $args = $this->prefix_args( $args );
       $args = $this->_call_lineage_collect_array_elements( 'pre_delegate_args', $args );
       $args = $this->delegate_args( $args );
       $args = $this->_call_lineage_collect_array_elements( 'pre_assign_args', $args );
+      $this->args = $args;
       $this->_call_lineage( 'assign_args', $args );
     }
-    $this->_call_lineage( 'initialize_args', $args );
+    $this->_call_lineage( 'initialize', $args );
   }
 
   /**
@@ -97,6 +121,23 @@ abstract class WP_Metadata_Base {
   }
 
   /**
+   * Returns an array of property abbreviations as array key and expansion as key vale.
+   *
+   * Subclasses should define DELEGATES() function:
+   *
+   *    return array(
+   *      $abbreviation1 => $expansion1,
+   *      ...,
+   *      $abbreviationN => $expansionN,
+   *    );
+   *
+   * @return array
+   */
+  function get_abbreviations() {
+    return $this->_call_lineage_collect_array_elements( 'ABBREVIATIONS' );
+  }
+
+  /**
    * @param string $constant_name
    * @param bool|string $class_name
    * @return mixed
@@ -111,6 +152,22 @@ abstract class WP_Metadata_Base {
       $value = constant( $constant_ref );
     }
     return $value;
+  }
+
+  /**
+   * @param array $args
+   * @return array
+   */
+  function expand_args( $args ) {
+    if ( count( $abbreviations = $this->get_abbreviations() ) ) {
+      foreach ( $abbreviations as $abbreviation => $expansion ) {
+        if ( isset( $args[ $abbreviation ] ) && ! isset( $args[ $expansion ] ) ) {
+          $args[ $expansion ] = $args[ $abbreviation ];
+          unset( $args[ $abbreviation ] );
+        }
+      }
+    }
+    return $args;
   }
 
   /**
@@ -146,7 +203,7 @@ abstract class WP_Metadata_Base {
   function delegate_args( $args ) {
     $class = get_class( $this ) ;
     $delegates = $this->get_delegates();
-    $this->delegated_args = WP_Metadata::extract_prefixed_args( $args, $delegates );
+    $this->delegated_args = WP_Metadata::extract_prefixed_args( $args, $delegates, 'strip_prefix=0' );
     return $args;
   }
 
@@ -168,7 +225,7 @@ abstract class WP_Metadata_Base {
       } else if ( $this->_non_public_property_exists( $property_name = "_{$name}" ) ) {
         $this->{$property_name} = $value;
       } else {
-        $this->extra[$name] = $value;
+        $this->extra_args[$name] = $value;
       }
     }
   }
@@ -294,7 +351,7 @@ abstract class WP_Metadata_Base {
    * @param string $method_name
    * @param array $args
    */
-  private function _call_lineage( $method_name, $args ) {
+  private function _call_lineage( $method_name, $args = array() ) {
     $lineage = wp_get_class_lineage( get_class( $this ), true );
     foreach( $lineage as $ancestor ) {
       if ( $this->_has_own_method( $ancestor, $method_name ) ) {
