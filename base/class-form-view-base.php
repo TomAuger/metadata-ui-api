@@ -9,7 +9,7 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
   /**
    *
    */
-  const HTML_TAG = 'div';
+  const HTML_TAG = 'div';     // @TODO Should this be WRAPPER_TAG
 
   /**
    * @var WP_Form
@@ -34,9 +34,10 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
    * @return string
    */
   function get_form_html() {
-    $attributes['html_id']    = $this->html_id();
-    $attributes['html_name']  = $this->html_name();
-    $attributes['html_class'] = $this->html_class();
+    // @TODO Should the following be wrapper vs. HTML? Or optionally both?
+    $attributes['id'] = $this->html_id();
+    $attributes['name'] = $this->html_name();
+    $attributes['class'] = $this->html_class() . (! empty( $attributes['class'] ) ? " {$attributes['class']}" : '' );
     $form_html = WP_Metadata::get_element_html( $this->html_tag(), $attributes, $this->get_form_fields_html() );
     return "\n<!-- WP_Metadata Form -->\n\n{$form_html}";
   }

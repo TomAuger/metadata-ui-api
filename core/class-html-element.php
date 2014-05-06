@@ -97,9 +97,7 @@ class WP_Html_Element extends WP_Metadata_Base {
     if ( ! $this->_attributes_parsed ) {
       $attributes = WP_Metadata::get_html_attributes( $this->tag_name );
       foreach( $this->_attributes as $name => $value ) {
-        if ( preg_match( '#^html_(.*?)$#', $name, $match ) ) {
-          $attributes[sanitize_key( $match[1] )] = esc_attr( $value );
-        }
+        $attributes[sanitize_key( $name )] = esc_attr( $value );
       }
       $this->_attributes = $attributes;
       $this->_attributes_parsed = true;

@@ -589,8 +589,11 @@ class WP_Metadata {
    * If found capture the non-prefixed key and value into $extracted_args for return.
    * (Stripping the prefix allows for nested values, i.e. 'label_html_class')
    *
+   * @note: If a string prefix is passed a single dimensional array is returned.
+   *        If an array of  prefixes is passed a two dimensional array is returned.
+   *
    * @param array $prefixed_args
-   * @param array $prefixes
+   * @param string|array $prefixes
    * @param array $args
    *
    * @return mixed
@@ -600,10 +603,10 @@ class WP_Metadata {
     $args = wp_parse_args( $args, array(
       'strip_prefix' => true,
     ));
-    if ( ! is_array( $prefixes ) ) {
-      $prefixes = array( $prefixes );
+    if ( is_string( $original = $prefixes ) ) {
+      $prefixes = array( $prefixes => $prefixes );
     }
-    if ( count( $prefixes ) ) {
+    if ( is_array( $prefixes ) && count( $prefixes ) ) {
       $extracted_args = array_fill_keys( array_keys( $prefixes ), array() );
       $match_regex = '#^(' . implode( '|', $prefixes ) . ')_(.*)$#';
       $delegate_args = array();
@@ -617,7 +620,7 @@ class WP_Metadata {
         }
       }
     }
-    return $extracted_args;
+    return is_string( $original ) ? $extracted_args[ $original ] : $extracted_args;
   }
 
   static function strip_arg_prefixes( $prefixed_args, $prefixes ) {

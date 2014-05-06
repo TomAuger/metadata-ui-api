@@ -57,45 +57,51 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
   }
 
   /**
-   * @param WP_Field_Base $field
-   * @param array $attributes
+   * @return array
    */
-  function __construct( $field, $attributes = array() ) {
+  static function TRANSFORMS() {
+    return array(
+      '^wrapper_([^_]+)$' => 'wrapper_html_$1',
+    );
+  }
+
+  /**
+   * @param WP_Field_Base $field
+   * @param array $args
+   */
+  function __construct( $field, $feature_args = array() ) {
 
     //$this->field =
-    $attributes['field'] = $field;
+    $feature_args['field'] = $field;
 
-    parent::__construct( $attributes );
+    parent::__construct( $feature_args );
+  }
+
+  function initialize( $feature_args ) {
 
     if ( ! is_object( $this->html_element ) ) {
-      $html_attributes = WP_Metadata::extract_prefixed_args( $attributes, 'html' );
+      $html_attributes = WP_Metadata::extract_prefixed_args( $feature_args, 'html' );
 
-      if ( empty( $html_attributes['html_id'] ) ) {
-        $html_attributes['html_id'] = $this->html_id();
-      }
-      if ( empty( $html_attributes['html_name'] ) ) {
-        $html_attributes['html_name'] = $this->html_name();
-      }
-      if ( empty( $html_attributes['html_class'] ) ) {
-        $html_attributes['html_class'] = $this->html_class();
-      }
-
+      $html_attributes['id'] = $this->html_id();
+      $html_attributes['name'] = $this->html_name();
+      $html_attributes['class'] = $this->html_class() . (
+        ! empty( $html_attributes['class'] )
+          ? " {$html_attributes['class']}"
+          : ''
+      );
       $this->html_element = WP_Metadata::get_html_element( $this->html_tag(), $html_attributes );
     }
 
     if ( ! is_object( $this->wrapper ) ) {
-      $wrapper_attributes = WP_Metadata::extract_prefixed_args( $attributes, 'wrapper' );
+      $wrapper_attributes = WP_Metadata::extract_prefixed_args( $feature_args, 'wrapper_html' );
 
-      if ( empty( $wrapper_attributes['html_id'] ) ) {
-        $wrapper_attributes['html_id'] = $this->wrapper_html_id();
-      }
-      if ( empty( $wrapper_attributes['html_name'] ) ) {
-        $wrapper_attributes['html_name'] = $this->wrapper_html_name();
-      }
-      if ( empty( $wrapper_attributes['html_class'] ) ) {
-        $wrapper_attributes['html_class'] = $this->wrapper_html_class();
-      }
-
+      $wrapper_attributes['id'] = $this->wrapper_html_id();
+      $wrapper_attributes['name'] = $this->wrapper_html_name();
+      $wrapper_attributes['class'] = $this->wrapper_html_class() . (
+        ! empty( $wrapper_attributes['class'] )
+          ? " {$wrapper_attributes['class']}"
+          : ''
+      );
       $this->wrapper = WP_Metadata::get_html_element( $this->wrapper_tag(), $wrapper_attributes );
     }
 
@@ -120,7 +126,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
    * @return bool|string
    */
   function html_class() {
-    return "field-{$this->feature_type}";
+    return "field-feature field-{$this->feature_type}";
   }
 
   /**

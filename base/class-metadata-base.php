@@ -59,6 +59,13 @@ abstract class WP_Metadata_Base {
   }
 
   /**
+   * @return array
+   */
+  static function TRANSFORMS() {
+    return array();
+  }
+
+  /**
    * @param array $args
    */
   function __construct( $args = array() ) {
@@ -72,6 +79,8 @@ abstract class WP_Metadata_Base {
       $args = $this->expand_args( $args );
       $args = $this->_call_lineage_collect_array_elements( 'pre_prefix_args', $args );
       $args = $this->prefix_args( $args );
+      $args = $this->_call_lineage_collect_array_elements( 'pre_transform_args', $args );
+      $args = $this->transform_args( $args );
       $args = $this->_call_lineage_collect_array_elements( 'pre_delegate_args', $args );
       $args = $this->delegate_args( $args );
       $args = $this->_call_lineage_collect_array_elements( 'pre_assign_args', $args );
@@ -138,6 +147,23 @@ abstract class WP_Metadata_Base {
   }
 
   /**
+   * Returns an array of property abbreviations as array key and expansion as key vale.
+   *
+   * Subclasses should define DELEGATES() function:
+   *
+   *    return array(
+   *      $abbreviation1 => $expansion1,
+   *      ...,
+   *      $abbreviationN => $expansionN,
+   *    );
+   *
+   * @return array
+   */
+  function get_transforms() {
+    return $this->_call_lineage_collect_array_elements( 'TRANSFORMS' );
+  }
+
+  /**
    * @param string $constant_name
    * @param bool|string $class_name
    * @return mixed
@@ -154,6 +180,27 @@ abstract class WP_Metadata_Base {
     return $value;
   }
 
+  /**
+   * @param array $args
+   * @return array
+   */
+  function transform_args( $args ) {
+    if ( count( $transforms = $this->get_transforms() ) ) {
+      foreach ( $transforms as $regex => $result ) {
+        foreach( $args as $name => $value ) {
+          if ( $match_count = preg_match( "#{$regex}#", $name, $matches ) ) {
+            unset( $args[ $name ] );
+            $name = $result;
+            for( $i = 1; $i <= $match_count; $i++ ) {
+              $name = str_replace( "\${$i}", $matches[$i], $name );
+            }
+            $args[ $name ] = $value;
+          }
+        }
+      }
+    }
+    return $args;
+  }
   /**
    * @param array $args
    * @return array
