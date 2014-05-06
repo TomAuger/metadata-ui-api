@@ -17,10 +17,10 @@ class WP_Field_Label_Feature extends WP_Field_Feature_Base {
 
   /**
    * @param WP_Field_Base $field
-   * @param array $attributes
+   * @param array $feature_args
    */
-  function __construct( $field, $attributes = array() ) {
-    parent::__construct( $field, $attributes );
+  function __construct( $field, $feature_args = array() ) {
+    parent::__construct( $field, $feature_args );
   }
 
   /**

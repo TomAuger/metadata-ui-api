@@ -118,6 +118,17 @@ class WP_Html_Element extends WP_Metadata_Base {
    * @param $attribute_name
    * @return mixed
    */
+  function set_attribute( $attribute_name, $value ) {
+    if ( ! $this->_attributes_parsed ) {
+      $this->attributes();
+    }
+    $this->_attributes[$attribute_name] = $value;
+  }
+
+  /**
+   * @param $attribute_name
+   * @return mixed
+   */
   function get_attribute_html( $attribute_name ) {
     $value = $this->get_attribute( $attribute_name );
     return $value ? " {$attribute_name}=\"{$value}\"" : false;

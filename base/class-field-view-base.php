@@ -3,11 +3,11 @@
 /**
  * Class WP_Field_View_Base
  * @mixin WP_Field_Base
- * @property WP_Field_Feature_Base $input
- * @property WP_Field_Feature_Base $label
- * @property WP_Field_Feature_Base $help
- * @property WP_Field_Feature_Base $message
- * @property WP_Field_Feature_Base $infobox
+ * @property WP_Field_Input_Feature $input
+ * @property WP_Field_Label_Feature $label
+ * @property WP_Field_Help_Feature $help
+ * @property WP_Field_Message_Feature $message
+ * @property WP_Field_Infobox_Feature $infobox
  */
 abstract class WP_Field_View_Base extends WP_Metadata_Base {
 
@@ -70,6 +70,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
        * Set $this->field before parent::__construct() because other initializes depend on it.
        */
       $this->field = $view_args['field'];
+      $this->field->view = $this;
     }
     $this->features = array_fill_keys( $this->get_feature_types(), array() );
     parent::__construct( $view_args );
@@ -94,6 +95,9 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
       $this->delegated_args[$feature_type]['feature_type'] = $feature_type;
       $feature = $this->field->make_field_feature( $feature_type, $this->get_feature_args( $feature_type ) );
       $this->features[$feature_type] = $feature;
+    }
+    if ( is_object( $label = $this->label ) ) {
+      $label->set_html_attribute( 'for', $this->input->html_id() );
     }
   }
 
@@ -247,6 +251,14 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
     $this->wrapper->element_value = $this->get_features_html();
     $feature_html = $this->wrapper->get_element_html();
     return $feature_html;
+  }
+
+  function set_html_attribute( $attribute_name, $value ) {
+    /**
+     * @var WP_Field_Feature_Base $feature
+     */
+    $input = $this->features['label'];
+    $this->set_html_attribute( $attribute_name, $value );
   }
 
 }

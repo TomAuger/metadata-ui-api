@@ -61,13 +61,13 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
    */
   static function TRANSFORMS() {
     return array(
-      '^wrapper_([^_]+)$' => 'wrapper_html_$1',
+      '^wrapper_([^_]+)$' => 'wrapper_html_$1',   // e.g. Allow wrapper_class as shortcut to wrapper_html_class.
     );
   }
 
   /**
    * @param WP_Field_Base $field
-   * @param array $args
+   * @param array $feature_args
    */
   function __construct( $field, $feature_args = array() ) {
 
@@ -189,4 +189,19 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
     return $feature_html;
   }
 
+  /**
+   * @param string $attribute_name
+   * @return mixed
+   */
+  function get_html_attribute( $attribute_name ) {
+    return $this->html_element->get_attribute( $attribute_name );
+  }
+
+  /**
+   * @param string $attribute_name
+   * @param mixed $value
+   */
+  function set_html_attribute( $attribute_name, $value ) {
+    $this->html_element->set_attribute( $attribute_name, $value );
+  }
 }
