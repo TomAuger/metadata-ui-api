@@ -13,6 +13,11 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
   /**
    *
    */
+  const HTML_TYPE = false;
+
+  /**
+   *
+   */
   const WRAPPER_TAG = 'div';
 
   /**
@@ -112,7 +117,14 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
    * @return array
    */
   function html_tag() {
-    return $this->constant( 'HTML_TAG' );
+    /**
+     * Ask the field if it has a specific HTML_TAG (i.e. "textarea", "select", etc.)
+     */
+    $html_tag = 'input' == $this->feature_type ? $this->field->constant( 'HTML_TAG' ) : false;
+    /**
+     * If no, ask the feature what HTML TAG to use (probably 'input').
+     */
+    return $html_tag ? $html_tag : $this->constant( 'HTML_TAG' );
   }
 
   /**

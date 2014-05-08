@@ -261,4 +261,34 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
     $this->set_html_attribute( $attribute_name, $value );
   }
 
+  /**
+   * Return the HTML tag to be used by this class.
+   * @return array
+   */
+  function html_tag() {
+    return $this->constant( 'HTML_TAG' );
+  }
+
+  /**
+   * @return bool|string
+   */
+  function html_id() {
+    return str_replace( '_', '-', $this->html_name() ) . '-' . $this->html_class();
+  }
+
+  /**
+   * @return bool|string
+   */
+  function html_class() {
+    return "metadata-form";
+  }
+
+  /**
+   * @return bool|string
+   */
+  function html_name() {
+    return $this->form->form_name;
+  }
+
 }
+
