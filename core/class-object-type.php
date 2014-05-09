@@ -20,7 +20,7 @@ final class WP_Object_Type {
 	protected static $_core_object_types = array(
 		'post' => array( 'has_subtype' => true ),
 		'user' => array( 'has_subtype' => false ),
-		'comment' => array( 'has_subtype' => false ),
+		'comment' => array( 'has_subtype' => false ), // @todo Set to true when comment types get core support
 	);
 
 	/**
