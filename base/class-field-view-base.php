@@ -11,30 +11,30 @@
  */
 abstract class WP_Field_View_Base extends WP_Metadata_Base {
 
-  /**
-   *
-   */
-  const WRAPPER_TAG = 'div';
+	/**
+	 *
+	 */
+	const WRAPPER_TAG = 'div';
 
-  /**
-   * @var string
-   */
-  var $view_name;
+	/**
+	 * @var string
+	 */
+	var $view_name;
 
-  /**
-   * @var WP_Field_Base
-   */
-  var $field;
+	/**
+	 * @var WP_Field_Base
+	 */
+	var $field;
 
-  /**
-   * @var bool|array
-   */
-  var $features = false;
+	/**
+	 * @var bool|array
+	 */
+	var $features = false;
 
-  /**
-   * @var WP_Html_Element
-   */
-  var $wrapper;
+	/**
+	 * @var WP_Html_Element
+	 */
+	var $wrapper;
 
   /**
    * CONSTANT method that maps $arg prefixes to delegated properties
@@ -42,6 +42,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @return array
    */
   static function DELEGATES() {
+
     return array(
       'label'   => 'label',
       'input'   => 'input',
@@ -49,14 +50,18 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
       'message' => 'message',
       'infobox' => 'infobox'
     );
+
   }
+
   /**
    * CONSTANT method that returns array of feature types for this class.
    *
    * @return array
    */
   static function FEATURE_TYPES() {
+
     return array_values( self::DELEGATES() );
+
   }
 
   /**
@@ -64,7 +69,9 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @param array $view_args
    */
   function __construct( $view_name, $view_args = array() ) {
+
     $view_args['view_name'] = $view_name;
+
     if ( ! empty( $view_args['field'] ) ) {
       /*
        * Set $this->field before parent::__construct() because other initializes depend on it.
@@ -72,7 +79,9 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
       $this->field = $view_args['field'];
       $this->field->view = $this;
     }
+
     $this->features = array_fill_keys( $this->get_feature_types(), array() );
+
     parent::__construct( $view_args );
 
     if ( ! is_object( $this->wrapper ) ) {
@@ -91,14 +100,19 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @param $args
    */
   function initialize( $args ) {
+
     foreach( $this->get_feature_types() as $feature_type ) {
       $this->delegated_args[$feature_type]['feature_type'] = $feature_type;
+
       $feature = $this->field->make_field_feature( $feature_type, $this->get_feature_args( $feature_type ) );
+
       $this->features[$feature_type] = $feature;
     }
+
     if ( is_object( $label = $this->label ) ) {
       $label->set_html_attribute( 'for', $this->input->html_id() );
     }
+
   }
 
   /**
@@ -107,9 +121,12 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @return array
    */
   function get_feature_args( $feature_type ) {
+
     $feature_args = array_merge( $this->field->delegated_args[$feature_type], $this->delegated_args[$feature_type] );
     $feature_args['field'] = $this->field;
+
     return $feature_args;
+
   }
 
   /**
@@ -117,36 +134,47 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @return array
    */
   function wrapper_tag() {
+
     return $this->constant( 'WRAPPER_TAG' );
+
   }
 
   /**
    * @return bool|string
    */
   function wrapper_html_id() {
+
     return str_replace( '_', '-', $this->field->field_name ) . '-' . $this->wrapper_html_class();
+
   }
 
   /**
    * @return bool|string
    */
   function wrapper_html_class() {
+
     return "metadata-field-wrapper";
+
   }
 
   /**
    * @return bool|string
    */
   function wrapper_html_name() {
+
     return "{$this->field->field_name}-wrapper";
+
   }
+
 
   /**
    * Delegate to $field explicitly since it is defined in base class.
    * @return array
    */
   function get_prefix() {
+
     return $this->field->get_prefix();
+
   }
 
   /**
@@ -154,7 +182,9 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @return array
    */
   function get_no_prefix() {
+
     return $this->field->get_no_prefix();
+
   }
 
   /**
@@ -163,13 +193,16 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @return array
    */
   function get_feature_types() {
+
     return $this->features ? array_keys( $this->features ) : $this->_call_lineage_collect_array_elements( 'FEATURE_TYPES' );
+
   }
 
   /**
    * Delegate accesses for missing poperties to the $field property
    *
    * @param string $property_name
+	 *
    * @return mixed
    */
   function __get( $property_name ) {
@@ -186,6 +219,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    *
    * @param string $property_name
    * @param mixed $value
+	 *
    * @return mixed
    */
   function __set( $property_name, $value ) {
@@ -202,6 +236,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    *
    * @param string $method_name
    * @param array $args
+	 *
    * @return mixed
    */
   function __call( $method_name, $args = array() ) {
@@ -216,47 +251,59 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @return bool
    */
   function __isset( $property_name ) {
+
     return isset( $this->features[$property_name] );
+
   }
 
   /**
    * @param array $attributes
+	 *
    * @return array
    */
   function filter_html_attributes( $attributes ) {
+
     return $attributes;
+
   }
 
   /**
    * @return array
    */
   function get_features_html() {
+
     $features_html = array();
+
     foreach( $this->get_feature_types() as $feature_type ) {
       /**
        * @var WP_Field_Feature_Base $feature
        */
       $feature = $this->features[$feature_type];
+
       $features_html[$feature_type] = $feature->get_feature_html();
     }
+
     return implode( "\n", $features_html );
+
   }
 
   /**
    * @return string
    */
   function get_field_html() {
+
     $this->wrapper->element_value = $this->get_features_html();
+
     $feature_html = $this->wrapper->get_element_html();
+
     return $feature_html;
+
   }
 
   function set_html_attribute( $attribute_name, $value ) {
-    /**
-     * @var WP_Field_Feature_Base $feature
-     */
-    $input = $this->features['label'];
+
     $this->set_html_attribute( $attribute_name, $value );
+
   }
 
   /**
@@ -264,29 +311,36 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    * @return array
    */
   function html_tag() {
+
     return $this->constant( 'HTML_TAG' );
+
   }
 
   /**
    * @return bool|string
    */
   function html_id() {
+
     return str_replace( '_', '-', $this->html_name() ) . '-' . $this->html_class();
+
   }
 
   /**
    * @return bool|string
    */
   function html_class() {
+
     return "metadata-form";
+
   }
 
   /**
    * @return bool|string
    */
   function html_name() {
+
     return $this->form->form_name;
+
   }
 
 }
-

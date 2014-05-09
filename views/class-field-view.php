@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Class WP_Field_View
  */

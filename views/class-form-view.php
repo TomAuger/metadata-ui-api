@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Class WP_Form_View
  */

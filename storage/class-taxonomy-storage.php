@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Class WP_Taxonomy_Storage
  *
@@ -7,32 +6,36 @@
  */
 class WP_Taxonomy_Storage extends WP_Storage_Base {
 
-  /**
-   *
-   */
-  const PREFIX = 'taxonomy_';
+	/**
+	 *
+	 */
+	const PREFIX = 'taxonomy_';
 
-  /**
-   * @return mixed $value
-   */
-  function get_value() {
-    return null;
-  }
+	/**
+	 * @return mixed $value
+	 */
+	function get_value() {
 
-  /**
-   * @param null|mixed $value
-   */
-  function update_value( $value = null ) {
+		return null;
 
-  }
+	}
 
-  /**
-   * Taxonomy Terms are the Field names.
-   *
-   * @return string
-   */
-  function storage_key() {
-    return null;
-  }
+	/**
+	 * @param null|mixed $value
+	 */
+	function update_value( $value = null ) {
+
+	}
+
+	/**
+	 * Taxonomy Terms are the Field names.
+	 *
+	 * @return string
+	 */
+	function storage_key() {
+
+		return null;
+
+	}
 
 }
