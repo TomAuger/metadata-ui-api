@@ -12,38 +12,38 @@ For this branch there is no documentation ready yet.
 ## Example:
 
 ```php
-/**
- * Example init of fields
- */
-	function example_init()  {
+	/**
+	 * Example init of fields
+	 */
+    function example_init()  {
 
-	register_post_type( 'pm_solution',  array(
-		'label'   =>  __( 'Solutions',  'pm-sherpa' ),
-		'public'  =>  true,
-		'rewrite' =>  true,
-		'form'    =>  'after-title'
-	) );
+		register_post_type( 'pm_solution',  array(
+			'label'   =>  __( 'Solutions',  'pm-sherpa' ),
+			'public'  =>  true,
+			'rewrite' =>  true,
+			'form'    =>  'after-title'
+		) );
 
-	register_post_field( 'website', 'pm_solution',  array(
-		'type'              =>  'url',
-		'label'             =>  __( 'Website',  'pm-sherpa' ),
-		'html_placeholder'  =>  'http://www.example.com',
-		'html_size'         =>  50
-	) );
+		register_post_field( 'website', 'pm_solution',  array(
+			'type'              =>  'url',
+			'label'             =>  __( 'Website',  'pm-sherpa' ),
+			'html_placeholder'  =>  'http://www.example.com',
+			'html_size'         =>  50
+		) );
 
-	register_post_field( 'tagline', 'pm_solution',  array(
-		'label'     =>  __( 'Tagline',  'pm-sherpa' ),
-		'html_size' =>  50
-	) );
+		register_post_field( 'tagline', 'pm_solution',  array(
+			'label'     =>  __( 'Tagline',  'pm-sherpa' ),
+			'html_size' =>  50
+		) );
 
-	register_post_field( 'blurb', 'pm_solution',  array(
-		'type'      =>  'textarea',
-		'label'     =>  __( 'Blurb',  'pm-sherpa' ),
-		'html_size' =>  160
-	) );
+		register_post_field( 'blurb', 'pm_solution',  array(
+			'type'      =>  'textarea',
+			'label'     =>  __( 'Blurb',  'pm-sherpa' ),
+			'html_size' =>  160
+		) );
 
-}
-add_action( 'init', 'example_init' );
+	}
+	add_action( 'init', 'example_init' );
 ```
 
 ##FAQ
