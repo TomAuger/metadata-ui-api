@@ -78,7 +78,7 @@ class WP_Form extends WP_Metadata_Base {
 
 	function initialize_class() {
 
-		$this->registerview( 'default', 'WP_Form_View' );
+		$this->register_view( 'default', 'WP_Form_View' );
 
 	}
 
@@ -126,7 +126,7 @@ class WP_Form extends WP_Metadata_Base {
 			$this->view = false;
 		}
 		else {
-			$form_view_class = $this->getview_class( $view_name );
+			$form_view_class = $this->get_view_class( $view_name );
 
 			$this->view = new $form_view_class( $this, $view_name );
 		}
@@ -152,12 +152,12 @@ class WP_Form extends WP_Metadata_Base {
 	/**
 	 * Register a class to be used as a form_view for the current class.
 	 *
-	 * $wp_form->registerview( 'post_admin', 'WP_Post_Adminview' );
+	 * $wp_form->register_view( 'post_admin', 'WP_Post_Adminview' );
 	 *
 	 * @param string $view_name The name of the view that is unique for this class.
 	 * @param string $class_name The class name for the View object.
 	 */
-	function registerview( $view_name, $class_name ) {
+	function register_view( $view_name, $class_name ) {
 
 		WP_Metadata::register_view( 'form', $view_name, $class_name, get_class( $this ) );
 
@@ -183,7 +183,7 @@ class WP_Form extends WP_Metadata_Base {
 	 *
 	 * @return string
 	 */
-	function getview_class( $view_name ) {
+	function get_view_class( $view_name ) {
 
 		return WP_Metadata::get_view_class( 'form', $view_name, get_class( $this ) );
 
