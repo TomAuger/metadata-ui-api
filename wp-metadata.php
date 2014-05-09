@@ -148,6 +148,9 @@ class WP_Metadata {
 			add_action( 'edit_form_after_title', array( __CLASS__, '_edit_post_form' ) );
 			add_action( 'edit_form_after_editor', array( __CLASS__, '_edit_post_form' ) );
 			add_action( 'edit_form_advanced', array( __CLASS__, '_edit_post_form' ) );
+
+			// @todo Add action / filter for Custom Fields meta box integration
+			// See https://github.com/wordpress-metadata/metadata-ui-api/issues/18
 		}
 
 	}
