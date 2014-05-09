@@ -21,6 +21,8 @@ final class WP_Object_Type {
 		'post' => array( 'has_subtype' => true ),
 		'user' => array( 'has_subtype' => false ),
 		'comment' => array( 'has_subtype' => false ), // @todo Set to true when comment types get core support
+		//'option' => array( 'has_subtype' => false ),
+		//'site-option' => array( 'has_subtype' => false )
 	);
 
 	/**
@@ -31,6 +33,26 @@ final class WP_Object_Type {
 		if ( $object_type ) {
 			$this->assign_type( $object_type );
 		}
+
+	}
+
+	/**
+	 * Register object type
+	 *
+	 * @param $object_type
+	 * @param $args
+	 *
+	 * @return bool Whether the object type was registered
+	 */
+	public static function register_object_type( $type, $args = array() ) {
+
+		if ( !isset( self::$_core_object_types[ $type ] ) ) {
+			self::$_core_object_types[ $type ] = $args;
+
+			return true;
+		}
+
+		return false;
 
 	}
 

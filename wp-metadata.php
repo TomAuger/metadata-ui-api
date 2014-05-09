@@ -8,6 +8,10 @@
  * @todo - Add an autoloader for most of these:
  */
 require( dirname( __FILE__ ) . '/functions.php' );
+require( dirname( __FILE__ ) . '/functions/post.php' );
+require( dirname( __FILE__ ) . '/functions/user.php' );
+require( dirname( __FILE__ ) . '/functions/comment.php' );
+require( dirname( __FILE__ ) . '/functions/option.php' );
 
 require( dirname( __FILE__ ) . '/base/class-metadata-base.php' );
 
