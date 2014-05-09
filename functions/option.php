@@ -6,7 +6,7 @@
  * @param string $option_group
  * @param array $form_args
  */
-function register_option_group_form( $form_name, $option_group, $form_args = array() ) {
+function register_option_form( $form_name, $option_group, $form_args = array() ) {
 
 	WP_Metadata::register_form( $form_name, "option:{$option_group}", $form_args );
 
@@ -32,7 +32,7 @@ function register_option_field( $field_name, $option_group, $field_args = array(
  *
  * @return WP_Form
  */
-function get_option_group_form( $form_name, $option_group, $form_args = array() ) {
+function get_option_form( $form_name, $option_group, $form_args = array() ) {
 
 	return WP_Metadata::get_form( $form_name, "option:{$option_group}", $form_args );
 
