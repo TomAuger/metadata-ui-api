@@ -115,7 +115,8 @@ class WP_Html_Element extends WP_Metadata_Base {
   }
 
   /**
-   * @param $attribute_name
+   * @param string $attribute_name
+   * @param mixed $value
    * @return mixed
    */
   function set_attribute( $attribute_name, $value ) {

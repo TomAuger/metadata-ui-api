@@ -23,7 +23,6 @@ class WP_Option_Storage extends WP_Storage_Base {
   }
 
   /**
-   * @param string $field_name
    * @param null|mixed $value
    */
   function update_value( $value = null ) {
@@ -38,7 +37,7 @@ class WP_Option_Storage extends WP_Storage_Base {
    * @return string
    */
   function storage_key() {
-    $field = $this->field;
+    $field = $this->owner;
     $object_type = $field->object_type;
     if ( $group = $object_type->subtype ) {
       $option_name = "_{WP_Metadata::$prefix}{$group}[{$field->field_name}]";

@@ -55,8 +55,8 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
    *
    * @return array
    */
-  function FEATURE_TYPES() {
-    return array_values( $this->DELEGATES() );
+  static function FEATURE_TYPES() {
+    return array_values( self::DELEGATES() );
   }
 
   /**
@@ -120,7 +120,6 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
     return $this->constant( 'WRAPPER_TAG' );
   }
 
-
   /**
    * @return bool|string
    */
@@ -141,7 +140,6 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
   function wrapper_html_name() {
     return "{$this->field->field_name}-wrapper";
   }
-
 
   /**
    * Delegate to $field explicitly since it is defined in base class.
