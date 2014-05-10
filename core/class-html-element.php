@@ -10,11 +10,6 @@ class WP_Html_Element extends WP_Metadata_Base {
 	const VOID_ELEMENTS = 'area|base|br|col|command|embed|hr|img|input|keygen|link|meta|param|source|track|wbr';
 
 	/**
-	 *
-	 */
-	const PREFIX = 'html_';
-
-	/**
 	 * @var string
 	 */
 	var $tag_name;

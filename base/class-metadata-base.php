@@ -58,15 +58,6 @@ abstract class WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
-	static function ABBREVIATIONS() {
-
-		return array();
-
-	}
-
-	/**
-	 * @return array
-	 */
 	static function TRANSFORMS() {
 
 		return array();
@@ -75,6 +66,9 @@ abstract class WP_Metadata_Base {
 
 	/**
 	 * @param array $args
+	 *
+	 * @todo Consider removing expand_args() and prefix_args() and just
+	 *
 	 */
 	function __construct( $args = array() ) {
 
@@ -86,20 +80,17 @@ abstract class WP_Metadata_Base {
 		$args = wp_parse_args( $args, $this->_call_lineage_value( 'default_args', array(), $args ) );
 
 		if ( $this->_call_lineage_value( 'do_assign_args', true, $args ) ) {
-			$args = $this->_call_lineage_collect_array_elements( 'pre_expand_args', $args );
 
-			$args = $this->expand_args( $args );
 			$args = $this->_call_lineage_collect_array_elements( 'pre_prefix_args', $args );
-
 			$args = $this->prefix_args( $args );
+
 			$args = $this->_call_lineage_collect_array_elements( 'pre_transform_args', $args );
-
 			$args = $this->transform_args( $args );
+
 			$args = $this->_call_lineage_collect_array_elements( 'pre_delegate_args', $args );
-
 			$args = $this->delegate_args( $args );
-			$args = $this->_call_lineage_collect_array_elements( 'pre_assign_args', $args );
 
+			$args = $this->_call_lineage_collect_array_elements( 'pre_assign_args', $args );
 			$this->args = $args;
 			$this->_call_lineage( 'assign_args', $args );
 
@@ -155,34 +146,18 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
-	 * Returns an array of property abbreviations as array key and expansion as key vale.
+	 * Returns an array of property transform regex as array key and expansion as key value.
 	 *
-	 * Subclasses should define DELEGATES() function:
-	 *
-	 *    return array(
-	 *      $abbreviation1 => $expansion1,
-	 *      ...,
-	 *      $abbreviationN => $expansionN,
-	 *    );
-	 *
-	 * @return array
-	 */
-	function get_abbreviations() {
-
-		return $this->_call_lineage_collect_array_elements( 'ABBREVIATIONS' );
-
-	}
-
-	/**
-	 * Returns an array of property abbreviations as array key and expansion as key vale.
-	 *
-	 * Subclasses should define DELEGATES() function:
+	 * Subclasses should define TRANSFORMS() function:
 	 *
 	 *    return array(
-	 *      $abbreviation1 => $expansion1,
+	 *      $regex1 => $transform1,
+	 *      $regex2 => $transform2,
 	 *      ...,
-	 *      $abbreviationN => $expansionN,
+	 *      $regexN => $transformN,
 	 *    );
+	 *
+	 * @note Multiple transforms can be applied so order is important.
 	 *
 	 * @return array
 	 */
@@ -225,15 +200,15 @@ abstract class WP_Metadata_Base {
 		if ( count( $transforms = $this->get_transforms() ) ) {
 			foreach ( $transforms as $regex => $result ) {
 				foreach ( $args as $name => $value ) {
-					if ( $match_count = preg_match( "#{$regex}#", $name, $matches ) ) {
-						unset( $args[ $name ] );
+					if (  preg_match( "#{$regex}#", $name, $matches ) ) {
 
-						$name = $result;
+						unset( $args[ $name = $result ] );
 
-						for ( $i = 1; $i <= $match_count; $i++ ) {
-							$name = str_replace( "\${$i}", $matches[ $i ], $name );
+						if ( 1 <= ( $match_count = count( $matches ) - 1 ) ) {
+							for ( $i = 1; $i <= $match_count; $i ++ ) {
+								$name = str_replace( '$' . $i, $matches[ $i ], $name );
+							}
 						}
-
 						$args[ $name ] = $value;
 					}
 				}
@@ -244,26 +219,6 @@ abstract class WP_Metadata_Base {
 
 	}
 
-	/**
-	 * @param array $args
-	 *
-	 * @return array
-	 */
-	function expand_args( $args ) {
-
-		if ( count( $abbreviations = $this->get_abbreviations() ) ) {
-			foreach ( $abbreviations as $abbreviation => $expansion ) {
-				if ( isset( $args[ $abbreviation ] ) && !isset( $args[ $expansion ] ) ) {
-					$args[ $expansion ] = $args[ $abbreviation ];
-
-					unset( $args[ $abbreviation ] );
-				}
-			}
-		}
-
-		return $args;
-
-	}
 
 	/**
 	 * Ensure all $args have the appropriate prefix.
@@ -282,10 +237,16 @@ abstract class WP_Metadata_Base {
 				 * For every $arg passed-in that does not contain an underscore ('_') prefix it with
 				 * value of PREFIX unless it's value is in NO_PREFIX.
 				 */
-				if ( false === strpos( $name, '_' ) && !preg_match( "#^({$no_prefix})$#", $name ) ) {
-					$args[ "{$delegate_prefix}{$name}" ] = $value;
+				if ( false === strpos( $name, '_' ) && ! preg_match( "#^({$no_prefix})$#", $name ) ) {
 
-					unset( $args[ $name ] );
+					if ( property_exists( $this, $property_name = "{$delegate_prefix}{$name}" ) ) {
+
+						$args[ $property_name ] = $value;
+
+						unset( $args[ $name ] );
+
+					}
+
 				}
 			}
 		}

@@ -26,11 +26,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 	var $field_name = false;
 
 	/**
-	 * @var bool|string
-	 */
-	var $field_label = false;
-
-	/**
 	 * @var bool
 	 */
 	var $field_required = false;
@@ -78,8 +73,21 @@ class WP_Field_Base extends WP_Metadata_Base {
 	static function DELEGATES() {
 
 		return array(
-			'view' => 'view',
+			'view'    => 'view',
 			'storage' => 'storage',
+		);
+
+	}
+
+
+	/**
+	 * @return array|void
+	 */
+	function get_delegates() {
+
+		return array_merge(
+			self::DELEGATES(),
+			$this->get_view_delegates()
 		);
 
 	}
@@ -87,20 +95,29 @@ class WP_Field_Base extends WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
-	static function ABBREVIATIONS() {
+	static function TRANSFORMS() {
+
+		/**
+		 * Create a regex to insure delegated and no_prefix $args are not matched
+		 * nor are $args that contain underscores.
+		 *
+		 * @see http://stackoverflow.com/a/5334825/102699 for 'not' regex logic
+		 */
+		$not_delegates = '^((?!' .
+			implode( '|', self::NO_PREFIX() ) .
+			implode( '|', self::DELEGATES() ) .
+		').*(?!_.*))$';
 
 		return array(
-			'label' => 'label_text'
+			'^label$'                           => 'label_text',
+			$not_delegates                      => 'html_$1',
+			'^input_([^_]+)$'                   => 'input_html_$1',
+			'^html_([^_]+)$'                    => 'input_html_$1',
+			'^wrapper_([^_]+)$'                 => 'input_wrapper_html_$1',
+			'^input_wrapper_([^_]+)$'           => 'input_wrapper_html_$1',
+			'(?:^|_)wrapper(_wrapper)+(?:_|$)'  => 'wrapper',
+			'(?:^|_)html(_html)+(?:_|$)'        => 'html',
 		);
-
-	}
-
-	/**
-	 * @return array|void
-	 */
-	function get_delegates() {
-
-		return array_merge( self::DELEGATES(), $this->get_view_delegates() );
 
 	}
 
@@ -183,7 +200,10 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function get_view_args() {
 
-		return array_merge( $this->delegated_args[ 'view' ], WP_Metadata::extract_prefixed_args( $this->args, $this->get_view_delegates() ) );
+		return array_merge(
+			$this->delegated_args[ 'view' ],
+			WP_Metadata::extract_prefixed_args( $this->args, $this->get_view_delegates()
+		));
 
 	}
 
@@ -207,8 +227,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 		if ( !$this->field_view_exists( $view_name ) ) {
 			$this->view = false;
-		}
-		else {
+		} else {
 			$view_args[ 'view_name' ] = $view_name;
 			$view_args[ 'field' ] = $this; // This is redundant, but that's okay
 			$this->view = $this->make_field_view( $view_name, $view_args );
@@ -226,8 +245,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 		if ( $feature_class = WP_Metadata::get_feature_type( $feature_type ) ) {
 			$feature = new $feature_class( $this, $feature_args );
-		}
-		else {
+		} else {
 			$feature = null;
 		}
 
@@ -340,7 +358,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function update_value( $value = null ) {
 
-		if ( !is_null( $value ) ) {
+		if ( ! is_null( $value ) ) {
 			$this->set_value( $value );
 		}
 		if ( $this->has_storage() ) {

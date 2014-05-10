@@ -240,4 +240,5 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 		$this->html_element->set_attribute( $attribute_name, $value );
 
 	}
+
 }
