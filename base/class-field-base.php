@@ -102,19 +102,32 @@ class WP_Field_Base extends WP_Metadata_Base {
 		 * nor are $args that contain underscores.
 		 *
 		 * @see http://stackoverflow.com/a/5334825/102699 for 'not' regex logic
+		 * @see http://www.rexegg.com/regex-lookarounds.html for negative lookaheads
+		 * @see http://ocpsoft.org/tutorials/regular-expressions/and-in-regex/ for logical 'and'
+		 * @see http://www.regular-expressions.info/refadv.html for "Keep text out of the regex match"
+		 *
+		 * @example Regex if 'foo' and 'bar' are no_prefix or delegates:
+		 *
+		 *  '^(?!(?|foo|bar)$)(?!.*_)(.*)'
+		 *
+		 * @note Other similar regex that might work the same
+		 *
+		 *  '^(?!foo$)(?!bar$)(?!.*_)(.*)';
+		 *  '^(?!(?>(foo|bar))$)(?!.*_)(.*)'
+		 *  '^(?!\K(foo|bar)$)(?!.*_)(.*)'
+		 *
+		 * Example matches any string except 'foo', 'bar' or one containing an underscore ('_').
 		 */
-		$not_delegates = '^((?!' .
-			implode( '|', self::NO_PREFIX() ) .
-			implode( '|', self::DELEGATES() ) .
-		').*(?!_.*))$';
+		$html_attributes = array_merge( self::NO_PREFIX(), self::DELEGATES() );
+		$html_attributes = '^(?!(?|' . implode( '|', $html_attributes ) . ')$)(?!.*_)(.*)$';
 
 		return array(
 			'^label$'                           => 'label_text',
-			$not_delegates                      => 'html_$1',
+			$html_attributes                    => 'html_$1',
 			'^input_([^_]+)$'                   => 'input_html_$1',
 			'^html_([^_]+)$'                    => 'input_html_$1',
-			'^wrapper_([^_]+)$'                 => 'input_wrapper_html_$1',
 			'^input_wrapper_([^_]+)$'           => 'input_wrapper_html_$1',
+			'^wrapper_([^_]+)$'                 => 'input_wrapper_html_$1',
 			'(?:^|_)wrapper(_wrapper)+(?:_|$)'  => 'wrapper',
 			'(?:^|_)html(_html)+(?:_|$)'        => 'html',
 		);
@@ -130,7 +143,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	static function NO_PREFIX() {
 
-		return array( 'value' );
+		return array(
+			'value',
+		);
 
 	}
 
@@ -157,9 +172,10 @@ class WP_Field_Base extends WP_Metadata_Base {
 			$this->view = $field_args[ 'view' ];
 
 			unset( $field_args[ 'view' ] );
-		}
-		else {
-			$this->view = 'default';
+
+		} else {
+
+		 	$this->view = 'default';
 		}
 
 		return $field_args;
@@ -171,7 +187,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function initialize_class() {
 
-		$this->register_field_view( 'default', 'WP_Field_View' );
+		WP_Metadata::register_field_view( 'default', 'WP_Field_View' );
 
 	}
 
@@ -225,7 +241,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function set_field_view( $view_name, $view_args = array() ) {
 
-		if ( !$this->field_view_exists( $view_name ) ) {
+		if ( ! WP_Metadata::field_view_exists( $view_name ) ) {
 			$this->view = false;
 		} else {
 			$view_args[ 'view_name' ] = $view_name;
@@ -269,32 +285,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	}
 
-	/**
-	 * Register a class to be used as a field_view for the current class.
-	 *
-	 * $wp_field->register_field_view( 'default', 'WP_Field_View' );
-	 *
-	 * @param string $view_name The name of the view that is unique for this class.
-	 * @param string $class_name The class name for the View object.
-	 */
-	function register_field_view( $view_name, $class_name ) {
-
-		WP_Metadata::register_view( 'field', $view_name, $class_name, get_class( $this ) );
-
-	}
-
-	/**
-	 * Does the named field view exist
-	 *
-	 * @param string $view_name The name of the view that is unique for this class.
-	 *
-	 * @return bool
-	 */
-	function field_view_exists( $view_name ) {
-
-		return WP_Metadata::view_exists( 'field', $view_name, get_class( $this ) );
-
-	}
 
 	/**
 	 * Retrieve the class name for a named view.

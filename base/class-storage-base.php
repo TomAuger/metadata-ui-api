@@ -36,7 +36,7 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @param WP_Metadata_Base $owner
+	 * @param object|WP_Metadata_Base $owner
 	 * @param array $storage_args
 	 */
 	function __construct( $owner, $storage_args = array() ) {
@@ -81,7 +81,11 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 	 */
 	function object_id() {
 
-		return $this->object->{self::OBJECT_ID};
+		if ( is_object( $this->object ) && property_exists( $this->object, self::OBJECT_ID ) ) {
+			return $this->object->{self::OBJECT_ID};
+		} else {
+			return null;
+		}
 
 	}
 
@@ -90,7 +94,7 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 	 */
 	function set_object_id( $object_id ) {
 
-		if ( property_exists( $this->object, self::OBJECT_ID ) ) {
+		if ( is_object( $this->object ) && property_exists( $this->object, self::OBJECT_ID ) ) {
 			$this->object->{self::OBJECT_ID} = $object_id;
 		}
 

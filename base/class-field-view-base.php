@@ -337,7 +337,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	 */
 	function html_name() {
 
-		return $this->form->form_name;
+		return $this->field->field_name;
 
 	}
 

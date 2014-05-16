@@ -202,14 +202,16 @@ abstract class WP_Metadata_Base {
 				foreach ( $args as $name => $value ) {
 					if (  preg_match( "#{$regex}#", $name, $matches ) ) {
 
-						unset( $args[ $name = $result ] );
+					   	$args['transformed_args'][$name] = $value;
+						unset( $args[ $name ] );
 
+						$new_name = $result;
 						if ( 1 <= ( $match_count = count( $matches ) - 1 ) ) {
 							for ( $i = 1; $i <= $match_count; $i ++ ) {
-								$name = str_replace( '$' . $i, $matches[ $i ], $name );
+								$new_name = str_replace( '$' . $i, $matches[ $i ], $new_name );
 							}
 						}
-						$args[ $name ] = $value;
+						$args[ $new_name ] = $value;
 					}
 				}
 			}

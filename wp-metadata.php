@@ -28,6 +28,7 @@ require( dirname( __FILE__ ) . '/base/class-field-view-base.php' );
 require( dirname( __FILE__ ) . '/storage/class-core-storage.php' );
 require( dirname( __FILE__ ) . '/storage/class-meta-storage.php' );
 require( dirname( __FILE__ ) . '/storage/class-option-storage.php' );
+require( dirname( __FILE__ ) . '/storage/class-memory-storage.php' );
 
 require( dirname( __FILE__ ) . '/forms/class-form.php' );
 
@@ -35,6 +36,7 @@ require( dirname( __FILE__ ) . '/fields/class-text-field.php' );
 require( dirname( __FILE__ ) . '/fields/class-textarea-field.php' );
 require( dirname( __FILE__ ) . '/fields/class-url-field.php' );
 require( dirname( __FILE__ ) . '/fields/class-date-field.php' );
+require( dirname( __FILE__ ) . '/fields/class-hidden-field.php' );
 
 require( dirname( __FILE__ ) . '/features/class-field-input-feature.php' );
 require( dirname( __FILE__ ) . '/features/class-field-label-feature.php' );
@@ -44,6 +46,7 @@ require( dirname( __FILE__ ) . '/features/class-field-infobox-feature.php' );
 
 require( dirname( __FILE__ ) . '/views/class-form-view.php' );
 require( dirname( __FILE__ ) . '/views/class-field-view.php' );
+require( dirname( __FILE__ ) . '/views/class-hidden-field-view.php' );
 
 /**
  * Class WP_Metadata
@@ -117,6 +120,9 @@ class WP_Metadata {
 		self::register_field_type( 'textarea', 'WP_TextArea_Field' );
 		self::register_field_type( 'url', 'WP_Url_Field' );
 		self::register_field_type( 'date', 'WP_Date_Field' );
+		self::register_field_type( 'hidden', 'WP_Hidden_Field' );
+
+		self::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
 
 		self::initialize_feature_type_registry();
 		self::register_feature_type( 'input', 'WP_Field_Input_Feature' );
@@ -133,6 +139,8 @@ class WP_Metadata {
 		self::register_storage( 'core', 'WP_Core_Storage' );
 		self::register_storage( 'option', 'WP_Option_Storage' );
 		self::register_storage( 'taxonomy', 'WP_Taxonomy_Storage' );
+		self::register_storage( 'memory', 'WP_Memory_Storage' );
+
 
 		//    /**
 		//     * Hook a different hook differently based on how the page is loaded to initialize the fields.
@@ -148,16 +156,109 @@ class WP_Metadata {
 		add_action( 'registered_post_type', array( __CLASS__, '_registered_post_type' ), 10, 2 );
 
 		if ( is_admin() ) {
+			add_action( 'admin_init', array( __CLASS__, '_admin_init' ) );
+		}
+
+	}
+
+	/**
+	 *
+	 */
+	static function _admin_init() {
+		if ( WP_Metadata::is_post_edit_screen() ) {
 			add_action( 'edit_form_top', array( __CLASS__, '_edit_post_form' ) );
 			add_action( 'edit_form_after_title', array( __CLASS__, '_edit_post_form' ) );
 			add_action( 'edit_form_after_editor', array( __CLASS__, '_edit_post_form' ) );
 			add_action( 'edit_form_advanced', array( __CLASS__, '_edit_post_form' ) );
 
-			// @todo Add action / filter for Custom Fields meta box integration
-			// See https://github.com/wordpress-metadata/metadata-ui-api/issues/18
+//			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
+
+			add_action( 'save_post' . self::get_current_screen()->post_type, '_save_post' );
 		}
+	}
+
+	/**
+	 * @return bool
+	 *
+	 * @todo For Core dev review. Better way?
+	 */
+	static function is_post_edit_screen() {
+
+		global $pagenow;
+		return 'post.php' == $pagenow || 'post-new.php' == $pagenow;
 
 	}
+
+	/**
+	 * Grabs the current or a new WP_screen object.
+	 *
+	 * Tries to get the current one but if it's not available then it hacks it's way to recreate one
+	 * because WordPress does not consistently set it, and it's not our place to change it's state.
+	 * We just want what we want.
+	 *
+	 * @return WP_Screen
+	 *
+	 * @todo For Core dev review. Better way?
+	 */
+	static function get_current_screen() {
+
+		$screen = get_current_screen();
+		if ( empty( $screen ) ) {
+			global $hook_suffix, $page_hook, $plugin_page, $pagenow, $current_screen;
+			if ( empty( $hook_suffix ) ) {
+				$save_hook_suffix    = $hook_suffix;
+				$save_current_screen = $current_screen;
+				if ( isset( $page_hook ) ) {
+					$hook_suffix = $page_hook;
+				} else if ( isset( $plugin_page ) ) {
+					$hook_suffix = $plugin_page;
+				} else if ( isset( $pagenow ) ) {
+					$hook_suffix = $pagenow;
+				}
+				set_current_screen();
+				$screen         = get_current_screen();
+				$hook_suffix    = $save_hook_suffix;
+				$current_screen = $save_current_screen;
+			}
+		}
+
+		return $screen;
+	}
+
+	/**
+	 * @param int $post_id
+	 * @param WP_Post $post
+	 * @param bool $update
+	 */
+	static function _save_post( $post_id, $post, $update ) {
+		$forms = self::get_post_admin_forms( $post->post_type );
+		if ( count( $forms ) && isset( $_POST['sunrise_fields'] ) && is_array( $POST_fields = $_POST['sunrise_fields'] ) ) {
+			/**
+			 * @var Sunrise_Form_Base $form
+			 */
+			foreach ( $forms as $form_name => $form ) {
+				$form->object_id = $post_id;
+				/**
+				 * @var Sunrise_Field_Base $field
+				 */
+				foreach ( $form->get_fields() as $field_name => $field ) {
+					if ( isset( $POST_fields[ $field_name ] ) ) {
+						$field->update_value( $POST_fields[ $field_name ] );
+					}
+				}
+			}
+		}
+	}
+
+
+
+
+
+
+
+
+
+
 
 	/**
 	 * @param string $post_type
@@ -650,19 +751,21 @@ class WP_Metadata {
 	}
 
 	/**
-	 * Register a class to be used as a field_view for the current class.
+	 * Register a class to be used as a view for the current class.
 	 *
-	 * $wp_field->register_field_view( 'default', 'WP_Field_View' );
+	 * @example
 	 *
-	 * @param string $view_name The name of the view that is unique for this class.
+	 *      WP_Metadata::register_view( 'field', 'default', 'WP_Field_View' );
+	 *      WP_Metadata::register_view( 'field', 'hidden', 'WP_Hidden_Field_View' );
+	 *
 	 * @param string $view_type Type of view
+	 * @param string $view_name The name of the view that is unique for this class.
 	 * @param string $class_name The class name for the View object.
-	 * @param string $associated_class
 	 */
-	static function register_view( $view_type, $view_name, $class_name, $associated_class ) {
+	static function register_view( $view_type, $view_name, $class_name ) {
 
-		if ( !self::view_exists( $view_name, $view_type, $associated_class ) ) {
-			self::$_views[ $view_type ][ $associated_class ][ $view_name ] = $class_name;
+		if ( !self::view_exists( $view_name, $view_type ) ) {
+			self::$_views[ $view_type ][ $view_name ] = $class_name;
 		}
 
 	}
@@ -672,13 +775,12 @@ class WP_Metadata {
 	 *
 	 * @param string $view_name The name of the view that is unique for this class.
 	 * @param string $view_type Type of view
-	 * @param string $associated_class
 	 *
 	 * @return bool
 	 */
-	static function view_exists( $view_type, $view_name, $associated_class ) {
+	static function view_exists( $view_type, $view_name ) {
 
-		return isset( self::$_views[ $view_type ][ $associated_class ][ $view_name ] );
+		return isset( self::$_views[ $view_type ][ $view_name ] );
 
 	}
 
@@ -687,16 +789,58 @@ class WP_Metadata {
 	 *
 	 * @param string $view_type Type of view
 	 * @param string $view_name The name of the view that is unique for this class.
-	 * @param string $associated_class
 	 *
 	 * @return string
 	 */
-	static function get_view_class( $view_type, $view_name, $associated_class ) {
+	static function get_view_class( $view_type, $view_name ) {
 
-		return self::view_exists( $view_type, $view_name, $associated_class ) ? self::$_views[ $view_type ][ $associated_class ][ $view_name ] : false;
+		return self::view_exists( $view_type, $view_name ) ? self::$_views[ $view_type ][ $view_name ] : false;
 
 	}
 
+	/**
+	 * Register a class to be used as a view for the current class.
+	 *
+	 * @example
+	 *
+	 *      WP_Metadata::register_field_view( 'default', 'WP_Field_View' );
+	 *      WP_Metadata::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
+	 *
+	 * @param string $view_name The name of the view that is unique for this class.
+	 * @param string $class_name The class name for the View object.
+	 */
+	static function register_field_view( $view_name, $class_name ) {
+
+		self::register_view( 'field', $view_name, $class_name );
+
+	}
+
+	/**
+	 * Does the named field view exist?
+	 *
+	 * @param string $view_name The name of the view that is unique for this class.
+	 *
+	 * @return bool
+	 */
+	static function field_view_exists( $view_name ) {
+
+		return self::view_exists( 'field', $view_name );
+
+	}
+
+
+	/**
+	 * Retrieve the class name for a named view.
+	 *
+	 * @param string $view_name The name of the view that is unique for this class.
+	 *
+	 * @return string
+	 */
+	static function get_field_view_class( $view_name ) {
+
+		return self::get_view_class( 'field', $view_name );
+
+	}
 	/*********************************************/
 	/***  Field Feature Type Registry Methods  ***/
 	/*********************************************/

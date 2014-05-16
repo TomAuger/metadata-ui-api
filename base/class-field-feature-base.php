@@ -85,7 +85,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 
 	function initialize( $feature_args ) {
 
-		if ( !is_object( $this->html_element ) ) {
+		if ( ! is_object( $this->html_element ) ) {
 			$html_attributes = WP_Metadata::extract_prefixed_args( $feature_args, 'html' );
 
 			$html_attributes[ 'id' ] = $this->html_id();
@@ -129,7 +129,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	function html_id() {
 
-		return str_replace( '_', '-', $this->field->field_name ) . "-field-{$this->feature_type}";
+		return str_replace( '_', '-', $this->field->view->html_id() ) . "-field-{$this->feature_type}";
 
 	}
 
@@ -147,7 +147,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	function html_name() {
 
-		return $this->field->field_name;
+		return $this->field->view->html_name();
 
 	}
 
@@ -209,10 +209,20 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	/**
 	 * @return string
 	 */
-	function get_feature_html() {
+	function get_element_html() {
 
 		$this->html_element->element_value = $this->html_value();
-		$this->wrapper->element_value = $this->html_element->get_element_html();
+
+		return $this->html_element->get_element_html();
+
+	}
+
+	/**
+	 * @return string
+	 */
+	function get_feature_html() {
+
+		$this->wrapper->element_value = $this->get_element_html();
 
 		$feature_html = $this->wrapper->get_element_html();
 
