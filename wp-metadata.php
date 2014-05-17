@@ -4,49 +4,61 @@
  * Description: Feature-as-a-plugin offering Forms & Fields for WordPress, initially forms for post admin edit but later for users, comments, taxonomy terms, options, etc.
  */
 
-/**
- * @todo - Add an autoloader for most of these:
- */
 require( dirname( __FILE__ ) . '/functions.php' );
 require( dirname( __FILE__ ) . '/functions/post.php' );
 require( dirname( __FILE__ ) . '/functions/user.php' );
 require( dirname( __FILE__ ) . '/functions/comment.php' );
 require( dirname( __FILE__ ) . '/functions/option.php' );
 
-require( dirname( __FILE__ ) . '/base/class-metadata-base.php' );
+function wp_metadata_autoload( $class ) {
+	static $classes = null;
 
-require( dirname( __FILE__ ) . '/core/class-object-type.php' );
-require( dirname( __FILE__ ) . '/core/class-html-element.php' );
-require( dirname( __FILE__ ) . '/core/class-registry.php' );
+	if ( $classes === null ) {
+		$classes = array(
+				'wp_metadata_base'		=> dirname( __FILE__ ) . '/base/class-metadata-base.php',
 
-require( dirname( __FILE__ ) . '/base/class-storage-base.php' );
-require( dirname( __FILE__ ) . '/base/class-field-base.php' );
-require( dirname( __FILE__ ) . '/base/class-field-feature-base.php' );
-require( dirname( __FILE__ ) . '/base/class-form-view-base.php' );
-require( dirname( __FILE__ ) . '/base/class-field-view-base.php' );
+				'wp_object_type'		=> dirname( __FILE__ ) . '/core/class-object-type.php',
+				'wp_html_element'		=> dirname( __FILE__ ) . '/core/class-html-element.php',
+				'wp_registry'			=> dirname( __FILE__ ) . '/core/class-registry.php',
 
-require( dirname( __FILE__ ) . '/storage/class-core-storage.php' );
-require( dirname( __FILE__ ) . '/storage/class-meta-storage.php' );
-require( dirname( __FILE__ ) . '/storage/class-option-storage.php' );
-require( dirname( __FILE__ ) . '/storage/class-memory-storage.php' );
+				'wp_storage_base'		=> dirname( __FILE__ ) . '/base/class-storage-base.php',
+				'wp_field_base'			=> dirname( __FILE__ ) . '/base/class-field-base.php',
+				'wp_field_feature_base'		=> dirname( __FILE__ ) . '/base/class-field-feature-base.php',
+				'wp_form_view_base'		=> dirname( __FILE__ ) . '/base/class-form-view-base.php',
+				'wp_field_view_base'		=> dirname( __FILE__ ) . '/base/class-field-view-base.php',
 
-require( dirname( __FILE__ ) . '/forms/class-form.php' );
+				'wp_core_storage'		=> dirname( __FILE__ ) . '/storage/class-core-storage.php',
+				'wp_meta_storage'		=> dirname( __FILE__ ) . '/storage/class-meta-storage.php',
+				'wp_option_storage'		=> dirname( __FILE__ ) . '/storage/class-option-storage.php',
+				'wp_memory_storage'		=> dirname( __FILE__ ) . '/storage/class-memory-storage.php',
 
-require( dirname( __FILE__ ) . '/fields/class-text-field.php' );
-require( dirname( __FILE__ ) . '/fields/class-textarea-field.php' );
-require( dirname( __FILE__ ) . '/fields/class-url-field.php' );
-require( dirname( __FILE__ ) . '/fields/class-date-field.php' );
-require( dirname( __FILE__ ) . '/fields/class-hidden-field.php' );
+				'wp_form'			=> dirname( __FILE__ ) . '/forms/class-form.php',
 
-require( dirname( __FILE__ ) . '/features/class-field-input-feature.php' );
-require( dirname( __FILE__ ) . '/features/class-field-label-feature.php' );
-require( dirname( __FILE__ ) . '/features/class-field-help-feature.php' );
-require( dirname( __FILE__ ) . '/features/class-field-message-feature.php' );
-require( dirname( __FILE__ ) . '/features/class-field-infobox-feature.php' );
+				'wp_text_field'			=> dirname( __FILE__ ) . '/fields/class-text-field.php',
+				'wp_textarea_field'		=> dirname( __FILE__ ) . '/fields/class-textarea-field.php',
+				'wp_url_field'			=> dirname( __FILE__ ) . '/fields/class-url-field.php',
+				'wp_date_field'			=> dirname( __FILE__ ) . '/fields/class-date-field.php',
+				'wp_hidden_field'		=> dirname( __FILE__ ) . '/fields/class-hidden-field.php',
 
-require( dirname( __FILE__ ) . '/views/class-form-view.php' );
-require( dirname( __FILE__ ) . '/views/class-field-view.php' );
-require( dirname( __FILE__ ) . '/views/class-hidden-field-view.php' );
+				'wp_field_input_feature'	=> dirname( __FILE__ ) . '/features/class-field-input-feature.php',
+				'wp_field_label_feature'	=> dirname( __FILE__ ) . '/features/class-field-label-feature.php',
+				'wp_field_help_feature'		=> dirname( __FILE__ ) . '/features/class-field-help-feature.php',
+				'wp_field_message_feature'	=> dirname( __FILE__ ) . '/features/class-field-message-feature.php',
+				'wp_field_infobox_feature'	=> dirname( __FILE__ ) . '/features/class-field-infobox-feature.php',
+
+				'wp_form_view'			=> dirname( __FILE__ ) . '/views/class-form-view.php',
+				'wp_field_view'			=> dirname( __FILE__ ) . '/views/class-field-view.php',
+				'wp_hidden_field_view'		=> dirname( __FILE__ ) . '/views/class-hidden-field-view.php',
+		);
+	}
+
+	$cn = strtolower( $class );
+
+	if ( isset( $classes[$cn] ) ) {
+		require_once( $classes[$cn] );
+	}
+}
+spl_autoload_register( 'wp_metadata_autoload' );
 
 /**
  * Class WP_Metadata
