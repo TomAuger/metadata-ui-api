@@ -202,7 +202,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	function html_value() {
 
-		return $this->field->get_value();
+		return $this->field->value();
 
 	}
 

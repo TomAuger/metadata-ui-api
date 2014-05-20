@@ -11,16 +11,17 @@ class WP_Memory_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
+	const STORAGE_TYPE = 'memory';
+
+	/**
+	 *
+	 */
 	const PREFIX = 'memory_';
 
 	/**
 	 * @var mixed
 	 */
 	private $_value = null;
-
-	function __construct() {
-		parent::__construct( $object );
-	}
 
 	/**
 	 * @return mixed $value

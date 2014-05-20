@@ -142,7 +142,7 @@ class WP_Form extends WP_Metadata_Base {
 		 * @var WP_Field_Base $field
 		 */
 		foreach ( $this->fields as $field ) {
-			if ( !is_object( $field->storage->object ) ) {
+			if ( ! is_object( $field->storage->object ) ) {
 				$field->storage->object = $object;
 			}
 		}

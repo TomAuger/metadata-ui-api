@@ -7,6 +7,11 @@ class WP_Meta_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
+	const STORAGE_TYPE = 'meta';
+
+	/**
+	 *
+	 */
 	const PREFIX = 'meta_';
 
 	/**

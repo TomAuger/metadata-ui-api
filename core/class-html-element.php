@@ -92,6 +92,10 @@ class WP_Html_Element extends WP_Metadata_Base {
 
 		$html = array();
 
+		if ( isset( $valid_attributes['value'] ) ) {
+			$attributes['value'] = esc_attr( $this->element_value );
+		}
+
 		foreach ( $attributes as $name => $value ) {
 			if ( $value && isset( $valid_attributes[ $name ] ) ) {
 				$html[] = "{$name}=\"{$value}\"";

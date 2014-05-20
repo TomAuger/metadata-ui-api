@@ -163,6 +163,18 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	/**
 	 * @param array $field_args
+	 * @return string
+	 */
+	function default_args( $field_args ) {
+
+		return wp_parse_args( $field_args, array(
+			'storage' => 'meta',
+		));
+
+	}
+
+	/**
+	 * @param array $field_args
 	 *
 	 * @return array
 	 */
@@ -193,12 +205,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	function initialize( $field_args ) {
 
-		/**
-		 * @todo Update to instantiate via storage factory.
-		 */
-		$this->storage = new WP_Meta_Storage( $this, $this->get_storage_args() );
+		$this->initialize_storage( $this->storage, $this->get_storage_args() );
 
-		$this->set_field_view( $this->view, $this->get_view_args() );
+		$this->initialize_field_view( $this->view, $this->get_view_args() );
 
 	}
 
@@ -239,7 +248,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 * @param string $view_name
 	 * @param array $view_args
 	 */
-	function set_field_view( $view_name, $view_args = array() ) {
+	function initialize_field_view( $view_name, $view_args = array() ) {
 
 		if ( ! WP_Metadata::field_view_exists( $view_name ) ) {
 			$this->view = false;
@@ -248,6 +257,21 @@ class WP_Field_Base extends WP_Metadata_Base {
 			$view_args[ 'field' ] = $this; // This is redundant, but that's okay
 			$this->view = $this->make_field_view( $view_name, $view_args );
 		}
+
+	}
+
+	/**
+	 * @param string $storage_type_name
+	 * @param array $storage_type_args
+	 */
+	function initialize_storage( $storage_type_name, $storage_type_args = array() ) {
+
+		if ( ! WP_Metadata::storage_type_exists( $storage_type_name ) ) {
+			$storage_type_name = WP_Meta_Storage::STORAGE_TYPE;
+		}
+		$storage_args[ 'owner' ] = $this;
+		$this->storage = $this->make_storage( $storage_type_name, $storage_type_args );
+
 
 	}
 
@@ -266,6 +290,24 @@ class WP_Field_Base extends WP_Metadata_Base {
 		}
 
 		return $feature;
+
+	}
+
+	/**
+	 * @param string $storage_type
+	 * @param array $storage_args
+	 *
+	 * @return null|WP_Storage_Base
+	 */
+	function make_storage( $storage_type, $storage_args ) {
+
+		if ( $storage_class = WP_Metadata::get_storage_type_class( $storage_type ) ) {
+			$storage = new $storage_class( $this, $storage_args );
+		} else {
+			$storage = null;
+		}
+
+		return $storage;
 
 	}
 
@@ -308,7 +350,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function value() {
 
-		if ( is_null( $this->_value ) && $this->has_storage() ) {
+		if ( is_null( $this->_value ) && $this->field->has_storage() ) {
 			$this->_value = $this->get_value();
 		}
 
@@ -342,6 +384,15 @@ class WP_Field_Base extends WP_Metadata_Base {
 		$this->_value = $value;
 
 	}
+
+//	/**
+//	 * @return WP_Field_Input_Feature
+//	 */
+//	function get_input_feature() {
+//
+//		return $this->view->features['input'];
+//
+//	}
 
 	/**
 	 * @param null|mixed $value

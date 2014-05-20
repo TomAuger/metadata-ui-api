@@ -5,6 +5,11 @@
 class WP_Core_Storage extends WP_Storage_Base {
 
 	/**
+	 *
+	 */
+	const STORAGE_TYPE = 'core';
+
+	/**
 	 * @return mixed $value
 	 */
 	function get_value() {

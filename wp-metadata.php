@@ -84,16 +84,6 @@ class WP_Metadata {
 	private static $_field_types = array();
 
 	/**
-	 * @var WP_Registry
-	 */
-	private static $_feature_type_registry = array();
-
-	/**
-	 * @var array
-	 */
-	private static $_storages = array();
-
-	/**
 	 * @var array
 	 */
 	private static $_element_attributes = array();
@@ -102,6 +92,16 @@ class WP_Metadata {
 	 * @var array
 	 */
 	private static $_views = array();
+
+	/**
+	 * @var WP_Registry
+	 */
+	private static $_feature_type_registry = array();
+
+	/**
+	 * @var WP_Registry
+	 */
+	private static $_storage_type_registry = array();
 
 	/**
 	 *
@@ -134,12 +134,12 @@ class WP_Metadata {
 		/*
 		 * Register "storage" classes
 		 */
-		//self::$_storage_registry = new WP_Registry();
-		self::register_storage( 'meta', 'WP_Meta_Storage' );
-		self::register_storage( 'core', 'WP_Core_Storage' );
-		self::register_storage( 'option', 'WP_Option_Storage' );
-		self::register_storage( 'taxonomy', 'WP_Taxonomy_Storage' );
-		self::register_storage( 'memory', 'WP_Memory_Storage' );
+		self::initialize_storage_type_registry();
+		self::register_storage_type( 'meta', 'WP_Meta_Storage' );
+		self::register_storage_type( 'core', 'WP_Core_Storage' );
+		self::register_storage_type( 'option', 'WP_Option_Storage' );
+		self::register_storage_type( 'taxonomy', 'WP_Taxonomy_Storage' );
+		self::register_storage_type( 'memory', 'WP_Memory_Storage' );
 
 
 		//    /**
@@ -173,7 +173,7 @@ class WP_Metadata {
 
 //			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
 
-			add_action( 'save_post' . self::get_current_screen()->post_type, '_save_post' );
+			add_action( 'save_post_' . self::get_current_screen()->post_type, array( __CLASS__, '_save_post' ), 10, 3 );
 		}
 	}
 
@@ -226,13 +226,50 @@ class WP_Metadata {
 	}
 
 	/**
+	 * @param string|WP_Object_Type $object_type
+	 * @param bool|array $form_names
+	 *
+	 * @return array
+	 */
+	static function get_forms( $object_type, $form_names = false ) {
+		$forms = array();
+
+		if ( isset( self::$_object_type_forms[$object_type] ) ) {
+			$forms = self::$_object_type_forms[ $object_type ];
+		}
+
+		if ( $form_names ) {
+			if ( is_array( $form_names ) ) {
+				$form_names = array_flip( $form_names );
+			} else {
+				$form_names = array( $form_names => 0 );
+			}
+			$forms = array_intersect_key( $forms, $form_names );
+		}
+
+		foreach( $forms as $form_name => $form_args ) {
+			$forms[$form_name] = self::make_form( $form_name, $object_type, $form_args );
+		}
+
+		return $forms;
+	}
+
+	static function get_form_names_from_POST() {
+		$form_names = array();
+		if ( isset( $_POST['wp_metadata_forms'] ) && is_array( $_POST['wp_metadata_forms'] ) && count( $_POST['wp_metadata_forms'] ) ) {
+			$form_names = $_POST['wp_metadata_forms'];
+		}
+		return $form_names;
+	}
+
+	/**
 	 * @param int $post_id
 	 * @param WP_Post $post
 	 * @param bool $update
 	 */
 	static function _save_post( $post_id, $post, $update ) {
-		$forms = self::get_post_admin_forms( $post->post_type );
-		if ( count( $forms ) && isset( $_POST['sunrise_fields'] ) && is_array( $POST_fields = $_POST['sunrise_fields'] ) ) {
+		$forms = get_post_forms( $post->post_type, self::get_form_names_from_POST() );
+		if ( count( $forms ) ) {
 			/**
 			 * @var Sunrise_Form_Base $form
 			 */
@@ -249,16 +286,6 @@ class WP_Metadata {
 			}
 		}
 	}
-
-
-
-
-
-
-
-
-
-
 
 	/**
 	 * @param string $post_type
@@ -391,9 +418,11 @@ class WP_Metadata {
 			 * in the Field class constructor.
 			 */
 			if ( !isset( $field_args[ 'type' ] ) ) {
+
 				$field_args[ 'field_type' ] = 'text';
-			}
-			else {
+
+			} else {
+
 				$field_args[ 'field_type' ] = $field_args[ 'type' ];
 
 				unset( $field_args[ 'type' ] );
@@ -409,6 +438,7 @@ class WP_Metadata {
 			/**
 			 * Field type is Class name with external filepath
 			 */
+
 			if ( $field_type->filepath ) {
 				require_once( $field_type->filepath );
 			}
@@ -417,18 +447,21 @@ class WP_Metadata {
 		}
 
 		if ( is_string( $field_type ) && class_exists( $field_type ) ) {
+
 			/**
 			 * Field type is a Class name
 			 */
 			$field = new $field_type( $field_name, $field_args );
 
-		}
-		elseif ( is_array( $field_type ) ) {
+		} else if ( is_array( $field_type ) ) {
+
 			/**
 			 * Field type is a 'Prototype'
 			 */
 			$field_args = wp_parse_args( $field_args, $field_type );
+
 			$field = self::make_field( $field_name, $object_type, $field_args );
+
 		}
 
 		return $field;
@@ -567,16 +600,6 @@ class WP_Metadata {
 	static function register_field_type( $type_name, $type_args = array() ) {
 
 		self::$_field_types[ $type_name ] = $type_args;
-
-	}
-
-	/**
-	 * @param string $storage_name - Name of storage
-	 * @param bool|string $storage_args - Classname
-	 */
-	static function register_storage( $storage_name, $storage_args = false ) {
-
-		self::$_storages[ $storage_name ] = $storage_args;
 
 	}
 
@@ -828,7 +851,6 @@ class WP_Metadata {
 
 	}
 
-
 	/**
 	 * Retrieve the class name for a named view.
 	 *
@@ -860,15 +882,58 @@ class WP_Metadata {
 	 */
 	static function register_feature_type( $feature_type, $feature_class ) {
 
-		self::$_feature_type_registry->register_item( $feature_type, $feature_class );
+		self::$_feature_type_registry->register_entry( $feature_type, $feature_class );
 
 	}
 
 	static function get_feature_type( $feature_type ) {
 
-		return self::$_feature_type_registry->get_item( $feature_type );
+		return self::$_feature_type_registry->get_entry( $feature_type );
 
 	}
+
+	/*********************************************/
+	/***  Field Storage Type Registry Methods  ***/
+	/*********************************************/
+
+	/**
+	 *
+	 */
+	static function initialize_storage_type_registry() {
+
+		self::$_storage_type_registry = new WP_Registry();
+
+	}
+
+	/**
+	 * @param string $storage_type_name - Name of storage
+	 * @param bool|string $storage_type_class - Classname
+	 */
+	static function register_storage_type( $storage_type_name, $storage_type_class = false ) {
+
+		self::$_storage_type_registry->register_entry( $storage_type_name, $storage_type_class );
+
+	}
+
+	static function get_storage_type_class( $storage_type ) {
+
+		return self::$_storage_type_registry->get_entry( $storage_type );
+
+	}
+
+	/**
+	 * Does the named field view exist?
+	 *
+	 * @param string $storage_type_name The name of the view that is unique for this class.
+	 *
+	 * @return bool
+	 */
+	static function storage_type_exists( $storage_type_name ) {
+
+		return self::$_storage_type_registry->entry_exists( $storage_type_name );
+
+	}
+
 
 	/*********************************************/
 	/*** Prefix related methods                ***/

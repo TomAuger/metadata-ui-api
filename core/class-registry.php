@@ -7,7 +7,7 @@ class WP_Registry extends WP_Metadata_Base {
 	/**
 	 * @var array
 	 */
-	private static $_items = array();
+	private $_entries = array();
 
 	/**
 	 * @param string $name
@@ -15,11 +15,11 @@ class WP_Registry extends WP_Metadata_Base {
 	 *
 	 * @return int
 	 */
-	function register_item( $name, $args ) {
+	function register_entry( $name, $args ) {
 
-		$index = count( self::$_items );
+		$index = count( $this->_entries );
 
-		self::$_items[ $name ] = $args;
+		$this->_entries[ $name ] = $args;
 
 		return $index;
 
@@ -30,9 +30,9 @@ class WP_Registry extends WP_Metadata_Base {
 	 *
 	 * @return mixed
 	 */
-	function get_item( $name ) {
+	function get_entry( $name ) {
 
-		return isset( self::$_items[ $name ] ) ? self::$_items[ $name ] : null;
+		return isset( $this->_entries[ $name ] ) ? $this->_entries[ $name ] : null;
 
 	}
 
@@ -41,9 +41,9 @@ class WP_Registry extends WP_Metadata_Base {
 	 *
 	 * @return bool
 	 */
-	function item_exists( $name ) {
+	function entry_exists( $name ) {
 
-		return isset( self::$_items[ $name ] );
+		return $name && is_string( $name ) && isset( $this->_entries[ $name ] );
 
 	}
 

@@ -9,6 +9,11 @@ class WP_Taxonomy_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
+	const STORAGE_TYPE = 'taxonomy';
+
+	/**
+	 *
+	 */
 	const PREFIX = 'taxonomy_';
 
 	/**

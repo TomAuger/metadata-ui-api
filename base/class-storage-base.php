@@ -7,6 +7,11 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 	/**
 	 *
 	 */
+	const STORAGE_TYPE = 'unspecified';
+
+	/**
+	 *
+	 */
 	const OBJECT_ID = 'ID';
 
 	/**

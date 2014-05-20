@@ -7,6 +7,11 @@ class WP_Option_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
+	const STORAGE_TYPE = 'option';
+
+	/**
+	 *
+	 */
 	const PREFIX = 'option_';
 
 	/**

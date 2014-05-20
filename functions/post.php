@@ -50,3 +50,15 @@ function get_post_form( $form_name, $post_type, $form_args = array() ) {
 	return WP_Metadata::get_form( $form_name, wp_get_post_object_type( $post_type ), $form_args );
 
 }
+
+/**
+ * @param string $post_type
+ * @param bool|array $form_names
+ *
+ * @return array
+ */
+function get_post_forms( $post_type, $form_names = false ) {
+
+	return WP_Metadata::get_forms( wp_get_post_object_type( $post_type ), $form_names );
+
+}
