@@ -10,56 +10,6 @@ require( dirname( __FILE__ ) . '/functions/user.php' );
 require( dirname( __FILE__ ) . '/functions/comment.php' );
 require( dirname( __FILE__ ) . '/functions/option.php' );
 
-function wp_metadata_autoload( $class ) {
-	static $classes = null;
-
-	if ( $classes === null ) {
-		$classes = array(
-				'wp_metadata_base'		=> dirname( __FILE__ ) . '/base/class-metadata-base.php',
-
-				'wp_object_type'		=> dirname( __FILE__ ) . '/core/class-object-type.php',
-				'wp_html_element'		=> dirname( __FILE__ ) . '/core/class-html-element.php',
-				'wp_registry'			=> dirname( __FILE__ ) . '/core/class-registry.php',
-
-				'wp_storage_base'		=> dirname( __FILE__ ) . '/base/class-storage-base.php',
-				'wp_field_base'			=> dirname( __FILE__ ) . '/base/class-field-base.php',
-				'wp_field_feature_base'		=> dirname( __FILE__ ) . '/base/class-field-feature-base.php',
-				'wp_form_view_base'		=> dirname( __FILE__ ) . '/base/class-form-view-base.php',
-				'wp_field_view_base'		=> dirname( __FILE__ ) . '/base/class-field-view-base.php',
-
-				'wp_core_storage'		=> dirname( __FILE__ ) . '/storage/class-core-storage.php',
-				'wp_meta_storage'		=> dirname( __FILE__ ) . '/storage/class-meta-storage.php',
-				'wp_option_storage'		=> dirname( __FILE__ ) . '/storage/class-option-storage.php',
-				'wp_memory_storage'		=> dirname( __FILE__ ) . '/storage/class-memory-storage.php',
-
-				'wp_form'			=> dirname( __FILE__ ) . '/forms/class-form.php',
-
-				'wp_text_field'			=> dirname( __FILE__ ) . '/fields/class-text-field.php',
-				'wp_textarea_field'		=> dirname( __FILE__ ) . '/fields/class-textarea-field.php',
-				'wp_url_field'			=> dirname( __FILE__ ) . '/fields/class-url-field.php',
-				'wp_date_field'			=> dirname( __FILE__ ) . '/fields/class-date-field.php',
-				'wp_hidden_field'		=> dirname( __FILE__ ) . '/fields/class-hidden-field.php',
-
-				'wp_field_input_feature'	=> dirname( __FILE__ ) . '/features/class-field-input-feature.php',
-				'wp_field_label_feature'	=> dirname( __FILE__ ) . '/features/class-field-label-feature.php',
-				'wp_field_help_feature'		=> dirname( __FILE__ ) . '/features/class-field-help-feature.php',
-				'wp_field_message_feature'	=> dirname( __FILE__ ) . '/features/class-field-message-feature.php',
-				'wp_field_infobox_feature'	=> dirname( __FILE__ ) . '/features/class-field-infobox-feature.php',
-
-				'wp_form_view'			=> dirname( __FILE__ ) . '/views/class-form-view.php',
-				'wp_field_view'			=> dirname( __FILE__ ) . '/views/class-field-view.php',
-				'wp_hidden_field_view'		=> dirname( __FILE__ ) . '/views/class-hidden-field-view.php',
-		);
-	}
-
-	$cn = strtolower( $class );
-
-	if ( isset( $classes[$cn] ) ) {
-		require_once( $classes[$cn] );
-	}
-}
-spl_autoload_register( 'wp_metadata_autoload' );
-
 /**
  * Class WP_Metadata
  */
@@ -120,6 +70,8 @@ class WP_Metadata {
 	 */
 	static function on_load() {
 
+		spl_autoload_register( array( __CLASS__, 'autoloader' ) );
+
 		//    self::$_object_type_field_registry = new WP_Registry();
 		//    self::$_object_type_form_registry = new WP_Registry();
 		//    self::$_view_registry = new WP_Registry();
@@ -169,6 +121,50 @@ class WP_Metadata {
 
 		if ( is_admin() ) {
 			add_action( 'admin_init', array( __CLASS__, '_admin_init' ) );
+		}
+
+	}
+
+	/**
+	 * @param string $class_name
+	 */
+	static function autoloader( $class_name ) {
+		static $classes;
+
+		if ( ! isset( $classes ) ) {
+			$classes = array(
+				'wp_object_type'           => '/core/class-object-type.php',
+				'wp_html_element'          => '/core/class-html-element.php',
+				'wp_registry'              => '/core/class-registry.php',
+				'wp_metadata_base'         => '/base/class-metadata-base.php',
+				'wp_storage_base'          => '/base/class-storage-base.php',
+				'wp_field_base'            => '/base/class-field-base.php',
+				'wp_field_feature_base'    => '/base/class-field-feature-base.php',
+				'wp_form_view_base'        => '/base/class-form-view-base.php',
+				'wp_field_view_base'       => '/base/class-field-view-base.php',
+				'wp_core_storage'          => '/storage/class-core-storage.php',
+				'wp_meta_storage'          => '/storage/class-meta-storage.php',
+				'wp_option_storage'        => '/storage/class-option-storage.php',
+				'wp_memory_storage'        => '/storage/class-memory-storage.php',
+				'wp_form'                  => '/forms/class-form.php',
+				'wp_text_field'            => '/fields/class-text-field.php',
+				'wp_textarea_field'        => '/fields/class-textarea-field.php',
+				'wp_url_field'             => '/fields/class-url-field.php',
+				'wp_date_field'            => '/fields/class-date-field.php',
+				'wp_hidden_field'          => '/fields/class-hidden-field.php',
+				'wp_field_input_feature'   => '/features/class-field-input-feature.php',
+				'wp_field_label_feature'   => '/features/class-field-label-feature.php',
+				'wp_field_help_feature'    => '/features/class-field-help-feature.php',
+				'wp_field_message_feature' => '/features/class-field-message-feature.php',
+				'wp_field_infobox_feature' => '/features/class-field-infobox-feature.php',
+				'wp_form_view'             => '/views/class-form-view.php',
+				'wp_field_view'            => '/views/class-field-view.php',
+				'wp_hidden_field_view'     => '/views/class-hidden-field-view.php',
+			);
+		}
+
+		if ( isset( $classes[ $class_name = strtolower( $class_name ) ] ) ) {
+			require_once( dirname( __FILE__ ) . $classes[$class_name] );
 		}
 
 	}
@@ -981,7 +977,6 @@ class WP_Metadata {
 		if ( is_array( $prefixes ) && count( $prefixes ) ) {
 			$extracted_args = array_fill_keys( array_keys( $prefixes ), array() );
 			$match_regex = '#^(' . implode( '|', $prefixes ) . ')_(.*)$#';
-			$delegate_args = array();
 
 			foreach ( $prefixed_args as $arg_name => $arg_value ) {
 				if ( preg_match( $match_regex, $arg_name, $match ) ) {
