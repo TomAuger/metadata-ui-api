@@ -9,7 +9,7 @@ This is a project of the [WordPress core Options/Metadata team](http://make.word
 
 We are preparing to start documenting things now that we have our initial base code, check back soon!
 
-Want to help? Check the Contributing section below for more details.
+Want to help? Check the [Contributing](https://github.com/wordpress-metadata/metadata-ui-api#contributing) section below for more details.
 
 ## Example:
 
