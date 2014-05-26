@@ -81,7 +81,7 @@ class WP_Metadata {
 		 */
 		//self::$_field_type_registry = new WP_Registry();
 		self::register_field_type( 'text', 'WP_Text_Field' );
-		self::register_field_type( 'textarea', 'WP_TextArea_Field' );
+		self::register_field_type( 'textarea', 'WP_Textarea_Field' );
 		self::register_field_type( 'url', 'WP_Url_Field' );
 		self::register_field_type( 'date', 'WP_Date_Field' );
 		self::register_field_type( 'hidden', 'WP_Hidden_Field' );
@@ -133,37 +133,37 @@ class WP_Metadata {
 
 		if ( ! isset( $classes ) ) {
 			$classes = array(
-				'wp_object_type'           => '/core/class-object-type.php',
-				'wp_html_element'          => '/core/class-html-element.php',
-				'wp_registry'              => '/core/class-registry.php',
-				'wp_metadata_base'         => '/base/class-metadata-base.php',
-				'wp_storage_base'          => '/base/class-storage-base.php',
-				'wp_field_base'            => '/base/class-field-base.php',
-				'wp_field_feature_base'    => '/base/class-field-feature-base.php',
-				'wp_form_view_base'        => '/base/class-form-view-base.php',
-				'wp_field_view_base'       => '/base/class-field-view-base.php',
-				'wp_core_storage'          => '/storage/class-core-storage.php',
-				'wp_meta_storage'          => '/storage/class-meta-storage.php',
-				'wp_option_storage'        => '/storage/class-option-storage.php',
-				'wp_memory_storage'        => '/storage/class-memory-storage.php',
-				'wp_form'                  => '/forms/class-form.php',
-				'wp_text_field'            => '/fields/class-text-field.php',
-				'wp_textarea_field'        => '/fields/class-textarea-field.php',
-				'wp_url_field'             => '/fields/class-url-field.php',
-				'wp_date_field'            => '/fields/class-date-field.php',
-				'wp_hidden_field'          => '/fields/class-hidden-field.php',
-				'wp_field_input_feature'   => '/features/class-field-input-feature.php',
-				'wp_field_label_feature'   => '/features/class-field-label-feature.php',
-				'wp_field_help_feature'    => '/features/class-field-help-feature.php',
-				'wp_field_message_feature' => '/features/class-field-message-feature.php',
-				'wp_field_infobox_feature' => '/features/class-field-infobox-feature.php',
-				'wp_form_view'             => '/views/class-form-view.php',
-				'wp_field_view'            => '/views/class-field-view.php',
-				'wp_hidden_field_view'     => '/views/class-hidden-field-view.php',
+				'WP_Object_Type'           => '/core/class-object-type.php',
+				'WP_Html_Element'          => '/core/class-html-element.php',
+				'WP_Registry'              => '/core/class-registry.php',
+				'WP_Metadata_Base'         => '/base/class-metadata-base.php',
+				'WP_Storage_Base'          => '/base/class-storage-base.php',
+				'WP_Field_Base'            => '/base/class-field-base.php',
+				'WP_Field_Feature_Base'    => '/base/class-field-feature-base.php',
+				'WP_Form_View_Base'        => '/base/class-form-view-base.php',
+				'WP_Field_View_Base'       => '/base/class-field-view-base.php',
+				'WP_Core_Storage'          => '/storage/class-core-storage.php',
+				'WP_Meta_Storage'          => '/storage/class-meta-storage.php',
+				'WP_Option_Storage'        => '/storage/class-option-storage.php',
+				'WP_Memory_Storage'        => '/storage/class-memory-storage.php',
+				'WP_Form'                  => '/forms/class-form.php',
+				'WP_Text_Field'            => '/fields/class-text-field.php',
+				'WP_Textarea_Field'        => '/fields/class-textarea-field.php',
+				'WP_Url_Field'             => '/fields/class-url-field.php',
+				'WP_Date_Field'            => '/fields/class-date-field.php',
+				'WP_Hidden_Field'          => '/fields/class-hidden-field.php',
+				'WP_Field_Input_Feature'   => '/features/class-field-input-feature.php',
+				'WP_Field_Label_Feature'   => '/features/class-field-label-feature.php',
+				'WP_Field_Help_Feature'    => '/features/class-field-help-feature.php',
+				'WP_Field_Message_Feature' => '/features/class-field-message-feature.php',
+				'WP_Field_Infobox_Feature' => '/features/class-field-infobox-feature.php',
+				'WP_Form_View'             => '/views/class-form-view.php',
+				'WP_Field_View'            => '/views/class-field-view.php',
+				'WP_Hidden_Field_View'     => '/views/class-hidden-field-view.php',
 			);
 		}
 
-		if ( isset( $classes[ $class_name = strtolower( $class_name ) ] ) ) {
+		if ( isset( $classes[ $class_name ] ) ) {
 			require_once( dirname( __FILE__ ) . $classes[$class_name] );
 		}
 
