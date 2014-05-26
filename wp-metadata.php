@@ -182,7 +182,19 @@ class WP_Metadata {
 //			add_action( 'add_meta_boxes', array( __CLASS__, 'add_meta_boxes' ) );
 
 			add_action( 'save_post_' . self::get_current_screen()->post_type, array( __CLASS__, '_save_post' ), 10, 3 );
+
+			// Add global styles for metadata api.
+			add_action( 'admin_enqueue_scripts', array( __CLASS__, '_enqueue_admin_styles' ) );
 		}
+	}
+
+	/**
+     * Load css required for the metadata api.
+     *
+     */
+	function _enqueue_admin_styles( $hook ) {
+
+		wp_enqueue_style( 'metadata', plugin_dir_url( dirname( __FILE__ ) ) . 'metadata-ui-api/css/metadata.css', array() );
 	}
 
 	/**
