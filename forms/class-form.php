@@ -67,6 +67,11 @@ class WP_Form extends WP_Metadata_Base {
 
 	}
 
+	/**
+	 * @param string $form_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $form_args
+	 */
 	function __construct( $form_name, $object_type, $form_args ) {
 
 		$form_args[ 'form_name' ] = $form_name;
@@ -76,6 +81,9 @@ class WP_Form extends WP_Metadata_Base {
 
 	}
 
+	/**
+	 *
+	 */
 	function initialize_class() {
 
 		$this->register_view( 'default', 'WP_Form_View' );
@@ -108,7 +116,9 @@ class WP_Form extends WP_Metadata_Base {
 		}
 
 		foreach ( $field_names as $field_name ) {
-			$field = WP_Metadata::get_field( $field_name, $object_type, array() );
+			$field = WP_Metadata::get_field( $field_name, $object_type, array(
+				'form' => $this,
+			));
 
 			if ( is_object( $field ) ) {
 				$this->add_field( $field );
@@ -190,12 +200,63 @@ class WP_Form extends WP_Metadata_Base {
 	}
 
 	/**
+	 * @return mixed
+	 */
+	function html_name() {
+
+		return str_replace( '-', '_', $this->form_name );
+
+	}
+
+	/**
 	 * @param WP_Field_Base $field
 	 */
 	function add_field( $field ) {
 
+		$field->form = $this;
 		$this->fields[ $field->field_name ] = $field;
 
+	}
+
+	/**
+	 *
+	 */
+	function set_object( $object ) {
+		/**
+		 * @var WP_Field_Base $field
+		 */
+		foreach ( $this->fields as $field ) {
+			$field->set_object( $object );
+		}
+	}
+
+	/**
+	 *
+	 */
+	function update_values( $values = false ) {
+		if ( false === $values ) {
+			/**
+			 * @var WP_Field_Base $field
+			 */
+			foreach ( $this->fields as $field ) {
+				$field->update_value();
+			}
+		} else if ( is_array( $values ) ) {
+			/**
+			 * @var WP_Field_Base $field
+			 */
+			foreach ( $this->fields as $field_name => $field ) {
+				if ( isset( $values[$field_name] ) ) {
+					if ( is_null( $values[$field_name] ) ) {
+						/*
+						 * $field->update_value( null ) updates using existing $field->value().
+						 */
+						$values[$field_name] = false;
+					}
+					$field->update_value( $values[$field_name] );
+				}
+			}
+		}
 	}
 
 	/**
@@ -219,5 +280,43 @@ class WP_Form extends WP_Metadata_Base {
 		return $result;
 
 	}
+
+	/**
+	 * @param array $form_args
+	 *
+	 * @return array
+	 */
+	function reject_args( $form_args ) {
+
+		unset( $form_args[ 'view' ] );
+
+		return $form_args;
+
+	}
+
+	/**
+	 * @param array $form_args
+	 *
+	 * @return array
+	 */
+	function pre_delegate_args( $form_args ) {
+
+		if ( isset( $form_args[ 'view' ] ) ) {
+
+			if ( false !== $form_args[ 'view' ] ) {
+
+				$this->view = $form_args['view'];
+
+			}
+
+		} else {
+
+		 	$this->view = 'default';
+		}
+
+		return $form_args;
+
+	}
+
 
 }

@@ -24,4 +24,12 @@ class WP_Field_Input_Feature extends WP_Field_Feature_Base {
 
 	}
 
+	/**
+	 * @return mixed
+	 */
+	function html_value() {
+
+		return $this->field->value();
+
+	}
 }

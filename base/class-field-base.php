@@ -56,6 +56,11 @@ class WP_Field_Base extends WP_Metadata_Base {
 	var $view = false;
 
 	/**
+	 * @var WP_Form
+	 */
+	var $form;
+
+	/**
 	 * @var bool|int
 	 */
 	protected $_field_index = false;
@@ -73,6 +78,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	static function DELEGATES() {
 
 		return array(
+			'form'    => 'form',
 			'view'    => 'view',
 			'storage' => 'storage',
 		);
@@ -174,16 +180,54 @@ class WP_Field_Base extends WP_Metadata_Base {
 	}
 
 	/**
+	 * @return mixed
+	 */
+	function form_html_name() {
+
+		return $this->form->html_name();
+
+	}
+
+
+	/**
+	 * @param array $field_args
+	 *
+	 * @return array
+	 */
+	function reject_args( $field_args ) {
+
+		unset( $field_args[ 'view' ] );
+
+		unset( $field_args[ 'form' ] );
+
+		return $field_args;
+
+	}
+
+	/**
 	 * @param array $field_args
 	 *
 	 * @return array
 	 */
 	function pre_delegate_args( $field_args ) {
 
-		if ( !empty( $field_args[ 'view' ] ) ) {
-			$this->view = $field_args[ 'view' ];
+		if ( ! empty( $field_args[ 'form' ] ) ) {
 
-			unset( $field_args[ 'view' ] );
+			$this->form = $field_args[ 'form' ];
+
+		}
+
+		if ( $this->form && empty( $this->form->view ) ) {
+
+			$this->view = null;
+
+		} else if ( isset( $field_args[ 'view' ] ) ) {
+
+			if ( false !== $field_args[ 'view' ] ) {
+
+				$this->view = $field_args['view'];
+
+			}
 
 		} else {
 
@@ -403,7 +447,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 			$this->set_value( $value );
 		}
 		if ( $this->has_storage() ) {
-			$this->storage->update_value( $this->storage_key(), $this->value() );
+			$this->storage->update_value( $this->value() );
 		}
 
 	}
@@ -427,6 +471,16 @@ class WP_Field_Base extends WP_Metadata_Base {
 		return method_exists( $this->storage, 'get_value' ) && method_exists( $this->storage, 'update_value' );
 
 	}
+
+	/**
+	 * @param object $object
+	 */
+	function set_object( $object ) {
+
+		$this->storage->object = $object;
+
+	}
+
 
 	/**
 	 * Delegate accesses for missing poperties to the $_field_view property

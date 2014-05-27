@@ -147,7 +147,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	function html_name() {
 
-		return $this->field->view->html_name();
+		return 'wp_metadata_forms[' . $this->field->form_html_name() . '][' . $this->field->view->html_name() . ']';
 
 	}
 
@@ -202,7 +202,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	function html_value() {
 
-		return $this->field->value();
+		return __( 'No html_value() method in Field Feature' );
 
 	}
 

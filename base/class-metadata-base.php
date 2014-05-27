@@ -90,6 +90,8 @@ abstract class WP_Metadata_Base {
 			$args = $this->_call_lineage_collect_array_elements( 'pre_delegate_args', $args );
 			$args = $this->delegate_args( $args );
 
+			$args = $this->_call_lineage_value( 'reject_args', $args, null );
+
 			$args = $this->_call_lineage_collect_array_elements( 'pre_assign_args', $args );
 			$this->args = $args;
 			$this->_call_lineage( 'assign_args', $args );

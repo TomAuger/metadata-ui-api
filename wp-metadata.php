@@ -262,12 +262,30 @@ class WP_Metadata {
 		return $forms;
 	}
 
-	static function get_form_names_from_POST() {
-		$form_names = array();
-		if ( isset( $_POST['wp_metadata_forms'] ) && is_array( $_POST['wp_metadata_forms'] ) && count( $_POST['wp_metadata_forms'] ) ) {
-			$form_names = $_POST['wp_metadata_forms'];
+	/**
+	 * @param string $post_type
+	 * @return array
+	 */
+	static function get_forms_from_POST( $post_type ) {
+		$forms = array();
+		if ( ! isset( $_POST['wp_metadata_forms'] ) || ! is_array( $_POST['wp_metadata_forms'] ) ) {
+			$forms = array();
+		} else {
+			$forms = $_POST['wp_metadata_forms'];
+			foreach( $forms as $form_name => $form_data ) {
+				$form = self::make_form( $form_name, wp_get_post_object_type( $post_type ), array( 'view' => false ) );
+				/**
+				 * @var WP_Field_Base $field
+				 */
+				foreach( $form->fields as $field_name => $field ) {
+					if ( isset( $form_data[$field_name] ) ) {
+						$field->set_value( $form_data[$field_name] );
+					}
+				}
+				$forms[$form_name] = $form;
+			}
 		}
-		return $form_names;
+		return $forms;
 	}
 
 	/**
@@ -276,21 +294,13 @@ class WP_Metadata {
 	 * @param bool $update
 	 */
 	static function _save_post( $post_id, $post, $update ) {
-		$forms = get_post_forms( $post->post_type, self::get_form_names_from_POST() );
-		if ( count( $forms ) ) {
+		if ( count( $forms = self::get_forms_from_POST( $post->post_type ) ) ) {
 			/**
-			 * @var Sunrise_Form_Base $form
+			 * @var WP_Form $form
 			 */
 			foreach ( $forms as $form_name => $form ) {
-				$form->object_id = $post_id;
-				/**
-				 * @var Sunrise_Field_Base $field
-				 */
-				foreach ( $form->get_fields() as $field_name => $field ) {
-					if ( isset( $POST_fields[ $field_name ] ) ) {
-						$field->update_value( $POST_fields[ $field_name ] );
-					}
-				}
+				$form->set_object( $post );
+				$form->update_values();
 			}
 		}
 	}

@@ -19,8 +19,25 @@ class WP_Meta_Storage extends WP_Storage_Base {
 	 */
 	var $meta_type = false;
 
+
 	/**
-	 * @return mixed $value
+	 * @param array $storage_args
+	 * @return array
+	 */
+	function pre_assign_args( $storage_args ) {
+
+		if ( empty( $storage_args['meta_type'] ) ) {
+
+			$storage_args['meta_type'] = 'post';
+
+		}
+
+		return $storage_args;
+
+	}
+
+	/**
+	 * @return mixed
 	 */
 	function get_value() {
 

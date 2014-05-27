@@ -58,14 +58,16 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
 			$fields_html[] = $field->get_field_html();
 		}
 
-		$form_field = new WP_Hidden_Field( "wp_metadata_forms", array(
-			'value' => $this->form->form_name,
-			'storage' => 'memory',
-			'view' => 'hidden',
-			'shared_name' => true,
-		));
+//		$form_field = new WP_Hidden_Field( "wp_metadata_forms", array(
+//			'value' => $this->form->form_name,
+//			'storage' => 'memory',
+//			'view' => 'hidden',
+//			'shared_name' => true,
+//			'form' => $this->form,
+//		));
+//
+//		$fields_html[] = $form_field->get_field_html();
 
-		$fields_html[] = $form_field->get_field_html();
 		return implode( "\n", $fields_html );
 
 	}

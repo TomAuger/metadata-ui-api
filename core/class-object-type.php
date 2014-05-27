@@ -31,7 +31,9 @@ final class WP_Object_Type {
 	function __construct( $object_type = false ) {
 
 		if ( $object_type ) {
+
 			$this->assign_type( $object_type );
+
 		}
 
 	}
@@ -140,7 +142,7 @@ final class WP_Object_Type {
 	 */
 	public function is_equivalent( $that ) {
 
-		if ( !is_a( $that, __CLASS__ ) ) {
+		if ( ! is_a( $that, __CLASS__ ) ) {
 			$object_type = new self( $that ); // @todo Unused variable
 		}
 
