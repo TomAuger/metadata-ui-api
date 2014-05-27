@@ -194,7 +194,8 @@ class WP_Metadata {
      */
 	function _enqueue_admin_styles( $hook ) {
 
-		wp_enqueue_style( 'metadata', plugin_dir_url( dirname( __FILE__ ) ) . 'metadata-ui-api/css/metadata.css', array() );
+		wp_enqueue_style( 'metadata', plugin_dir_url( __FILE__ ) . 'css/metadata.css', array() );
+
 	}
 
 	/**
