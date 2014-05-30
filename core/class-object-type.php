@@ -7,7 +7,7 @@ final class WP_Object_Type {
 	/**
 	 * @var bool
 	 */
-	var $object_type = false;
+	var $class = false;
 
 	/**
 	 * @var bool
@@ -17,7 +17,7 @@ final class WP_Object_Type {
 	/**
 	 * @var array
 	 */
-	protected static $_core_object_types = array(
+	protected static $_core_classs = array(
 		'post' => array( 'has_subtype' => true ),
 		'user' => array( 'has_subtype' => false ),
 		'comment' => array( 'has_subtype' => false ), // @todo Set to true when comment types get core support
@@ -48,8 +48,8 @@ final class WP_Object_Type {
 	 */
 	public static function register_object_type( $type, $args = array() ) {
 
-		if ( !isset( self::$_core_object_types[ $type ] ) ) {
-			self::$_core_object_types[ $type ] = $args;
+		if ( ! isset( self::$_core_classs[ $type ] ) ) {
+			self::$_core_classs[ $type ] = $args;
 
 			return true;
 		}
@@ -76,21 +76,21 @@ final class WP_Object_Type {
 		}
 
 		if ( is_a( $object_type, __CLASS__ ) ) {
-			$this->object_type = $object_type->object_type;
-			$this->subtype = $object_type->subtype;
+			$this->class = $object_type->class;
+			$this->subtype = $class->subtype;
 		}
 		else {
 			if ( is_string( $object_type ) ) {
-				if ( isset( self::$_core_object_types[ $object_type ] ) && !self::$_core_object_types[ $object_type ][ 'has_subtype' ] ) {
-					$this->object_type = $object_type;
+				if ( isset( self::$_core_classs[ $object_type ] ) && ! self::$_core_classs[ $object_type ][ 'has_subtype' ] ) {
+					$this->class = $object_type;
 					$this->subtype = false;
 				}
 				elseif ( false === strpos( $object_type, ':' ) ) {
-					$this->object_type = 'post';
+					$this->class = 'post';
 					$this->subtype = $object_type;
 				}
 				else {
-					list( $this->object_type, $this->subtype ) = explode( ':', $object_type );
+					list( $this->class, $this->subtype ) = explode( ':', $object_type );
 				}
 			}
 			else {
@@ -98,11 +98,11 @@ final class WP_Object_Type {
 					$object_type = (object) $object_type;
 				}
 
-				$this->object_type = property_exists( $object_type, 'object_type' ) ? $object_type->object_type : false;
+				$this->class = property_exists( $object_type, 'class' ) ? $object_type->class : false;
 				$this->subtype = property_exists( $object_type, 'subtype' ) ? $object_type->subtype : false;
 			}
 
-			$this->object_type = sanitize_key( $this->object_type );
+			$this->class = sanitize_key( $this->class );
 
 			if ( $this->subtype ) {
 				$this->subtype = sanitize_key( $this->subtype );
@@ -118,7 +118,7 @@ final class WP_Object_Type {
 	 */
 	function unqualified_type() {
 
-		return empty( $this->subtype ) ? $this->object_type : $this->subtype;
+		return empty( $this->subtype ) ? $this->class : $this->subtype;
 
 	}
 
@@ -155,7 +155,7 @@ final class WP_Object_Type {
 	 */
 	function __toString() {
 
-		return "{$this->object_type}:{$this->subtype}";
+		return "{$this->class}:{$this->subtype}";
 
 	}
 
