@@ -8,7 +8,7 @@
  */
 function wp_get_post_object_type( $post_type ) {
 
-	return $post_type ? "post:{$post_type}" : 'post:all';
+	return $post_type ? "post:{$post_type}" : 'post:any';
 
 }
 

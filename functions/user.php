@@ -8,7 +8,7 @@
  */
 function wp_get_user_object_type( $user_role ) {
 
-	return $user_role ? "user:{$user_role}" : 'user:all';
+	return $user_role ? "user:{$user_role}" : 'user:any';
 
 }
 

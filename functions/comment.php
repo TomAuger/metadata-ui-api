@@ -8,7 +8,7 @@
  */
 function wp_get_comment_object_type( $comment_type ) {
 
-	return $comment_type ? "comment:{$comment_type}" : 'comment:all';
+	return $comment_type ? "comment:{$comment_type}" : 'comment:any';
 
 }
 

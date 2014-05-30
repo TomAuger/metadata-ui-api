@@ -17,12 +17,12 @@ final class WP_Object_Type {
 	/**
 	 * @var array
 	 */
-	protected static $_core_classs = array(
-		'post' => array( 'has_subtype' => true ),
-		'user' => array( 'has_subtype' => false ),
-		'comment' => array( 'has_subtype' => false ), // @todo Set to true when comment types get core support
-		//'option' => array( 'has_subtype' => false ),
-		//'site-option' => array( 'has_subtype' => false )
+	protected static $_object_type_classes = array(
+		'post' => array(),
+		'user' => array(),
+		'comment' => array(),
+		//'option' => array(),
+		//'site-option' => array(),)
 	);
 
 	/**
@@ -32,7 +32,7 @@ final class WP_Object_Type {
 
 		if ( $object_type ) {
 
-			$this->assign_type( $object_type );
+			$this->assign( $object_type );
 
 		}
 
@@ -41,15 +41,15 @@ final class WP_Object_Type {
 	/**
 	 * Register object type
 	 *
-	 * @param $object_type
-	 * @param $args
+	 * @param $class
+	 * @param $class_args
 	 *
-	 * @return bool Whether the object type was registered
+	 * @return bool Whether the object type $class was registered
 	 */
-	public static function register_object_type( $type, $args = array() ) {
+	public static function register_class( $class, $class_args = array() ) {
 
-		if ( ! isset( self::$_core_classs[ $type ] ) ) {
-			self::$_core_classs[ $type ] = $args;
+		if ( ! isset( self::$_object_type_classes[ $class ] ) ) {
+			self::$_object_type_classes[ $class ] = $class_args;
 
 			return true;
 		}
@@ -59,7 +59,7 @@ final class WP_Object_Type {
 	}
 
 	/**
-	 * Validated and assigns a value to this Object Type
+	 * Validates and assigns a value to this Object Type
 	 *
 	 * @example:
 	 *
@@ -67,7 +67,7 @@ final class WP_Object_Type {
 	 *
 	 * @param bool|string|array|WP_Object_Type $object_type
 	 */
-	function assign_type( $object_type = false ) {
+	function assign( $object_type = false ) {
 
 		if ( empty( $object_type ) ) {
 			global $post;
@@ -81,11 +81,7 @@ final class WP_Object_Type {
 		}
 		else {
 			if ( is_string( $object_type ) ) {
-				if ( isset( self::$_core_classs[ $object_type ] ) && ! self::$_core_classs[ $object_type ][ 'has_subtype' ] ) {
-					$this->class = $object_type;
-					$this->subtype = false;
-				}
-				elseif ( false === strpos( $object_type, ':' ) ) {
+				if ( false === strpos( $object_type, ':' ) ) {
 					$this->class = 'post';
 					$this->subtype = $object_type;
 				}
@@ -109,6 +105,10 @@ final class WP_Object_Type {
 			}
 		}
 
+		if ( empty( $this->subtype ) ) {
+			$this->subtype = 'any';
+		}
+
 	}
 
 	/**
@@ -118,7 +118,7 @@ final class WP_Object_Type {
 	 */
 	function unqualified_type() {
 
-		return empty( $this->subtype ) ? $this->class : $this->subtype;
+		return 'any' == $this->subtype ? $this->class : $this->subtype;
 
 	}
 
@@ -129,21 +129,21 @@ final class WP_Object_Type {
 	 */
 	public function is_valid() {
 
-		return !empty( $this->type );
+		return ! empty( $this->class );
 
 	}
 
 	/**
 	 * Check if the current object type is equivalent to the one passed in.
 	 *
-	 * @param WP_Object_Type $that
+	 * @param WP_Object_Type|string $that
 	 *
 	 * @return bool
 	 */
 	public function is_equivalent( $that ) {
 
 		if ( ! is_a( $that, __CLASS__ ) ) {
-			$object_type = new self( $that ); // @todo Unused variable
+			$that = new self( $that );
 		}
 
 		return $this == $that;

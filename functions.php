@@ -55,3 +55,15 @@ function wp_get_class_lineage( $class_name, $inclusive = true ) {
 	return $lineage;
 
 }
+
+/**
+ * Register object type
+ *
+ * @param $class
+ * @param $class_args
+ *
+ * @return bool Whether the object type $class was registered
+ */
+function register_object_type_class( $class, $class_args = array() ) {
+ 	WP_Object_Type::register_class( $class, $class_args );
+}
