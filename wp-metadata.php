@@ -181,7 +181,7 @@ class WP_Metadata {
 	/**
 	 * @param string $class_name
 	 */
-	static function autoloader( $class_name ) {
+	static function _autoloader( $class_name ) {
 
 		if ( isset( self::$_autoload_classes[ $class_name ] ) ) {
 
