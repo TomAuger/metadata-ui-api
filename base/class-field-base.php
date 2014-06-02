@@ -338,6 +338,16 @@ class WP_Field_Base extends WP_Metadata_Base {
 	}
 
 	/**
+	 * @return WP_Field_Feature_Base
+	 */
+	function input_feature() {
+
+		return $this->view->input_feature();
+
+	}
+
+
+	/**
 	 * @param string $storage_type
 	 * @param array $storage_args
 	 *
@@ -480,7 +490,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 		$this->storage->object = $object;
 
 	}
-
 
 	/**
 	 * Delegate accesses for missing poperties to the $_field_view property

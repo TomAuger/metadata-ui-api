@@ -20,19 +20,14 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	const WRAPPER_TAG = 'div';
 
 	/**
-	 * @var WP_Field_Base
-	 */
-	var $field;
-
-	/**
 	 * @var string
 	 */
 	var $feature_type;
 
 	/**
-	 * @var WP_Html_Element
+	 * @var WP_Field_Base
 	 */
-	var $html_element;
+	var $field;
 
 	/**
 	 * @var WP_Html_Element
@@ -40,12 +35,17 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	var $wrapper;
 
 	/**
+	 * @var WP_Html_Element
+	 */
+	var $element;
+
+	/**
 	 * @return array
 	 */
 	static function DELEGATES() {
 
 		return array(
-			'html' => 'html_element',
+			'html' => 'element',
 			'wrapper' => 'wrapper',
 		);
 	}
@@ -57,6 +57,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 
 		return array(
 			'field',
+			'element',
 			'wrapper',
 		);
 	}
@@ -85,13 +86,13 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 
 	function initialize( $feature_args ) {
 
-		if ( ! is_object( $this->html_element ) ) {
+		if ( ! is_object( $this->element ) ) {
 			$html_attributes = WP_Metadata::extract_prefixed_args( $feature_args, 'html' );
 
 			$html_attributes[ 'id' ] = $this->html_id();
 			$html_attributes[ 'name' ] = $this->html_name();
 			$html_attributes[ 'class' ] = $this->html_class() . ( !empty( $html_attributes[ 'class' ] ) ? " {$html_attributes['class']}" : '' );
-			$this->html_element = WP_Metadata::get_html_element( $this->html_tag(), $html_attributes );
+			$this->element = WP_Metadata::get_html_element( $this->html_tag(), $html_attributes );
 		}
 
 		if ( !is_object( $this->wrapper ) ) {
@@ -211,9 +212,9 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	function get_element_html() {
 
-		$this->html_element->element_value = $this->html_value();
+		$this->element->element_value = $this->html_value();
 
-		return $this->html_element->get_element_html();
+		return $this->element->get_element_html();
 
 	}
 
@@ -237,7 +238,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	function get_html_attribute( $attribute_name ) {
 
-		return $this->html_element->get_attribute( $attribute_name );
+		return $this->element->get_attribute( $attribute_name );
 
 	}
 
@@ -247,7 +248,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	function set_html_attribute( $attribute_name, $value ) {
 
-		$this->html_element->set_attribute( $attribute_name, $value );
+		$this->element->set_attribute( $attribute_name, $value );
 
 	}
 

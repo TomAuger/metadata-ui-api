@@ -261,6 +261,44 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	}
 
 	/**
+	 *  Allow Input HTML to be overridden in Field or Field View
+	 *
+	 *  To override in Field, implement get_input_html().
+	 *  To override in Field View, implement get_input_html().
+	 *
+	 */
+	function get_input_html() {
+
+		if ( method_exists( $this->field, 'get_input_html' ) ) {
+
+			$input_html = $this->field->get_input_html();
+
+		} else {
+
+			$input_html = $this->input_feature()->get_feature_html();
+
+		}
+
+		return $input_html;
+	}
+
+	/**
+	 * @return WP_Field_Feature_Base
+	 */
+	function input_feature() {
+
+		if ( ! isset( $this->features['input'] ) ) {
+
+			// Do this to ensure the return value of input_feature() can be dereferenced. Should never be needed.
+			$input_feature = new WP_Field_Input_Feature( $this->field );
+
+		}
+
+		return $this->features['input'];
+
+	}
+
+	/**
 	 * @return array
 	 */
 	function get_features_html() {
@@ -273,7 +311,11 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 			 */
 			$feature = $this->features[ $feature_type ];
 
-			$features_html[ $feature_type ] = $feature->get_feature_html();
+			if ( 'input' == $feature_type ) {
+				$features_html[ $feature_type ] = $this->get_input_html();
+			} else {
+				$features_html[ $feature_type ] = $feature->get_feature_html();
+			}
 		}
 
 		return implode( "\n", $features_html );
