@@ -34,10 +34,12 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
 	 */
 	function get_form_html() {
 
-		// @TODO Should the following be wrapper vs. HTML? Or optionally both?
-		$attributes[ 'id' ] = $this->html_id();
-		$attributes[ 'name' ] = $this->html_name();
-		$attributes[ 'class' ] = $this->html_class() . ( ! empty( $attributes[ 'class' ] ) ? " {$attributes['class']}" : '' );
+		$attributes = array(
+			'id'    => $this->html_id(),
+			'name'  => $this->html_name(),
+			'class' => $this->html_class() . ( ! empty( $attributes[ 'class' ] ) ? " {$attributes['class']}" : '' ),
+		);
+
 		$form_html = WP_Metadata::get_element_html( $this->html_tag(), $attributes, $this->get_form_fields_html() );
 
 		return "\n<!-- WP_Metadata Form -->\n\n{$form_html}";

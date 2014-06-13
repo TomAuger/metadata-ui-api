@@ -313,7 +313,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 		if ( ! WP_Metadata::storage_type_exists( $storage_type_name ) ) {
 			$storage_type_name = WP_Meta_Storage::STORAGE_TYPE;
 		}
-		$storage_args[ 'owner' ] = $this;
+		$storage_type_args[ 'owner' ] = $this;
 		$this->storage = $this->make_storage( $storage_type_name, $storage_type_args );
 
 

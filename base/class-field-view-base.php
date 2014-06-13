@@ -290,7 +290,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 		if ( ! isset( $this->features['input'] ) ) {
 
 			// Do this to ensure the return value of input_feature() can be dereferenced. Should never be needed.
-			$input_feature = new WP_Field_Input_Feature( $this->field );
+			$this->features['input'] = new WP_Field_Input_Feature( $this->field );
 
 		}
 
@@ -338,11 +338,11 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	function set_html_attribute( $attribute_name, $value ) {
 
 		/**
-		 * @var WP_Field_Feature_Base $feature
+		 * @var WP_Field_Label_Feature $input
 		 */
-		$input = $this->features[ 'label' ]; // @todo Unused variable
+		$input = $this->features[ 'label' ];
 
-		$this->set_html_attribute( $attribute_name, $value );
+		$input->set_html_attribute( $attribute_name, $value );
 
 	}
 
