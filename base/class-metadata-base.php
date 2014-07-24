@@ -1,565 +1,525 @@
 <?php
+
 /**
  * Class WP_Metadata_Base
  */
 abstract class WP_Metadata_Base {
 
-	/**
-	 * The property (var) prefix from a constant to be used for this current class.
-	 *
-	 * @example: const PREFIX = 'form_';
-	 *
-	 * Intended to be used by subclasses.
-	 */
-	const PREFIX = null;
-
-	/**
-	 * @var array
-	 */
-	var $args = array();
+  /**
+   * The property (var) prefix from a constant to be used for this current class.
+   *
+   * @example: const PREFIX = 'form';
+   *
+   * Intended to be used by subclasses.
+   */
+  const PREFIX = null;
+
+  /**
+   * @var array
+   */
+  var $args = array();
+
+  /**
+   * @var array
+   */
+  var $extra_args = array();
+
+  /**
+   * @var bool
+   */
+  private $_initialized = array();
+
+  /**
+   * @var array
+   */
+  private $_property_prefixes;
+
+  /**
+   * @var array
+   */
+  private $_default_args;
+
+  /**
+   * @var array
+   */
+  private static $_annotated_properties;
+
+
+  /**
+   * @return array
+   */
+  static function TRANSFORMS() {
+
+    return array();
+
+  }
+
+  /**
+   * @param array $args
+   *
+   */
+  function __construct( $args = array() ) {
+
+    if ( ! isset( $this->_initialized[ $this_class = get_class( $this ) ] ) ) {
+      $this->_initialized[ $this_class ] = true;
+      $this->do_class_action( 'initialize_class' );
+    }
+
+    $args = wp_parse_args( $args, $this->default_args() );
+
+    if ( $this->apply_class_filters( 'do_assign_args', $args ) ) {
+
+      $args = $this->apply_class_filters( 'pre_prefix_args', $args );
+      $args = $this->prefix_args( $args );
+
+      $args = $this->apply_class_filters( 'pre_transform_args', $args );
+      $args = $this->transform_args( $args );
+
+      $args = $this->apply_class_filters( 'pre_collect_args', $args );
+      $args = $this->collect_args( $args );
+
+      $args = $this->apply_class_filters( 'reject_args', $args, null );
+
+      $args       = $this->apply_class_filters( 'pre_assign_args', $args );
+      $this->args = $args;
+      $this->assign_args( $args );
+
+    }
+
+    $this->do_class_action( 'initialize', $args );
+
+  }
+
+  /**
+   * @return array
+   */
+  function default_args() {
+    if ( ! isset( $this->_default_args ) ) {
+      $properties   = $this->get_annotated_properties();
+      foreach ( $properties as $property_name => $property ) {
+        $properties[ $property_name ] = $property->default;
+      }
+      $this->_default_args = $properties;
+    }
+    return $this->_default_args;
+  }
+
+  /**
+   * Gets the property (var) prefix from a constant to be used for this current class.
+   *
+   * @example: const PREFIX = 'form';
+   *
+   * Intended to be used by subclasses.
+   *
+   * @return array
+   */
+  function get_prefix() {
+
+    return $this->constant( 'PREFIX' );
+
+  }
+
+  /**
+   * Returns an array of property transform regex as array key and expansion as key value.
+   *
+   * Subclasses should define TRANSFORMS() function:
+   *
+   *    return array(
+   *      $regex1 => $transform1,
+   *      $regex2 => $transform2,
+   *      ...,
+   *      $regexN => $transformN,
+   *    );
+   *
+   * @note Multiple transforms can be applied so order is important.
+   *
+   * @return array
+   */
+  function get_transforms() {
+
+    return $this->get_annotations( 'TRANSFORMS' );
+
+  }
+
+  /**
+   * @param string $const_name
+   * @param bool|string $class_name
+   *
+   * @return mixed
+   */
+  function constant( $const_name, $class_name = false ) {
+
+    if ( ! $class_name ) {
+
+      $class_name = get_class( $this );
+
+    }
+
+    return WP_Metadata::constant( $class_name, $const_name );
+
+  }
+
+  /**
+   * @param array $args
+   *
+   * @return array
+   */
+  function transform_args( $args ) {
+
+    if ( count( $transforms = $this->get_transforms() ) ) {
+      foreach ( $transforms as $regex => $result ) {
+        foreach ( $args as $name => $value ) {
+          if ( preg_match( "#{$regex}#", $name, $matches ) ) {
+
+            $args['transformed_args'][ $name ] = $value;
+            unset( $args[ $name ] );
+
+            $new_name = $result;
+            if ( 1 <= ( $match_count = count( $matches ) - 1 ) ) {
+              for ( $i = 1; $i <= $match_count; $i ++ ) {
+                $new_name = str_replace( '$' . $i, $matches[ $i ], $new_name );
+              }
+            }
+            $args[ $new_name ] = $value;
+          }
+        }
+      }
+    }
+
+    return $args;
+
+  }
+
+  /**
+   * Ensure all $args have been prefixed that don't already have an underscore in their name.
+   *
+   * @param array $args
+   *
+   * @return array
+   */
+  function prefix_args( $args ) {
+
+    if ( $prefix = $this->get_prefix() ) {
+
+      foreach ( $args as $arg_name => $arg_value ) {
+        /**
+         * For every $arg passed-in that does not contain an underscore, is not already prefixed, and
+         * for which there is a property on this object
+         */
+        if ( false === strpos( $arg_name, '_' ) && ! preg_match( "#^{$prefix}_#", $arg_name ) &&
+             (
+                property_exists( $this, $property_name = "{$prefix}:{$arg_name}" ) ||
+                method_exists( $this, $method_name = "set_{$property_name}" )
+             )
+        ) {
+
+          $args[ $property_name ] = $arg_value;
+          unset( $args[ $arg_name ] );
+
+        }
+      }
+    }
+
+    return $args;
+
+  }
+
+  /**
+   * collect $args from delegate properties. Also store in $this->delegated_args array.
+   *
+   * @example
+   *
+   *  $input = array(
+   *    'field_name' => 'Foo',
+   *    'html:size' => 50,     // Will be split and "collect" like
+   *    'wrapper:size' => 25,  // Assumes a TRANSFORMS() value that add's 'html' between 'wrapper' and 'size'
+   *  );
+   *  print_r( self::collect_args( $input ) );
+   *  // Outputs:
+   *  array(
+   *    'field_name' => 'Foo',
+   *    'html' => array( 'size' => 50 ),
+   *    'wrapper' => array( 'html:size' => 25 ),
+   *  );
+   *
+   *
+   * @param array $args
+   *
+   * @return array
+   */
+  function collect_args( $args ) {
 
-	/**
-	 * @var array
-	 */
-	var $extra_args = array();
-
-	/**
-	 * @var array
-	 */
-	var $delegated_args = array();
+    $args = WP_Metadata::collect_args( $args, array(
+      'prefixes' => $this->get_property_prefixes(),
+      'include' => 'all',
+    ));
 
-	/**
-	 * @var bool
-	 */
-	private $_done_once = array();
+    return $args;
 
-	/**
-	 * Array of field names that should not get a prefix.
-	 *
-	 * Intended to be used by subclasses.
-	 *
-	 * @return array
-	 */
-	static function NO_PREFIX() {
-
-		return array();
-
-	}
-
-	/**
-	 * @return array
-	 */
-	static function DELEGATES() {
-
-		return array();
-
-	}
-
-	/**
-	 * @return array
-	 */
-	static function TRANSFORMS() {
-
-		return array();
-
-	}
-
-	/**
-	 * @param array $args
-	 *
-	 * @todo Consider removing expand_args() and prefix_args() and just
-	 *
-	 */
-	function __construct( $args = array() ) {
-
-		if ( !isset( $this->_done_once[ $this_class = get_class( $this ) ] ) ) {
-			$this->_done_once[ $this_class ] = true;
-			$this->_call_lineage( 'initialize_class' );
-		}
-
-		$args = wp_parse_args( $args, $this->_call_lineage_value( 'default_args', array(), $args ) );
-
-		if ( $this->_call_lineage_value( 'do_assign_args', true, $args ) ) {
-
-			$args = $this->_call_lineage_collect_array_elements( 'pre_prefix_args', $args );
-			$args = $this->prefix_args( $args );
-
-			$args = $this->_call_lineage_collect_array_elements( 'pre_transform_args', $args );
-			$args = $this->transform_args( $args );
-
-			$args = $this->_call_lineage_collect_array_elements( 'pre_delegate_args', $args );
-			$args = $this->delegate_args( $args );
-
-			$args = $this->_call_lineage_value( 'reject_args', $args, null );
-
-			$args = $this->_call_lineage_collect_array_elements( 'pre_assign_args', $args );
-			$this->args = $args;
-			$this->_call_lineage( 'assign_args', $args );
-
-		}
-
-		$this->_call_lineage( 'initialize', $args );
-
-	}
-
-	/**
-	 * Gets the property (var) prefix from a constant to be used for this current class.
-	 *
-	 * @example: const PREFIX = 'form_';
-	 *
-	 * Intended to be used by subclasses.
-	 *
-	 * @return array
-	 */
-	function get_prefix() {
-
-		return $this->constant( 'PREFIX' );
-
-	}
-
-	/**
-	 * Gets array of field names that should not get a prefix.
-	 *
-	 * @return array
-	 */
-	function get_no_prefix() {
-
-		return $this->_call_lineage_collect_array_elements( 'NO_PREFIX' );
-
-	}
-
-	/**
-	 * Returns an array of delegate properties and with their prefix as array key.
-	 *
-	 * Subclasses should define DELEGATES() function:
-	 *
-	 *    return array(
-	 *      $prefix1 => $property_name1,
-	 *      ...,
-	 *      $prefixN => $property_nameN,
-	 *    );
-	 *
-	 * @return array
-	 */
-	function get_delegates() {
-
-		return $this->_call_lineage_collect_array_elements( 'DELEGATES' );
-
-	}
-
-	/**
-	 * Returns an array of property transform regex as array key and expansion as key value.
-	 *
-	 * Subclasses should define TRANSFORMS() function:
-	 *
-	 *    return array(
-	 *      $regex1 => $transform1,
-	 *      $regex2 => $transform2,
-	 *      ...,
-	 *      $regexN => $transformN,
-	 *    );
-	 *
-	 * @note Multiple transforms can be applied so order is important.
-	 *
-	 * @return array
-	 */
-	function get_transforms() {
-
-		return $this->_call_lineage_collect_array_elements( 'TRANSFORMS' );
-
-	}
-
-	/**
-	 * @param string $constant_name
-	 * @param bool|string $class_name
-	 *
-	 * @return mixed
-	 */
-	function constant( $constant_name, $class_name = false ) {
-
-		if ( !$class_name ) {
-			$class_name = get_class( $this );
-		}
-
-		if ( !defined( $constant_ref = "{$class_name}::{$constant_name}" ) ) {
-			$value = null;
-		}
-		else {
-			$value = constant( $constant_ref );
-		}
-
-		return $value;
-
-	}
-
-	/**
-	 * @param array $args
-	 *
-	 * @return array
-	 */
-	function transform_args( $args ) {
-
-		if ( count( $transforms = $this->get_transforms() ) ) {
-			foreach ( $transforms as $regex => $result ) {
-				foreach ( $args as $name => $value ) {
-					if (  preg_match( "#{$regex}#", $name, $matches ) ) {
-
-					   	$args['transformed_args'][$name] = $value;
-						unset( $args[ $name ] );
-
-						$new_name = $result;
-						if ( 1 <= ( $match_count = count( $matches ) - 1 ) ) {
-							for ( $i = 1; $i <= $match_count; $i ++ ) {
-								$new_name = str_replace( '$' . $i, $matches[ $i ], $new_name );
-							}
-						}
-						$args[ $new_name ] = $value;
-					}
-				}
-			}
-		}
-
-		return $args;
-
-	}
-
-
-	/**
-	 * Ensure all $args have the appropriate prefix.
-	 *
-	 * @param array $args
-	 *
-	 * @return array
-	 */
-	function prefix_args( $args ) {
-
-		if ( false !== ( $delegate_prefix = $this->get_prefix() ) ) {
-			$no_prefix = implode( '|', $this->get_no_prefix() );
-
-			foreach ( $args as $name => $value ) {
-				/**
-				 * For every $arg passed-in that does not contain an underscore ('_') prefix it with
-				 * value of PREFIX unless it's value is in NO_PREFIX.
-				 */
-				if ( false === strpos( $name, '_' ) && ! preg_match( "#^({$no_prefix})$#", $name ) ) {
-
-					if ( property_exists( $this, $property_name = "{$delegate_prefix}{$name}" ) ) {
-
-						$args[ $property_name ] = $value;
-
-						unset( $args[ $name ] );
-
-					}
-
-				}
-			}
-		}
-
-		return $args;
-
-	}
-
-	/**
-	 * Parse out $args for delegate properties from $args and store in $this->delegated_args array.
-	 *
-	 * @param $args
-	 *
-	 * @return mixed
-	 */
-	function delegate_args( $args ) {
-
-		$class = get_class( $this ); // @todo Unused variable
-
-		$delegates = $this->get_delegates();
-
-		$this->delegated_args = WP_Metadata::extract_prefixed_args( $args, $delegates, 'strip_prefix=0' );
-
-		return $args;
-
-	}
-
-	/**
-	 * Assign the element values in the $args array to the properties of this object.
-	 *
-	 * @param array $args An array of name/value pairs that can be used to initialize an object's properties.
-	 */
-	function assign_args( $args ) {
-
-		/*
-		 * Assign the arg values to properties, if they exist.
-		 * If no property exists capture value in the $this->extra[] array.
-		 */
-		foreach ( $args as $name => $value ) {
-			if ( method_exists( $this, $method_name = "set_{$name}" ) ) {
-				call_user_func( array( $this, $method_name ), $value );
-			}
-			elseif ( property_exists( $this, $name ) ) {
-				$this->{$name} = $value;
-			}
-			elseif ( $this->_non_public_property_exists( $property_name = "_{$name}" ) ) {
-				$this->{$property_name} = $value;
-			}
-			else {
-				$this->extra_args[ $name ] = $value;
-			}
-		}
-
-	}
-
-	/**
-	 * Allows methods without parameters to be accessed as if properties.
-	 *
-	 * @param string $property_name
-	 *
-	 * @return mixed|null
-	 */
-	function __get( $property_name ) {
-
-		if ( method_exists( $this, $property_name ) ) {
-			$value = call_user_func( array( $this, $property_name ) );
-		}
-		else {
-			$message = __( 'Object of class %s does not contain a property or method named %s().' );
-			trigger_error( sprintf( $message, get_class( $this ), $property_name ), E_USER_WARNING );
-			$value = null;
-		}
-
-		return $value;
-
-	}
-
-	/**
-	 * @param string $method_name
-	 * @param array $args
-	 *
-	 * @return mixed
-	 */
-	function __call( $method_name, $args = array() ) {
-
-		$result = false;
-
-		if ( preg_match( '#^the_(.*)$#', $method_name, $match ) ) {
-			$method_exists = false;
-
-			if ( method_exists( $this, $method_name = $match[ 1 ] ) ) {
-				$method_exists = true;
-			}
-			elseif ( method_exists( $this, $method_name = "{$method_name}_html" ) ) {
-				$method_exists = true;
-			}
-			elseif ( method_exists( $this, $method_name = "get_{$method_name}" ) ) {
-				$method_exists = true;
-			}
-			elseif ( method_exists( $this, $method_name = "get_{$match[1]}" ) ) {
-				$method_exists = true;
-			}
-
-			if ( $method_exists ) {
-				echo call_user_func_array( array( $this, $method_name ), $args );
-
-				$result = true;
-			}
-		}
-
-		return $result;
-
-	}
-
-	/**
-	 * Get an array of constants by class name for the current lineage.
-	 *
-	 * @param string $constant_name
-	 * @param bool|string $class_name
-	 *
-	 * @return array
-	 */
-	private function _get_lineage_const_array( $constant_name, $class_name = false ) {
-
-		if ( !$class_name ) {
-			$class_name = get_class( $this );
-		}
-
-		$lineage = wp_get_class_lineage( $class_name, true );
-
-		$constants = array();
-
-		foreach ( $lineage as $ancestor ) {
-			if ( defined( $constant_ref = "{$ancestor}::{$constant_name}" ) ) {
-				$constants = array_merge( $constants, array( $this->constant( $constant_name, $ancestor ) ) );
-			}
-		}
-
-		/*
-		 * Remove any constants values that are null.
-		 */
-
-		// @todo Are anonymous functions available for PHP 5.2?
-		return array_filter( $constants, function ( $element ) {
-
-			return !is_null( $element );
-
-		} );
-
-	}
-
-	/**
-	 *
-	 */
-	protected function _non_public_property_exists( $property ) {
-
-		$reflection = new ReflectionClass( get_class( $this ) );
-
-		if ( !$reflection->hasProperty( $property ) ) {
-			$exists = false;
-		}
-		else {
-			$property = $reflection->getProperty( $property );
-			$exists = $property->isProtected() || $property->isPrivate();
-		}
-
-		return $exists;
-
-	}
-
-	/**
-	 * Call a named method starting with the most distant anscestor down to the current class filtering $value.
-	 *
-	 * @param string $method_name
-	 * @param mixed $value
-	 * @param array $args
-	 *
-	 * @return mixed
-	 */
-	private function _call_lineage_value( $method_name, $value, $args ) {
-
-		$lineage = wp_get_class_lineage( get_class( $this ), true );
-
-		foreach ( $lineage as $ancestor ) {
-			if ( $this->_has_own_method( $ancestor, $method_name ) ) {
-				$value = $this->_invoke_method( $ancestor, $this, $method_name, array( $value, $args ) );
-			}
-		}
-
-		return $value;
-
-	}
-
-	/**
-	 * Call a named method starting with the most distant anscestor down to the current class and merging $args.
-	 *
-	 * @param string $method_name
-	 * @param array $elements
-	 *
-	 * @return array
-	 */
-	protected function _call_lineage_collect_array_elements( $method_name, $elements = array() ) {
-
-		$lineage = wp_get_class_lineage( get_class( $this ), true );
-
-		foreach ( $lineage as $ancestor ) {
-			if ( $this->_has_own_method( $ancestor, $method_name ) ) {
-				$elements = array_merge( $elements, $this->_invoke_method( $ancestor, $this, $method_name, array( $elements ) ) );
-			}
-		}
-
-		return $elements;
-
-	}
-
-	/**
-	 * Call a named method starting with the most distant anscestor down to the current class with no return value.
-	 *
-	 * @param string $method_name
-	 * @param array $args
-	 */
-	private function _call_lineage( $method_name, $args = array() ) {
-
-		$lineage = wp_get_class_lineage( get_class( $this ), true );
-
-		foreach ( $lineage as $ancestor ) {
-			if ( $this->_has_own_method( $ancestor, $method_name ) ) {
-				$this->_invoke_method( $ancestor, $this, $method_name, array( $args ) );
-			}
-		}
-
-	}
-
-	/**
-	 * @param string $class_name
-	 * @param string $property_name
-	 *
-	 * @return bool
-	 */
-	private function _has_own_static( $class_name, $property_name ) {
-
-		$has_own_static_property = false;
-
-		if ( property_exists( $class_name, $property_name ) ) {
-			$reflected_property = new ReflectionProperty( $class_name, $property_name );
-			$has_own_static_property = $reflected_property->isStatic();
-		}
-
-		return $has_own_static_property;
-
-	}
-
-	/**
-	 * Allow invoking of instance methods that are overridden by methods in a child class.
-	 *
-	 * This allows for methods as filters and actions without requiring them to call parent::method().
-	 *
-	 * @param string $class_name
-	 * @param object $object
-	 * @param string $method_name
-	 *
-	 * @return mixed
-	 */
-	private function _get_static( $class_name, $object, $method_name ) {
-
-		$reflected_property = new ReflectionProperty( $class_name, $property_name ); // @todo $property_name not set
-
-		return $reflected_property->getValue( $object );
-
-	}
-
-	/**
-	 * @param string $class_name
-	 * @param string $method_name
-	 *
-	 * @return bool
-	 */
-	private function _has_own_method( $class_name, $method_name ) {
-
-		$has_own_method = false;
-
-		if ( method_exists( $class_name, $method_name ) ) {
-			$reflector = new ReflectionMethod( $class_name, $method_name );
-			$has_own_method = $class_name == $reflector->getDeclaringClass()->name;
-		}
-
-		return $has_own_method;
-
-	}
-
-	/**
-	 * Allow invoking of instance methods that are overridden by methods in a child class.
-	 *
-	 * This allows for methods as filters and actions without requiring them to call parent::method().
-	 *
-	 * @param string $class_name
-	 * @param object $object
-	 * @param string $method_name
-	 * @param array $args
-	 *
-	 * @return mixed
-	 */
-	private function _invoke_method( $class_name, $object, $method_name, $args ) {
-
-		$reflected_class = new ReflectionClass( $class_name );
-		$reflected_method = $reflected_class->getMethod( $method_name );
-
-		return $reflected_method->invokeArgs( $object, $args );
-
-	}
+  }
+
+  /**
+   * @return string[]
+   */
+  function get_property_prefixes() {
+
+    if ( ! isset( $this->_property_prefixes ) ) {
+
+      $this->_property_prefixes = array();
+
+      $annotated_properties = $this->get_annotated_properties( get_class( $this ) );
+
+      foreach ( $annotated_properties as $field_name => $annotated_property ) {
+
+        $this->_property_prefixes[ $field_name ] = $annotated_property->prefix ? $annotated_property->prefix : false;
+
+      }
+
+    }
+    return $this->_property_prefixes;
+
+  }
+
+  /**
+   * Assign the element values in the $args array to the properties of this object.
+   *
+   * @param array $args An array of name/value pairs that can be used to initialize an object's properties.
+   */
+  function assign_args( $args ) {
+
+    $annotated_properties = $this->get_annotated_properties();
+
+    $class_name = get_class( $this );
+
+    $real_properties = get_class_vars( get_class( $this ) );
+
+    /*
+     * Assign the arg values to properties, if they exist.
+     * If no property exists capture value in the $this->extra[] array.
+     */
+    foreach ( $args as $name => $value ) {
+
+      $property = false;
+
+      /**
+       * @var WP_Annotated_Property $property
+       */
+      if ( method_exists( $this, $method_name = "set_{$name}" ) ) {
+
+        call_user_func( array( $this, $method_name ), $value );
+
+      } else if ( isset( $annotated_properties[ $name ] ) ) {
+
+        $property = $annotated_properties[ $name ];
+
+        /**
+         * @var WP_Annotated_Property $annotated_property
+         */
+        $annotated_property = $this->get_annotated_property( $name );
+
+      } else if ( isset( $real_properties[ $name ] ) ) {
+
+        $property = $real_properties[ $name ];
+
+      } elseif ( WP_Metadata::non_public_property_exists( $class_name, $property_name = "_{$name}" ) ) {
+
+        $this->extra_args[ $name ] = $value;
+
+      }
+
+      if ( $property ) {
+
+        $property_name = $property->property_name;
+
+        if ( isset( $annotated_property ) && $annotated_property->factory ) {
+
+          $args[ '_annotated_property' ] = $annotated_property;
+          $args[ 'value' ] = $value;
+
+          $factory = WP_Metadata::get_object_factory( $annotated_property->factory );
+
+          $value = call_user_func_array( $factory->callable, $args );
+
+        }
+
+      }
+
+      if ( $property_name ) {
+
+        $this->{$property_name} = $value;
+
+      }
+    }
+
+  }
+
+  /**
+   * Allows methods without parameters to be accessed as if properties.
+   *
+   * @param string $property_name
+   *
+   * @return mixed|null
+   */
+  function __get( $property_name ) {
+
+    if ( method_exists( $this, $property_name ) ) {
+
+      $value = call_user_func( array( $this, $property_name ) );
+
+    } else {
+
+      $message = __( 'Object of class %s does not contain a property or method named %s().' );
+
+      trigger_error( sprintf( $message, get_class( $this ), $property_name ), E_USER_WARNING );
+
+      $value = null;
+
+    }
+
+    return $value;
+
+  }
+
+  /**
+   * @param string $method_name
+   * @param array $args
+   *
+   * @return mixed
+   */
+  function __call( $method_name, $args = array() ) {
+
+    $result = false;
+
+    if ( preg_match( '#^the_(.*)$#', $method_name, $match ) ) {
+
+      $method_exists = false;
+
+      if ( method_exists( $this, $method_name = $match[1] ) ) {
+
+        $method_exists = true;
+
+      } elseif ( method_exists( $this, $method_name = "{$method_name}_html" ) ) {
+
+        $method_exists = true;
+
+      } elseif ( method_exists( $this, $method_name = "get_{$method_name}" ) ) {
+
+        $method_exists = true;
+
+      } elseif ( method_exists( $this, $method_name = "get_{$match[1]}" ) ) {
+
+        $method_exists = true;
+
+      }
+
+      if ( $method_exists ) {
+
+        echo call_user_func_array( array( $this, $method_name ), $args );
+
+        $result = true;
+
+      }
+    }
+
+    return $result;
+
+  }
+
+  /**
+   * Gets array of properties field names that should not get a prefix.
+   *
+   * @param string $property_name
+   *
+   * @return WP_Annotated_Property[]|bool
+   */
+  function get_annotated_property( $property_name ) {
+
+    $annotated_properties = $this->get_annotated_properties();
+
+    return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : false;
+
+  }
+
+  /**
+   * @return array
+   */
+  function get_annotated_properties() {
+
+    if ( ! isset( self::$_annotated_properties[ $class_name = get_class( $this ) ] ) ) {
+
+      /**
+       * @var array[] $annotated_properties
+       */
+      $annotated_properties = $this->get_annotations( 'PROPERTIES' );
+
+      foreach ( $annotated_properties as $property_name => $property_args ) {
+
+        $annotated_properties[ $property_name ] = new WP_Annotated_Property( $property_name, $property_args );
+
+      }
+
+      self::$_annotated_properties[ $class_name ] = $annotated_properties;
+
+    }
+    return self::$_annotated_properties[ $class_name ];
+
+  }
+
+  /**
+   * @return array
+   */
+  function get_properties() {
+
+    $annotated_properties = $this->get_annotated_properties();
+
+    $real_properties = get_class_vars( get_class( $this ) );
+
+    return array_merge( $annotated_properties, $real_properties );
+
+  }
+
+  /**
+   * @return array
+   */
+  function get_annotated_property_names() {
+
+    return array_keys( $this->get_annotated_properties() );
+
+  }
+
+  /**
+   * @param string $annotation_name
+   * @param array $annotations
+   *
+   * @return array
+   */
+  function get_annotations( $annotation_name, $annotations = array() ) {
+
+    return WP_Metadata::get_annotations( $this, $annotation_name, $annotations );
+
+  }
+
+  /**
+   * @param string $filter
+   * @param mixed $value
+   *
+   * @return mixed
+   */
+  function apply_class_filters( $filter, $value ) {
+
+    return WP_Metadata::apply_class_filters( $this, get_class( $this ), $filter, $value, array_slice( func_get_args(), 2 ) );
+
+  }
+
+  /**
+   * @param string $filter
+   *
+   */
+  function do_class_action( $filter ) {
+
+    WP_Metadata::do_class_action( $this, get_class( $this ), $filter, array_slice( func_get_args(), 1 ) );
+
+  }
+
 
 }

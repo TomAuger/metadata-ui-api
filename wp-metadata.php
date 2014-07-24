@@ -65,13 +65,23 @@ class WP_Metadata {
 	 */
 	private static $_storage_type_registry = array();
 
-	/**
+  /**
+   * @var WP_Registry
+   */
+  private static $_object_factory_registry = array();
+
+
+  private static $_class_annotations;
+
+  /**
 	 * @var array
 	 */
 	private static $_autoload_classes = array(
-		'WP_Object_Type'           => 'core/class-object-type.php',
+    'WP_Object_Type'           => 'core/class-object-type.php',
+    'WP_Object_Factory'        => 'core/class-object-factory.php',
 		'WP_Html_Element'          => 'core/class-html-element.php',
 		'WP_Registry'              => 'core/class-registry.php',
+		'WP_Annotated_Property'    => 'core/class-annotated-property.php',
 		'WP_Metadata_Base'         => 'base/class-metadata-base.php',
 		'WP_Storage_Base'          => 'base/class-storage-base.php',
 		'WP_Field_Base'            => 'base/class-field-base.php',
@@ -138,6 +148,15 @@ class WP_Metadata {
 		self::register_storage_type( 'option', 'WP_Option_Storage' );
 		self::register_storage_type( 'taxonomy', 'WP_Taxonomy_Storage' );
 		self::register_storage_type( 'memory', 'WP_Memory_Storage' );
+
+		/*
+		 * Register "factory" classes
+		 */
+		self::initialize_object_factory_registry();
+		self::register_object_factory( 'field',   array( __CLASS__, 'make_field' )  );
+    self::register_object_factory( 'storage', array( __CLASS__, 'make_storage' )  );
+		self::register_object_factory( 'form',    array( __CLASS__, 'make_form' ) );
+    self::register_object_factory( 'html_element', 'WP_Html_Element' );
 
 
 		//    /**
@@ -404,7 +423,7 @@ class WP_Metadata {
 	}
 
 	/**
-	 * @param string $object_type
+	 * @param string|WP_Object_Type $object_type
 	 *
 	 * @return array
 	 */
@@ -603,7 +622,7 @@ class WP_Metadata {
 
 	/**
 	 * @param string $form_name
-	 * @param string $object_type
+	 * @param string|WP_Object_Type $object_type
 	 * @param array $form_args
 	 *
 	 * @return WP_Form
@@ -621,7 +640,7 @@ class WP_Metadata {
 
 	/**
 	 * @param string $field_name
-	 * @param string $object_type
+	 * @param string|WP_Object_Type $object_type
 	 * @param array $field_args
 	 *
 	 * @return int Field Index
@@ -641,7 +660,7 @@ class WP_Metadata {
 
 	/**
 	 * @param string $form_name
-	 * @param string $object_type
+	 * @param string|WP_Object_Type $object_type
 	 * @param array $form_args
 	 *
 	 * @return int Form Index
@@ -988,7 +1007,12 @@ class WP_Metadata {
 
 	}
 
-	static function get_storage_type_class( $storage_type ) {
+  /**
+   * @param string $storage_type
+   *
+   * @return string
+   */
+  static function get_storage_type_class( $storage_type ) {
 
 		return self::$_storage_type_registry->get_entry( $storage_type );
 
@@ -1007,61 +1031,334 @@ class WP_Metadata {
 
 	}
 
-
 	/*********************************************/
 	/*** Prefix related methods                ***/
 	/*********************************************/
 	/**
-	 * Extract args with specified prefixes.
+	 * Collect $args from list of keys and values into a tree of keys and values.
 	 *
-	 * Look for $args based on their prefixes (i.e. 'html_').
-	 * If found capture the non-prefixed key and value into $extracted_args for return.
-	 * (Stripping the prefix allows for nested values, i.e. 'label_html_class')
+	 * Look for $args based on their prefixes (i.e. 'html:').
+	 * If found capture the non-prefixed key and value into $collected_args for return.
+	 * (Stripping the prefix allows for nested values, i.e. 'label:html:class')
+   *
+   * @note ONLY collect the first level, so $args['label:html:class'] would become $args['label']['html:class'].
+   *       Subnames will get split later thanks to calls that drill down recursively.
+   *
+   * @param array $prefixed_args
+   * @param array $args
 	 *
-	 * @note: If a string prefix is passed a single dimensional array is returned.
-	 *        If an array of  prefixes is passed a two dimensional array is returned.
-	 *
-	 * @param array $prefixed_args
-	 * @param string|array $prefixes
-	 * @param array $args
-	 *
-	 * @return mixed
+	 * @return array
 	 */
-	static function extract_prefixed_args( $prefixed_args, $prefixes, $args = array() ) {
-
-		$extracted_args = array();
-
-		$args = wp_parse_args( $args, array(
-			'strip_prefix' => true,
-		) );
-
-		if ( is_string( $original = $prefixes ) ) {
-			$prefixes = array( $prefixes => $prefixes );
-		}
-
-		if ( is_array( $prefixes ) && count( $prefixes ) ) {
-			$extracted_args = array_fill_keys( array_keys( $prefixes ), array() );
-			$match_regex = '#^(' . implode( '|', $prefixes ) . ')_(.*)$#';
-
-			foreach ( $prefixed_args as $arg_name => $arg_value ) {
-				if ( preg_match( $match_regex, $arg_name, $match ) ) {
-					if ( $args[ 'strip_prefix' ] || 2 <= substr_count( $arg_name, '_' ) ) {
-						$extracted_args[ $match[ 1 ] ][ $match[ 2 ] ] = $arg_value;
-					}
-					else {
-						$extracted_args[ $match[ 1 ] ][ $arg_name ] = $arg_value;
-					}
-				}
+	static function collect_args( $prefixed_args, $args = array() ) {
+    $args = wp_parse_args( $args, array(
+      'prefixes' => false,
+      'include' => 'all',   // Or 'prefixed'
+    ));
+    $collected_args = array();
+    if ( is_string( $args['prefixes'] ) ) {
+      $args['prefixes'] = array( $args['prefixes'] );
+    }
+		foreach ( $prefixed_args as $arg_name => $arg_value ) {
+			if ( 'all' == $args['include'] && false === strpos( $arg_name, ':' ) ) {
+        $collected_args[ $arg_name ] = $arg_value;
+			} else {
+				list( $new_name, $sub_name ) = preg_split( '#:#', $arg_name, 2 );
+				if ( 'all' == $args['include'] || in_array( $new_name, $args['prefixes'] ) ) {
+          $collected_args[ 'collected_args' ][ $arg_name ] = $arg_value;
+          $collected_args[ $new_name ][ $sub_name ] = $arg_value;
+          unset( $collected_args[ $arg_name ] );
+        }
 			}
 		}
 
-		return is_string( $original ) ? $extracted_args[ $original ] : $extracted_args;
+		return $collected_args;
+
+	}
+	/*********************************************/
+	/***  Object Factory Type Methods  ***/
+	/*********************************************/
+
+	/**
+	 *
+	 */
+	static function initialize_object_factory_registry() {
+
+		self::$_object_factory_registry = new WP_Registry();
 
 	}
 
-	static function strip_arg_prefixes( $prefixed_args, $prefixes ) {
+  /**
+ 	 * @param string $factory_type - Name of object
+   * @param callable $factory_callable
+   * @param array[] $parameters
+ 	 */
+ 	static function register_object_factory( $factory_type, $factory_callable, $parameters = array() ) {
+
+    $factory = new WP_Object_Factory( $factory_type, array(
+
+      'callable' => $factory_callable,
+      'parameters' => $parameters,
+
+    ));
+
+    self::$_object_factory_registry->register_entry( $factory_type, $factory );
+
+ 	}
+
+  /**
+   * @param string $factory_type
+   *
+   * @return WP_Object_Factory
+   */
+  static function get_object_factory( $factory_type ) {
+
+		return self::$_object_factory_registry->get_entry( $factory_type );
 
 	}
+
+  /**
+   * @param string $class_name
+   * @param string $method_name
+   *
+   * @return bool
+   */
+  static function has_own_method( $class_name, $method_name ) {
+
+    $has_own_method = false;
+
+    if ( method_exists( $class_name, $method_name ) ) {
+      $reflector      = new ReflectionMethod( $class_name, $method_name );
+      $has_own_method = $class_name == $reflector->getDeclaringClass()->name;
+    }
+
+    return $has_own_method;
+
+  }
+
+  /**
+   * Allow invoking of instance methods that are overridden by methods in a child class.
+   *
+   * This allows for methods as filters and actions without requiring them to call parent::method().
+   *
+   * @param object $instance
+   * @param string $class_name
+   * @param string $method_name
+   * @param array $args
+   *
+   * @return mixed
+   */
+  static function invoke_instance_method( $instance, $class_name, $method_name, $args ) {
+
+    $reflected_class  = new ReflectionClass( $class_name );
+    $reflected_method = $reflected_class->getMethod( $method_name );
+
+    return $reflected_method->invokeArgs( $instance, $args );
+
+  }
+
+
+  /**
+   * @param string $class_name
+   * @param string $property_name
+   *
+   * @note UNTESTED
+   *
+   * @return bool
+   */
+  static function has_own_static_property( $class_name, $property_name ) {
+
+    $has_own_static_property = false;
+
+    if ( property_exists( $class_name, $property_name ) ) {
+      $reflected_property      = new ReflectionProperty( $class_name, $property_name );
+      $has_own_static_property = $reflected_property->isStatic();
+    }
+
+    return $has_own_static_property;
+
+  }
+
+  /**
+   * Allow invoking of instance methods that are overridden by methods in a child class.
+   *
+   * This allows for methods as filters and actions without requiring them to call parent::method().
+   *
+   * @note UNTESTED
+   *
+   * @param string $class_name
+   * @param object $object
+   * @param string $method_name
+   *
+   * @return mixed
+   */
+  static function get_static_method_name( $class_name, $object, $method_name ) {
+
+    $reflected_method = new ReflectionProperty( $class_name, $method_name );
+
+    return $reflected_method->getValue( $object );
+
+  }
+
+  /**
+   * @param string $class_name
+   * @param string $property_name
+   *
+   * @return bool
+   */
+  static function non_public_property_exists( $class_name, $property_name ) {
+
+    $reflection = new ReflectionClass( $class_name );
+
+    if ( ! $reflection->hasProperty( $property_name ) ) {
+      $exists = false;
+    } else {
+      $property_name = $reflection->getProperty( $property_name );
+      $exists   = $property_name->isProtected() || $property_name->isPrivate();
+    }
+
+    return $exists;
+
+  }
+  /**
+   * Get an array of class name parent
+   *
+   * Returns an array of all parent class names with most distant ancenstor first down to parent class,
+   * or the named class (if inclusive.)
+   *
+   * @example array( 'WP_Base', 'WP_Field_Base', 'WP_Text_Field' )
+   *
+   * @param string $class_name
+   * @param bool $inclusive
+   *
+   * @return array
+   */
+  static function get_class_parents( $class_name, $inclusive = true ) {
+
+    if ( !( $parents = wp_cache_get( $cache_key = "class_lineage[{$class_name}]" ) ) ) {
+      $parents = $inclusive ? array( $class_name ) : array();
+
+      if ( $class_name = get_parent_class( $class_name ) ) {
+        $parents = array_merge( self::get_class_parents( $class_name, true ), $parents );
+      }
+
+      wp_cache_set( $cache_key, $parents );
+    }
+
+    return $parents;
+
+  }
+
+  /**
+   * Collect an array of class annotations defined as either class constant or static method.
+   * Start with the most distant anscestor down to the current class and merge $annotations.
+   *
+   * @param object $instance
+   * @param string $annotation_name
+   * @param array $annotations
+   *
+   * @return array
+   */
+  static function get_annotations( $instance, $annotation_name, $annotations = array() ) {
+
+    $class_name = get_class( $instance );
+
+    if ( ! isset( self::$_class_annotations[$key = "{$class_name}::{$annotation_name}"] ) ) {
+
+      $parents = self::get_class_parents( $class_name, true );
+
+      foreach ( $parents as $parent ) {
+
+        if ( defined( $const_ref = "{$parent}::{$annotation_name}" ) ) {
+
+          $annotations = array_merge( $annotations, array( self::constant( $annotation_name, $parent ) ) );
+
+        } else if ( self::has_own_method( $parent, $annotation_name ) ) {
+
+          $annotations = array_merge( $annotations, self::invoke_instance_method( $instance, $parent, $annotation_name, $annotations ) );
+
+        }
+
+      }
+
+      /*
+       * Remove any annotations values that are null.
+       */
+      self::$_class_annotations[$key] = array_filter( $annotations, array( __CLASS__, '_strip_null_elements' ) );
+
+    }
+    return self::$_class_annotations[$key];
+
+  }
+
+  /**
+   * Call a named method starting with the most distant anscestor down to the current class filtering $value.
+   *
+   * @param object $object
+   * @param string $class_name
+   * @param string $method_name
+   * @param mixed $value
+   *
+   * @return mixed
+   */
+  static function apply_class_filters( $object, $class_name, $method_name, $value ) {
+    $args = array_slice( func_get_args(), 3 );
+    $parents = self::get_class_parents( $class_name, true );
+
+    foreach ( $parents as $parent ) {
+      if ( self::has_own_method( $parent, $method_name ) ) {
+        $value = self::invoke_instance_method( $object, $parent, $method_name, array( $value, $args ) );
+      }
+    }
+
+    return $value;
+
+  }
+
+  /**
+   * Call a named method starting with the most distant anscestor down to the current class with no return value.
+   *
+   * @param object $object
+   * @param string $class_name
+   * @param string $method_name
+   */
+  static function do_class_action( $object, $class_name, $method_name ) {
+    $args = array_slice( func_get_args(), 3 );
+    $parents = self::get_class_parents( $class_name, true );
+
+    foreach ( $parents as $parent ) {
+      if ( self::has_own_method( $parent, $method_name ) ) {
+        self::invoke_instance_method( $object, $parent, $method_name, array( $args ) );
+      }
+    }
+
+  }
+
+  /**
+   * @param mixed $element
+   *
+   * @return bool
+   */
+  static function _strip_null_elements( $element ) {
+
+    return ! is_null( $element );
+
+  }
+
+
+  /**
+   * @param string $class_name
+   * @param string $const_name
+   *
+   * @return mixed
+   *
+   */
+  static function constant( $class_name, $const_name ) {
+
+    return defined( $const_ref = "{$class_name}::{$const_name}" ) ? constant( $const_ref ) : null;
+
+  }
+
+
 
 }
 

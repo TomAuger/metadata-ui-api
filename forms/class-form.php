@@ -10,7 +10,7 @@ class WP_Form extends WP_Metadata_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'form_';
+	const PREFIX = 'form';
 
 	/**
 	 * @var string
@@ -23,7 +23,7 @@ class WP_Form extends WP_Metadata_Base {
 	var $object_type;
 
 	/**
-	 * @var array
+	 * @var WP_Field_Base[]
 	 */
 	var $fields = array();
 
@@ -42,30 +42,18 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	private $_initialized = false;
 
-	/**
-	 * @return array
-	 */
-	static function DELEGATES() {
+  /**
+ 	 * @return array
+ 	 */
+  static function PROPERTIES() {
 
-		return array( 'storage' => 'storage' );
+    return array(
+      'storage' => array( 'factory' => 'storage', 'prefix' => 'storage' ),
+      'view'    => array( 'factory' => 'view',    'prefix' => 'view' ),
+      'fields'  => array( 'type' => 'WP_Field_Base[]' ),
+    );
 
-	}
-
-	/**
-	 * $form_arg names that should not get a prefix.
-	 *
-	 * Intended to be used by subclasses.
-	 *
-	 * @return array
-	 */
-	static function NO_PREFIX() {
-
-		return array(
-			'view',
-			'fields',
-		);
-
-	}
+  }
 
 	/**
 	 * @param string $form_name
@@ -86,7 +74,7 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	function initialize_class() {
 
-		$this->register_view( 'default', 'WP_Form_View' );
+    $this->register_view( 'default', 'WP_Form_View' );
 
 	}
 
@@ -95,7 +83,7 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	function initialize( $form_args ) {
 
-		if ( !is_object( $this->view ) ) {
+		if ( ! is_object( $this->view ) ) {
 			$this->set_form_view( 'default' );
 		}
 

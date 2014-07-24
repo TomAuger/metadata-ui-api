@@ -39,28 +39,18 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	var $element;
 
-	/**
-	 * @return array
-	 */
-	static function DELEGATES() {
+  /**
+ 	 * @return array
+ 	 */
+  static function PROPERTIES() {
 
-		return array(
-			'html' => 'element',
-			'wrapper' => 'wrapper',
-		);
-	}
+    return array(
+      'field'   => array( 'factory' => 'field',        'prefix' => 'field' ),
+      'wrapper' => array( 'factory' => 'html_element', 'prefix' => 'wrapper' ),
+      'element' => array( 'factory' => 'html_element', 'prefix' => 'html' ),
+    );
 
-	/**
-	 * @return array
-	 */
-	static function NO_PREFIX() {
-
-		return array(
-			'field',
-			'element',
-			'wrapper',
-		);
-	}
+  }
 
 	/**
 	 * @return array
@@ -68,7 +58,10 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	static function TRANSFORMS() {
 
 		return array(
-			'^wrapper_([^_]+)$' => 'wrapper_html_$1', // e.g. Allow wrapper_class as shortcut to wrapper_html_class.
+      /**
+       * @example Allow "wrapper:{$property}" as shortcut to "wrapper:html:class".
+       */
+      '^wrapper:([^:]+)$' => 'wrapper:html:$1',
 		);
 	}
 
@@ -87,7 +80,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	function initialize( $feature_args ) {
 
 		if ( ! is_object( $this->element ) ) {
-			$html_attributes = WP_Metadata::extract_prefixed_args( $feature_args, 'html' );
+			$html_attributes = WP_Metadata::collect_args( $feature_args, 'prefix=html&include=prefixed' );
 
 			$html_attributes[ 'id' ] = $this->html_id();
 			$html_attributes[ 'name' ] = $this->html_name();
@@ -96,7 +89,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 		}
 
 		if ( !is_object( $this->wrapper ) ) {
-			$wrapper_attributes = WP_Metadata::extract_prefixed_args( $feature_args, 'wrapper_html' );
+			$wrapper_attributes = WP_Metadata::collect_args( $feature_args, 'prefix=wrapper&include=prefixed' );
 
 			$wrapper_attributes[ 'id' ] = $this->wrapper_html_id();
 			$wrapper_attributes[ 'name' ] = $this->wrapper_html_name();

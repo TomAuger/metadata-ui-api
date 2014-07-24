@@ -20,7 +20,7 @@ class WP_Hidden_Field_View extends WP_Field_View_Base {
 	 *
 	 * @return array
 	 */
-	static function DELEGATES() {
+	static function CONTAINED() {
 
 		return array( 'input' => 'input' );
 

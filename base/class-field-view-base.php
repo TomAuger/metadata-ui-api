@@ -40,7 +40,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	 *
 	 * @return array
 	 */
-	static function DELEGATES() {
+	static function CONTAINED() {
 
 		return array(
 			'label' => 'label',
@@ -59,7 +59,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	 */
 	function FEATURE_TYPES() {
 
-		return array_values( $this->DELEGATES() );
+		return array_values( $this->CONTAINED() );
 
 	}
 

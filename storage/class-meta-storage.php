@@ -12,29 +12,13 @@ class WP_Meta_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'meta_';
+	const PREFIX = 'meta';
 
 	/**
 	 * @var bool|string - Meta type such as 'post', 'user' and 'comment' (in future, other.)
 	 */
-	var $meta_type = false;
+	var $meta_type = 'post';
 
-
-	/**
-	 * @param array $storage_args
-	 * @return array
-	 */
-	function pre_assign_args( $storage_args ) {
-
-		if ( empty( $storage_args['meta_type'] ) ) {
-
-			$storage_args['meta_type'] = 'post';
-
-		}
-
-		return $storage_args;
-
-	}
 
 	/**
 	 * @return mixed

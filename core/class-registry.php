@@ -2,7 +2,7 @@
 /**
  * Class WP_Registry
  */
-class WP_Registry extends WP_Metadata_Base {
+class WP_Registry {
 
 	/**
 	 * @var array
@@ -11,7 +11,7 @@ class WP_Registry extends WP_Metadata_Base {
 
 	/**
 	 * @param string $name
-	 * @param array $args
+	 * @param mixed $args
 	 *
 	 * @return int
 	 */

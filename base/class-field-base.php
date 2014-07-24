@@ -18,7 +18,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'field_';
+	const PREFIX = 'field';
 
 	/**
 	 * @var bool|string
@@ -71,37 +71,26 @@ class WP_Field_Base extends WP_Metadata_Base {
 	protected $_value = null;
 
 	/**
-	 * Returns an array of delegate properties and with their $args prefix for this class.
+	 * Returns an array of object properties and their annotations.
 	 *
 	 * @return array
 	 */
-	static function DELEGATES() {
+	static function PROPERTIES() {
 
-		return array(
-			'form'    => 'form',
-			'view'    => 'view',
-			'storage' => 'storage',
-		);
-
-	}
-
-
-	/**
-	 * @return array|void
-	 */
-	function get_delegates() {
-
-		return array_merge(
-			self::DELEGATES(),
-			$this->get_view_delegates()
-		);
+    return array(
+      'value'   => array( 'type' => 'mixed' ),
+      'form'    => array( 'type' => 'WP_Form', 'auto_assign' => false, ),
+      'view'    => array( 'prefix' => 'view', 'factory' => 'field' ),
+      'storage' => array( 'storage' => 'view', 'factory' => 'storage', 'default' => 'meta' ),
+    );
 
 	}
 
 	/**
+   * @param self $this_obj
 	 * @return array
 	 */
-	static function TRANSFORMS() {
+	static function TRANSFORMS( $this_obj ) {
 
 		/**
 		 * Create a regex to insure delegated and no_prefix $args are not matched
@@ -112,7 +101,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 		 * @see http://ocpsoft.org/tutorials/regular-expressions/and-in-regex/ for logical 'and'
 		 * @see http://www.regular-expressions.info/refadv.html for "Keep text out of the regex match"
 		 *
-		 * @example Regex if 'foo' and 'bar' are no_prefix or delegates:
+		 * @example Regex if 'foo' and 'bar' are no_prefix or contained:
 		 *
 		 *  '^(?!(?|foo|bar)$)(?!.*_)(.*)'
 		 *
@@ -124,33 +113,19 @@ class WP_Field_Base extends WP_Metadata_Base {
 		 *
 		 * Example matches any string except 'foo', 'bar' or one containing an underscore ('_').
 		 */
-		$html_attributes = array_merge( self::NO_PREFIX(), self::DELEGATES() );
-		$html_attributes = '^(?!(?|' . implode( '|', $html_attributes ) . ')$)(?!.*_)(.*)$';
+		 $properties = implode( '|', $this_obj->get_annotated_property_names() );
+
+		$html_attributes = "^(?!(?|$properties)$)(?!.*_)(.*)$";
 
 		return array(
-			'^label$'                           => 'label_text',
-			$html_attributes                    => 'html_$1',
-			'^input_([^_]+)$'                   => 'input_html_$1',
-			'^html_([^_]+)$'                    => 'input_html_$1',
-			'^input_wrapper_([^_]+)$'           => 'input_wrapper_html_$1',
-			'^wrapper_([^_]+)$'                 => 'input_wrapper_html_$1',
-			'(?:^|_)wrapper(_wrapper)+(?:_|$)'  => 'wrapper',
+			'^label$'                           => 'label:label_text',
+			$html_attributes                    => 'html:$1',
+			'^input:([^_]+)$'                   => 'input:html:$1',
+			'^html:([^_]+)$'                    => 'input:html:$1',
+			'^input:wrapper:([^_]+)$'           => 'input:wrapper:html:$1',
+			'^wrapper:([^_]+)$'                 => 'input:wrapper:html:$1',
+			'(?:^|_)wrapper(:wrapper)+(?:_|$)'  => 'wrapper',
 			'(?:^|_)html(_html)+(?:_|$)'        => 'html',
-		);
-
-	}
-
-	/**
-	 * Array of field names that should not get a prefix.
-	 *
-	 * Intended to be used by subclasses.
-	 *
-	 * @return array
-	 */
-	static function NO_PREFIX() {
-
-		return array(
-			'value',
 		);
 
 	}
@@ -164,18 +139,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 		$field_args[ 'field_name' ] = $field_name;
 
 		parent::__construct( $field_args );
-
-	}
-
-	/**
-	 * @param array $field_args
-	 * @return string
-	 */
-	function default_args( $field_args ) {
-
-		return wp_parse_args( $field_args, array(
-			'storage' => 'meta',
-		));
 
 	}
 
@@ -270,21 +233,21 @@ class WP_Field_Base extends WP_Metadata_Base {
 	function get_view_args() {
 
 		return array_merge(
-			$this->delegated_args[ 'view' ],
-			WP_Metadata::extract_prefixed_args( $this->args, $this->get_view_delegates()
-		));
+			$this->view,
+			WP_Metadata::collect_args( $this->args, $this->get_view_contained() )
+		);
 
 	}
 
 	/**
 	 * @return array
 	 */
-	function get_view_delegates() {
+	function get_view_contained() {
 
-		$delegates = call_user_func( array( $this->get_view_class(), 'DELEGATES' ) );
-		$delegates[ 'view' ] = 'view';
+		$contained = call_user_func( array( $this->get_view_class(), 'CONTAINED' ) );
+		$contained[ 'view' ] = 'view';
 
-		return $delegates;
+		return $contained;
 
 	}
 
@@ -510,11 +473,12 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 * @param string $property_name
 	 * @param mixed $value
 	 *
-	 * @return mixed
 	 */
 	function __set( $property_name, $value ) {
 
-		return property_exists( $this->view, $property_name ) ? $this->view->$property_name = $value : null;
+		if ( property_exists( $this->view, $property_name ) ) {
+      $this->view->$property_name = $value;
+    }
 
 	}
 
