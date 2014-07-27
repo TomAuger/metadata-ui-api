@@ -79,9 +79,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 
     return array(
       'value'   => array( 'type' => 'mixed' ),
-      'form'    => array( 'type' => 'WP_Form', 'auto_assign' => false, ),
-      'view'    => array( 'prefix' => 'view', 'factory' => 'field' ),
-      'storage' => array( 'storage' => 'view', 'factory' => 'storage', 'default' => 'meta' ),
+      'form'    => array( 'type' => 'WP_Form', 'auto_create' => false, ),
+      'view'    => array( 'prefix' => 'view', 'factory' => 'view' ),
+      'storage' => array( 'prefix' => 'storage', 'factory' => 'storage', 'default' => 'meta' ),
     );
 
 	}
@@ -290,13 +290,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function make_field_feature( $feature_type, $feature_args ) {
 
-		if ( $feature_class = WP_Metadata::get_feature_type( $feature_type ) ) {
-			$feature = new $feature_class( $this, $feature_args );
-		} else {
-			$feature = null;
-		}
-
-		return $feature;
+		return WP_Metadata::make_field_feature( $this, $feature_type, $feature_args );
 
 	}
 
@@ -318,13 +312,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function make_storage( $storage_type, $storage_args ) {
 
-		if ( $storage_class = WP_Metadata::get_storage_type_class( $storage_type ) ) {
-			$storage = new $storage_class( $this, $storage_args );
-		} else {
-			$storage = null;
-		}
-
-		return $storage;
+		return WP_Metadata::make_storage( $this, $storage_type, $storage_args );
 
 	}
 
@@ -336,11 +324,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function make_field_view( $view_name, $view_args = array() ) {
 
-		$field_view_class = $this->get_view_class( $view_name );
-		$view = new $field_view_class( $view_name, $view_args );
-		$view->field = $this; // This is redundant, but that's okay
-
-		return $view;
+    return WP_Metadata::make_field_view( $this, $view_name, $view_args );
 
 	}
 
@@ -358,7 +342,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 			$view_name = $this->view;
 		}
 
-		return is_object( $this->view ) ? get_class( $this->view ) : WP_Metadata::get_view_class( 'field', $view_name, get_class( $this ) );
+		return is_object( $this->view )
+		  ? get_class( $this->view )
+		  : WP_Metadata::get_view_class( 'field', $view_name, get_class( $this ) );
 
 	}
 

@@ -37,6 +37,11 @@ class WP_Annotated_Property {
   var $default;
 
   /**
+   * @var array
+   */
+  var $parameters = array();
+
+  /**
    * @var string
    * @example
    *    'form', 'field', 'storage', etc.

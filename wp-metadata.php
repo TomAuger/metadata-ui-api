@@ -43,11 +43,6 @@ class WP_Metadata {
 	/**
 	 * @var array
 	 */
-	private static $_field_types = array();
-
-	/**
-	 * @var array
-	 */
 	private static $_element_attributes = array();
 
 	/**
@@ -55,23 +50,19 @@ class WP_Metadata {
 	 */
 	private static $_views = array();
 
-	/**
-	 * @var WP_Registry
-	 */
-	private static $_feature_type_registry = array();
-
-	/**
-	 * @var WP_Registry
-	 */
-	private static $_storage_type_registry = array();
+  /**
+   * @var WP_Annotated_Property[]
+   */
+  private static $_class_annotations;
 
   /**
-   * @var WP_Registry
-   */
-  private static $_object_factory_registry = array();
-
-
-  private static $_class_annotations;
+ 	 * @var WP_Registry[]|object
+ 	 */
+ 	private static $_registries = array(
+    'storage_types'  => null,
+    'field_types'    => null,
+    'feature_types'  => null,
+ 	);
 
   /**
 	 * @var array
@@ -120,6 +111,17 @@ class WP_Metadata {
 		//    self::$_object_type_form_registry = new WP_Registry();
 		//    self::$_view_registry = new WP_Registry();
 
+    foreach( array_keys( self::$_registries ) as $registry_name ) {
+
+      self::$_registries[$registry_name] = new WP_Registry( $registry_name );
+
+    }
+    /*
+     * Convert to object to ensure by-reference passing
+     */
+    self::$_registries = (object)self::$_registries;
+
+
 		/*
 		 * Register field classes
 		 */
@@ -132,7 +134,6 @@ class WP_Metadata {
 
 		self::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
 
-		self::initialize_feature_type_registry();
 		self::register_feature_type( 'input', 'WP_Field_Input_Feature' );
 		self::register_feature_type( 'label', 'WP_Field_Label_Feature' );
 		self::register_feature_type( 'message', 'WP_Field_Message_Feature' );
@@ -142,21 +143,11 @@ class WP_Metadata {
 		/*
 		 * Register "storage" classes
 		 */
-		self::initialize_storage_type_registry();
 		self::register_storage_type( 'meta', 'WP_Meta_Storage' );
 		self::register_storage_type( 'core', 'WP_Core_Storage' );
 		self::register_storage_type( 'option', 'WP_Option_Storage' );
 		self::register_storage_type( 'taxonomy', 'WP_Taxonomy_Storage' );
 		self::register_storage_type( 'memory', 'WP_Memory_Storage' );
-
-		/*
-		 * Register "factory" classes
-		 */
-		self::initialize_object_factory_registry();
-		self::register_object_factory( 'field',   array( __CLASS__, 'make_field' )  );
-    self::register_object_factory( 'storage', array( __CLASS__, 'make_storage' )  );
-		self::register_object_factory( 'form',    array( __CLASS__, 'make_form' ) );
-    self::register_object_factory( 'html_element', 'WP_Html_Element' );
 
 
 		//    /**
@@ -517,7 +508,7 @@ class WP_Metadata {
 		/**
 		 * @var string|object $field_type If string, a class. If object a filepath to load a class and $args
 		 */
-		$field_type = self::_get_field_type( $field_args[ 'field_type' ] );
+		$field_type = self::get_field_type( $field_args[ 'field_type' ] );
 
 		if ( is_object( $field_type ) ) {
 			/**
@@ -550,17 +541,6 @@ class WP_Metadata {
 		}
 
 		return $field;
-
-	}
-
-	/**
-	 * @param string $field_type
-	 *
-	 * @return string|array|object
-	 */
-	private static function _get_field_type( $field_type ) {
-
-		return self::$_field_types[ $field_type ];
 
 	}
 
@@ -629,12 +609,7 @@ class WP_Metadata {
 	 */
 	static function make_form( $form_name, $object_type, $form_args = array() ) {
 
-		/**
-		 * @todo Support more than one type of form. Maybe. If needed.
-		 */
-		$form = new WP_Form( $form_name, $object_type, $form_args );
-
-		return $form;
+	  return WP_Form::make_new( $form_name, $object_type, $form_args );
 
 	}
 
@@ -685,15 +660,27 @@ class WP_Metadata {
 	 */
 	static function register_field_type( $type_name, $type_def = array() ) {
 
-		if ( ! isset( self::$_field_types[ $type_name ] ) ) {
+		if ( ! isset( self::$_registries->field_types->$type_name ) ) {
 
-			self::$_field_types[ $type_name ] = $type_def;
+      self::$_registries->field_types->$type_name = $type_def;
 
 			return true;
+
 		}
 
 		return false;
 	}
+
+  /**
+ 	 * @param string $field_type
+ 	 *
+ 	 * @return string|array|object
+ 	 */
+ 	static function get_field_type( $field_type ) {
+
+ 		return self::$_registries->field_types->$field_type;
+
+ 	}
 
 	/**
 	 * @param string $tag_name
@@ -960,42 +947,42 @@ class WP_Metadata {
 	/*********************************************/
 
 	/**
-	 *
-	 */
-	static function initialize_feature_type_registry() {
-
-		self::$_feature_type_registry = new WP_Registry();
-
-	}
-
-	/**
 	 * @param string $feature_type Name of Feature
 	 * @param string $feature_class Classname
 	 */
 	static function register_feature_type( $feature_type, $feature_class ) {
 
-		self::$_feature_type_registry->register_entry( $feature_type, $feature_class );
+    self::$_registries->feature_types->register_entry( $feature_type, $feature_class );
 
 	}
 
-	static function get_feature_type( $feature_type ) {
+  /**
+   * @param $feature_type
+   *
+   * @return string
+   */
+  static function get_feature_type( $feature_type ) {
 
-		return self::$_feature_type_registry->get_entry( $feature_type );
+		return self::$_registries->feature_types->get_entry( $feature_type );
 
 	}
 
-	/*********************************************/
+  /**
+ 	 * Does the named feature type exist?
+ 	 *
+ 	 * @param string $feature_type_name The name of the view that is unique for this class.
+ 	 *
+ 	 * @return bool
+ 	 */
+ 	static function feature_type_exists( $feature_type_name ) {
+
+     return self::$_registries->feature_types->entry_exists( $feature_type_name );
+
+ 	}
+
+ 	/*********************************************/
 	/***  Field Storage Type Registry Methods  ***/
 	/*********************************************/
-
-	/**
-	 *
-	 */
-	static function initialize_storage_type_registry() {
-
-		self::$_storage_type_registry = new WP_Registry();
-
-	}
 
 	/**
 	 * @param string $storage_type_name - Name of storage
@@ -1003,7 +990,7 @@ class WP_Metadata {
 	 */
 	static function register_storage_type( $storage_type_name, $storage_type_class = false ) {
 
-		self::$_storage_type_registry->register_entry( $storage_type_name, $storage_type_class );
+    self::$_registries->storage_types->register_entry( $storage_type_name, $storage_type_class );
 
 	}
 
@@ -1014,12 +1001,12 @@ class WP_Metadata {
    */
   static function get_storage_type_class( $storage_type ) {
 
-		return self::$_storage_type_registry->get_entry( $storage_type );
+    return self::$_registries->storage_types->get_entry( $storage_type );
 
 	}
 
 	/**
-	 * Does the named field view exist?
+   * Does the named storage type exist?
 	 *
 	 * @param string $storage_type_name The name of the view that is unique for this class.
 	 *
@@ -1027,7 +1014,7 @@ class WP_Metadata {
 	 */
 	static function storage_type_exists( $storage_type_name ) {
 
-		return self::$_storage_type_registry->entry_exists( $storage_type_name );
+    return self::$_registries->storage_types->entry_exists( $storage_type_name );
 
 	}
 
@@ -1074,48 +1061,6 @@ class WP_Metadata {
 		return $collected_args;
 
 	}
-	/*********************************************/
-	/***  Object Factory Type Methods  ***/
-	/*********************************************/
-
-	/**
-	 *
-	 */
-	static function initialize_object_factory_registry() {
-
-		self::$_object_factory_registry = new WP_Registry();
-
-	}
-
-  /**
- 	 * @param string $factory_type - Name of object
-   * @param callable $factory_callable
-   * @param array[] $parameters
- 	 */
- 	static function register_object_factory( $factory_type, $factory_callable, $parameters = array() ) {
-
-    $factory = new WP_Object_Factory( $factory_type, array(
-
-      'callable' => $factory_callable,
-      'parameters' => $parameters,
-
-    ));
-
-    self::$_object_factory_registry->register_entry( $factory_type, $factory );
-
- 	}
-
-  /**
-   * @param string $factory_type
-   *
-   * @return WP_Object_Factory
-   */
-  static function get_object_factory( $factory_type ) {
-
-		return self::$_object_factory_registry->get_entry( $factory_type );
-
-	}
-
   /**
    * @param string $class_name
    * @param string $method_name
@@ -1301,7 +1246,8 @@ class WP_Metadata {
    * @return mixed
    */
   static function apply_class_filters( $object, $class_name, $method_name, $value ) {
-    $args = array_slice( func_get_args(), 3 );
+
+    $args = func_get_args() ? array_slice( func_get_args(), 3 ) : array();
     $parents = self::get_class_parents( $class_name, true );
 
     foreach ( $parents as $parent ) {
@@ -1322,12 +1268,13 @@ class WP_Metadata {
    * @param string $method_name
    */
   static function do_class_action( $object, $class_name, $method_name ) {
-    $args = array_slice( func_get_args(), 3 );
+
+    $args = func_get_args() ? array_slice( func_get_args(), 3 ) : array();
     $parents = self::get_class_parents( $class_name, true );
 
     foreach ( $parents as $parent ) {
       if ( self::has_own_method( $parent, $method_name ) ) {
-        self::invoke_instance_method( $object, $parent, $method_name, array( $args ) );
+        self::invoke_instance_method( $object, $parent, $method_name, $args );
       }
     }
 
@@ -1359,6 +1306,98 @@ class WP_Metadata {
   }
 
 
+  /**
+   * Returns an instance of a storage object.
+   *
+   * @param string $storage_type
+   * @param object $owner
+ 	 * @param array $storage_args
+ 	 *
+ 	 * @return null|WP_Storage_Base
+ 	 */
+ 	static function make_storage( $storage_type, $owner = null, $storage_args = array() ) {
+
+ 		return WP_Storage_Base::make_new( $storage_type, $owner, $storage_args );
+
+ 	}
+
+  /**
+   * @param WP_Field_Base $field
+   * @param string $view_name
+ 	 * @param array $view_args
+ 	 *
+ 	 * @return WP_Field_View
+ 	 */
+ 	static function make_field_view( $field, $view_name, $view_args = array() ) {
+
+ 		$field_view_class = $field->get_view_class( $view_name );
+
+ 		if ( $view = new $field_view_class( $view_name, $view_args ) ) {
+
+      if ( property_exists( $field, 'field' ) ) {
+
+        $view->field = $field;
+
+      }
+
+    } else {
+
+      $view = null;
+
+    }
+
+ 		return $view;
+
+  }
+
+  /**
+   * @param WP_Field_Base $field
+ 	 * @param array[] $features_args
+ 	 *
+ 	 * @return null|WP_Field_Feature_Base
+ 	 */
+ 	static function make_field_features( $field, $features_args ) {
+
+    $features = array();
+
+    foreach( $features_args as $feature_type => $feature_args ) {
+
+      $features[ $feature_type ] = self::make_field_feature( $field, $feature_type, $feature_args );
+
+    }
+
+    return $features;
+
+  }
+
+  /**
+   * @param WP_Field_Base $field
+ 	 * @param string $feature_type
+ 	 * @param array $feature_args
+ 	 *
+ 	 * @return null|WP_Field_Feature_Base
+ 	 */
+ 	static function make_field_feature( $field, $feature_type, $feature_args ) {
+
+ 		if ( $feature_class = self::get_feature_type( $feature_type ) ) {
+
+ 			$feature = new $feature_class( $field, $feature_args );
+
+      if ( property_exists( $field, 'field' ) ) {
+
+        $view->field = $field;
+
+      }
+
+ 		} else {
+
+ 			$feature = null;
+
+ 		}
+
+ 		return $feature;
+
+ 	}
 
 }
 

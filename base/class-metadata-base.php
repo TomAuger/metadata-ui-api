@@ -48,6 +48,24 @@ abstract class WP_Metadata_Base {
   /**
    * @return array
    */
+  static function PROPERTIES() {
+
+    return array();
+
+  }
+
+  /**
+   * @return array
+   */
+  static function METHODS() {
+
+    return array();
+
+  }
+
+  /**
+   * @return array
+   */
   static function TRANSFORMS() {
 
     return array();
@@ -293,6 +311,12 @@ abstract class WP_Metadata_Base {
 
     $real_properties = get_class_vars( get_class( $this ) );
 
+    $context = array(
+      '$this' => $this,
+      '$value' => null,
+    );
+
+
     /*
      * Assign the arg values to properties, if they exist.
      * If no property exists capture value in the $this->extra[] array.
@@ -333,12 +357,21 @@ abstract class WP_Metadata_Base {
 
         if ( isset( $annotated_property ) && $annotated_property->factory ) {
 
-          $args[ '_annotated_property' ] = $annotated_property;
-          $args[ 'value' ] = $value;
+          $context['$value'] = $value;
 
           $factory = WP_Metadata::get_object_factory( $annotated_property->factory );
 
-          $value = call_user_func_array( $factory->callable, $args );
+          if ( $annotated_property->prefix ) {
+
+            $object_args = $factory->extract_args( $annotated_property->prefix, $args );
+
+          } else {
+
+            $object_args = array();
+
+          }
+
+          $value = $factory->make_object( $context, $object_args );
 
         }
 
@@ -507,7 +540,10 @@ abstract class WP_Metadata_Base {
    */
   function apply_class_filters( $filter, $value ) {
 
-    return WP_Metadata::apply_class_filters( $this, get_class( $this ), $filter, $value, array_slice( func_get_args(), 2 ) );
+    call_user_func_array(
+      array( 'WP_Metadata', 'apply_class_filters' ),
+      array( $this, get_class( $this ), $filter, $value, array_slice( func_get_args(), 2 ) )
+    );
 
   }
 
@@ -517,7 +553,10 @@ abstract class WP_Metadata_Base {
    */
   function do_class_action( $filter ) {
 
-    WP_Metadata::do_class_action( $this, get_class( $this ), $filter, array_slice( func_get_args(), 1 ) );
+    call_user_func_array(
+      array( 'WP_Metadata', 'do_class_action' ),
+      array( $this, get_class( $this ), $filter, array_slice( func_get_args(), 1 ) )
+    );
 
   }
 

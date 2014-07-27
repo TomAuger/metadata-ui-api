@@ -37,6 +37,12 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	var $view;
 
+
+  /**
+ 	 * @var WP_Storage_Base
+ 	 */
+	var $storage;
+
 	/**
 	 *
 	 */
@@ -48,12 +54,45 @@ class WP_Form extends WP_Metadata_Base {
   static function PROPERTIES() {
 
     return array(
-      'storage' => array( 'factory' => 'storage', 'prefix' => 'storage' ),
-      'view'    => array( 'factory' => 'view',    'prefix' => 'view' ),
+      'storage' => array( 'prefix' => 'storage', 'type' => 'WP_Storage_Base' ),
+      'view'    => array( 'prefix' => 'view', 'type' => 'WP_Form_View' ),
       'fields'  => array( 'type' => 'WP_Field_Base[]' ),
     );
 
   }
+
+  /**
+   * Defines the PARAMETERS for the static class factory method 'make_new'.
+   *
+   * @return array
+   */
+  static function PARAMETERS() {
+
+    return array(
+      '$value',
+      'object_type',
+      '$args',
+    );
+
+  }
+
+  /**
+ 	 * @param string $form_name
+ 	 * @param string|WP_Object_Type $object_type
+ 	 * @param array $form_args
+ 	 *
+ 	 * @return WP_Form
+   *
+   * @todo Support more than one type of form. Maybe. If needed.
+   *
+ 	 */
+ 	static function make_new( $form_name, $object_type, $form_args = array() ) {
+
+ 		$form = new WP_Form( $form_name, $object_type, $form_args );
+
+ 		return $form;
+
+ 	}
 
 	/**
 	 * @param string $form_name
@@ -84,7 +123,9 @@ class WP_Form extends WP_Metadata_Base {
 	function initialize( $form_args ) {
 
 		if ( ! is_object( $this->view ) ) {
+
 			$this->set_form_view( 'default' );
+
 		}
 
 		$this->initialize_form_fields( $form_args[ 'object_type' ] );
@@ -131,21 +172,21 @@ class WP_Form extends WP_Metadata_Base {
 
 	}
 
-	/**
-	 * @param WP_Post|object $object
-	 */
-	function set_storage_object( $object ) {
+  /**
+ 	 * @param WP_Post|object $object
+ 	 */
+ 	function set_storage_object( $object ) {
 
-		/**
-		 * @var WP_Field_Base $field
-		 */
-		foreach ( $this->fields as $field ) {
-			if ( ! is_object( $field->storage->object ) ) {
-				$field->storage->object = $object;
-			}
-		}
+ 		/**
+ 		 * @var WP_Field_Base $field
+ 		 */
+ 		foreach ( $this->fields as $field ) {
+ 			if ( ! is_object( $field->storage->object ) ) {
+ 				$field->storage->object = $object;
+ 			}
+ 		}
 
-	}
+ 	}
 
 	/**
 	 * Register a class to be used as a form_view for the current class.

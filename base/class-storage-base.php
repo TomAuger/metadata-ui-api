@@ -31,26 +31,69 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 	 *
 	 * @return array
 	 */
-	static function NO_PREFIX() {
+	static function PROPERTIES() {
 
 		return array(
-			'owner',
-			'object',
+			'owner'   => array( 'prefix' => false, 'auto_create' => false ),
+			'object'  => array( 'prefix' => false, 'auto_create' => false ),
 		);
 
 	}
 
-	/**
-	 * @param object|WP_Metadata_Base $owner
-	 * @param array $storage_args
-	 */
-	function __construct( $owner, $storage_args = array() ) {
+  /**
+   * Defines the PARAMETERS for the static class factory method 'make_new'.
+   *
+   * @return array
+   */
+  static function PARAMETERS() {
 
-		$this->owner = $owner;
+    return array(
+      '$value',
+      '$this',
+      '$args',
+    );
 
-		parent::__construct( $storage_args );
+  }
 
-	}
+
+  /**
+   * Returns a new instance of a storage object.
+   *
+   * Defaults to WP_Meta_Storage if $storage_type not passed (i.e. $storage_type => 'meta').
+   *
+   * @param string $storage_type
+   * @param object $owner
+ 	 * @param array $storage_args
+ 	 *
+ 	 * @return null|WP_Storage_Base
+ 	 */
+  static function make_new( $storage_type, $owner = null, $storage_args = array() ) {
+
+    if ( ! $storage_type ) {
+
+      $storage_type = 'meta';
+
+    }
+
+    if ( $storage_class = self::get_storage_type_class( $storage_type ) ) {
+
+      $storage = new $storage_class( $storage_args );
+
+      if ( property_exists( $owner, 'storage' ) ) {
+
+        $owner->storage = $storage;
+
+      }
+
+    } else {
+
+      $storage = null;
+
+    }
+
+ 		return $storage;
+
+ 	}
 
 	/**
 	 * @return mixed $value
