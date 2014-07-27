@@ -55,6 +55,19 @@ abstract class WP_Metadata_Base {
   }
 
   /**
+   * Defines the PARAMETERS for the static class factory method 'make_new'.
+   *
+   * @return array
+   */
+  static function PARAMETERS() {
+
+    return array(
+      '$args',
+    );
+
+  }
+
+  /**
    * @return array
    */
   static function METHODS() {
@@ -355,23 +368,21 @@ abstract class WP_Metadata_Base {
 
         $property_name = $property->property_name;
 
-        if ( isset( $annotated_property ) && $annotated_property->factory ) {
-
-          $context['$value'] = $value;
-
-          $factory = WP_Metadata::get_object_factory( $annotated_property->factory );
+        if ( isset( $annotated_property ) && $annotated_property->is_class() ) {
 
           if ( $annotated_property->prefix ) {
 
-            $object_args = $factory->extract_args( $annotated_property->prefix, $args );
+            $object_args = $this->extract_prefixed_args( $annotated_property->prefix, $args );
 
           } else {
 
             $object_args = array();
 
           }
+          $object_args['$object'] = $this;
+          $object_args['$value'] = $value;
 
-          $value = $factory->make_object( $context, $object_args );
+          $this->make_object( $annotated_property->property_type, $object_args );
 
         }
 
@@ -553,12 +564,85 @@ abstract class WP_Metadata_Base {
    */
   function do_class_action( $filter ) {
 
-    call_user_func_array(
-      array( 'WP_Metadata', 'do_class_action' ),
-      array( $this, get_class( $this ), $filter, array_slice( func_get_args(), 1 ) )
+    $args = func_get_args();
+
+    $call_args = array_merge(
+      array( $this, get_class( $this ), $filter ),
+      array_slice( $args, 1 )
     );
+
+    call_user_func_array( array( 'WP_Metadata', 'do_class_action' ), $call_args );
 
   }
 
+  /**
+   * @param string $class_name
+   * @param array $object_args
+   *
+   * @return object
+   */
+  function make_object( $class_name, $object_args ) {
+
+    $parameters = self::_build_parameters( $class_name, $object_args );
+
+    if ( method_exists( $class_name, 'make_new' ) ) {
+
+      $object = call_user_func_array( array( $class_name, 'make_new' ), $parameters );
+
+    } else {
+
+      $object = null;
+
+    }
+
+    return $object;
+
+  }
+
+
+  /**
+   * Build Parameters for Object Constructor
+   *
+   * @param string $class_name
+   * @param array $object_args
+   *
+   * @return array
+   */
+  private function _build_parameters( $class_name, $object_args ) {
+
+    $parameters = array();
+
+    foreach( $this->PARAMETERS() as $parameter_name ) {
+
+      if ( preg_match( '#^(\$object|\$value)$#', $parameter_name ) ) {
+        $parameters[] = $object_args[ $parameter_name ];
+
+      } else if ( '$args' == $parameter_name ) {
+        $parameters[] = $object_args;
+
+      } else if ( property_exists( $class_name, $parameter_name ) ) {
+        $parameters[] = $object_args[ '$object' ]->$parameter_name;
+
+      } else if ( isset( $object_args[ $parameter_name ] ) ) {
+        $parameters[] = $object_args[ $parameter_name ];
+
+      }
+
+    }
+
+    return $parameters;
+
+  }
+
+  /**
+   * @param string $prefix
+   * @param array $args
+   * @return mixed|array;
+   */
+  function extract_prefixed_args( $prefix, $args ) {
+
+    return ! empty( $args[$prefix] ) ? $args[$prefix] : array();
+
+  }
 
 }

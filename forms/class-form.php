@@ -76,24 +76,6 @@ class WP_Form extends WP_Metadata_Base {
 
   }
 
-  /**
- 	 * @param string $form_name
- 	 * @param string|WP_Object_Type $object_type
- 	 * @param array $form_args
- 	 *
- 	 * @return WP_Form
-   *
-   * @todo Support more than one type of form. Maybe. If needed.
-   *
- 	 */
- 	static function make_new( $form_name, $object_type, $form_args = array() ) {
-
- 		$form = new WP_Form( $form_name, $object_type, $form_args );
-
- 		return $form;
-
- 	}
-
 	/**
 	 * @param string $form_name
 	 * @param string|WP_Object_Type $object_type
@@ -347,5 +329,24 @@ class WP_Form extends WP_Metadata_Base {
 
 	}
 
+
+
+  /**
+ 	 * @param string $form_name
+ 	 * @param string|WP_Object_Type $object_type
+ 	 * @param array $form_args
+ 	 *
+ 	 * @return WP_Form
+   *
+   * @todo Support more than one type of form. Maybe. If needed.
+   *
+ 	 */
+ 	static function make_new( $form_name, $object_type, $form_args = array() ) {
+
+ 		$form = new WP_Form( $form_name, $object_type, $form_args );
+
+ 		return $form;
+
+ 	}
 
 }

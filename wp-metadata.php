@@ -107,20 +107,7 @@ class WP_Metadata {
 
 		spl_autoload_register( array( __CLASS__, '_autoloader' ) );
 
-		//    self::$_object_type_field_registry = new WP_Registry();
-		//    self::$_object_type_form_registry = new WP_Registry();
-		//    self::$_view_registry = new WP_Registry();
-
-    foreach( array_keys( self::$_registries ) as $registry_name ) {
-
-      self::$_registries[$registry_name] = new WP_Registry( $registry_name );
-
-    }
-    /*
-     * Convert to object to ensure by-reference passing
-     */
-    self::$_registries = (object)self::$_registries;
-
+    self::initialize_registries();
 
 		/*
 		 * Register field classes
@@ -168,6 +155,24 @@ class WP_Metadata {
 		}
 
 	}
+
+  /**
+   * Initialize the generic registries.
+   *
+   */
+  static function initialize_registries() {
+
+    foreach( array_keys( self::$_registries ) as $registry_name ) {
+
+      self::$_registries[$registry_name] = new WP_Registry( $registry_name );
+
+    }
+    /*
+     * Convert to object to ensure by-reference passing
+     */
+    self::$_registries = (object)self::$_registries;
+
+  }
 
 	/**
 	 * @param string $class_name
@@ -1269,12 +1274,15 @@ class WP_Metadata {
    */
   static function do_class_action( $object, $class_name, $method_name ) {
 
-    $args = func_get_args() ? array_slice( func_get_args(), 3 ) : array();
+    $args = func_get_args();
+
+    $invoke_args = $args ? array_slice( $args, 3 ) : array();
+
     $parents = self::get_class_parents( $class_name, true );
 
     foreach ( $parents as $parent ) {
       if ( self::has_own_method( $parent, $method_name ) ) {
-        self::invoke_instance_method( $object, $parent, $method_name, $args );
+        self::invoke_instance_method( $object, $parent, $method_name, $invoke_args );
       }
     }
 

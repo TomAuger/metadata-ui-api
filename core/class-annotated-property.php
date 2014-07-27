@@ -63,8 +63,10 @@ class WP_Annotated_Property {
     if ( empty( $args['type'] ) ) {
       $this->property_type = 'string';
     } else if ( preg_match( '#(.+)\[\]$#', $args['type'], $match ) ) {
-      $this->property_type = 'array';
-      $this->array_of = $match[1];
+        $this->property_type = 'array';
+        $this->array_of = $match[1];
+    } else {
+      $this->property_type = $args['type'];
     }
     unset( $args['type'] );
 
@@ -78,6 +80,13 @@ class WP_Annotated_Property {
       }
     }
 
+  }
+
+  /**
+   * @return bool
+   */
+  function is_class() {
+    return class_exists( $this->property_type );
   }
 
 }
