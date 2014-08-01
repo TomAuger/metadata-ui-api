@@ -637,6 +637,9 @@ class WP_Metadata {
 		self::$_object_type_fields[ $object_type ][ $field_name ] = $field_args[ 'field_index' ];
 		self::$_field_args[] = $field_args;
 
+		// @todo Generalized callbacks
+		register_meta( $object_type, $field_name, null, null );
+
 		return $field_args[ 'field_index' ];
 
 	}
