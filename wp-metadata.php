@@ -87,6 +87,7 @@ class WP_Metadata {
 		'WP_Textarea_Field'        => 'fields/class-textarea-field.php',
 		'WP_Url_Field'             => 'fields/class-url-field.php',
 		'WP_Date_Field'            => 'fields/class-date-field.php',
+		'WP_Editor_Field'          => 'fields/class-editor-field.php',
 		'WP_Hidden_Field'          => 'fields/class-hidden-field.php',
 		'WP_Field_Input_Feature'   => 'features/class-field-input-feature.php',
 		'WP_Field_Label_Feature'   => 'features/class-field-label-feature.php',
@@ -118,6 +119,7 @@ class WP_Metadata {
 		self::register_field_type( 'textarea', 'WP_Textarea_Field' );
 		self::register_field_type( 'url', 'WP_Url_Field' );
 		self::register_field_type( 'date', 'WP_Date_Field' );
+		self::register_field_type( 'editor', 'WP_Editor_Field' );
 		self::register_field_type( 'hidden', 'WP_Hidden_Field' );
 
 		self::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
