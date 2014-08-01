@@ -990,6 +990,11 @@ class WP_Metadata {
 
 	}
 
+	/**
+	 * @param $storage_type
+	 *
+	 * @return mixed
+	 */
 	static function get_storage_type_class( $storage_type ) {
 
 		return self::$_storage_type_registry->get_entry( $storage_type );
