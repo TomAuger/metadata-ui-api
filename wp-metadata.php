@@ -69,7 +69,6 @@ class WP_Metadata {
 	 */
 	private static $_autoload_classes = array(
     'WP_Object_Type'           => 'core/class-object-type.php',
-    'WP_Object_Factory'        => 'core/class-object-factory.php',
 		'WP_Html_Element'          => 'core/class-html-element.php',
 		'WP_Registry'              => 'core/class-registry.php',
 		'WP_Annotated_Property'    => 'core/class-annotated-property.php',
@@ -489,63 +488,7 @@ class WP_Metadata {
 	 */
 	static function make_field( $field_name, $object_type, $field_args = array() ) {
 
-		$field = false;
-
-		if ( !isset( $field_args[ 'field_type' ] ) ) {
-			/*
-			 * We have to do this normalization of the 'type' $arg prior to
-			 * the Field classes __construct() because it drives the class used
-			 * to instantiate the Field. All other $args can be normalized
-			 * in the Field class constructor.
-			 */
-			if ( !isset( $field_args[ 'type' ] ) ) {
-
-				$field_args[ 'field_type' ] = 'text';
-
-			} else {
-
-				$field_args[ 'field_type' ] = $field_args[ 'type' ];
-
-				unset( $field_args[ 'type' ] );
-			}
-		}
-
-		/**
-		 * @var string|object $field_type If string, a class. If object a filepath to load a class and $args
-		 */
-		$field_type = self::get_field_type( $field_args[ 'field_type' ] );
-
-		if ( is_object( $field_type ) ) {
-			/**
-			 * Field type is Class name with external filepath
-			 */
-
-			if ( $field_type->filepath ) {
-				require_once( $field_type->filepath );
-			}
-
-			$field_type = $field_type->field_args;
-		}
-
-		if ( is_string( $field_type ) && class_exists( $field_type ) ) {
-
-			/**
-			 * Field type is a Class name
-			 */
-			$field = new $field_type( $field_name, $field_args );
-
-		} else if ( is_array( $field_type ) ) {
-
-			/**
-			 * Field type is a 'Prototype'
-			 */
-			$field_args = wp_parse_args( $field_args, $field_type );
-
-			$field = self::make_field( $field_name, $object_type, $field_args );
-
-		}
-
-		return $field;
+		return WP_Field_Base::make_new( $field_name, $object_type, $field_args );
 
 	}
 
@@ -1056,7 +999,7 @@ class WP_Metadata {
 			} else {
 				list( $new_name, $sub_name ) = preg_split( '#:#', $arg_name, 2 );
 				if ( 'all' == $args['include'] || in_array( $new_name, $args['prefixes'] ) ) {
-          $collected_args[ 'collected_args' ][ $arg_name ] = $arg_value;
+          $collected_args[ '_collected_args' ][ $arg_name ] = $arg_value;
           $collected_args[ $new_name ][ $sub_name ] = $arg_value;
           unset( $collected_args[ $arg_name ] );
         }
@@ -1224,7 +1167,9 @@ class WP_Metadata {
 
         } else if ( self::has_own_method( $parent, $annotation_name ) ) {
 
-          $annotations = array_merge( $annotations, self::invoke_instance_method( $instance, $parent, $annotation_name, $annotations ) );
+          $annotations = array_merge( $annotations,
+            self::invoke_instance_method( $instance, $parent, $annotation_name, $annotations ) )
+          ;
 
         }
 
@@ -1406,6 +1351,17 @@ class WP_Metadata {
  		return $feature;
 
  	}
+
+	/**
+	 * @param string $class_name
+	 * @return string[];
+	 *
+	 */
+	static function get_make_new_parameters( $class_name ) {
+
+		return call_user_func( array( $class_name, 'PARAMETERS' ) );
+
+	}
 
 }
 

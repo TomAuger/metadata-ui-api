@@ -37,7 +37,6 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	var $view;
 
-
   /**
  	 * @var WP_Storage_Base
  	 */
@@ -54,8 +53,8 @@ class WP_Form extends WP_Metadata_Base {
   static function PROPERTIES() {
 
     return array(
-      'storage' => array( 'prefix' => 'storage', 'type' => 'WP_Storage_Base' ),
-      'view'    => array( 'prefix' => 'view', 'type' => 'WP_Form_View' ),
+	    'view'    => array( 'type' => 'WP_Form_View', 'default' => 'default' ),
+      'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
       'fields'  => array( 'type' => 'WP_Field_Base[]' ),
     );
 
@@ -75,6 +74,24 @@ class WP_Form extends WP_Metadata_Base {
     );
 
   }
+
+	/**
+	 * @param string $form_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $form_args
+	 *
+	 * @return WP_Form
+  *
+  * @todo Support more than one type of form. Maybe. If needed.
+  *
+	 */
+	static function make_new( $form_name, $object_type, $form_args = array() ) {
+
+		$form = new WP_Form( $form_name, $object_type, $form_args );
+
+		return $form;
+
+	}
 
 	/**
 	 * @param string $form_name
@@ -149,7 +166,7 @@ class WP_Form extends WP_Metadata_Base {
 		else {
 			$form_view_class = $this->get_view_class( $view_name );
 
-			$this->view = new $form_view_class( $this, $view_name );
+			$this->view = new $form_view_class( $view_name, $this );
 		}
 
 	}
@@ -292,61 +309,43 @@ class WP_Form extends WP_Metadata_Base {
 
 	}
 
-	/**
-	 * @param array $form_args
-	 *
-	 * @return array
-	 */
-	function reject_args( $form_args ) {
+//	/**
+//	 * @param array $form_args
+//	 *
+//	 * @return array
+//	 */
+//	function reject_args( $form_args ) {
+//
+//		unset( $form_args[ 'view' ] );
+//
+//		return $form_args;
+//
+//	}
+//
+//	/**
+//	 * @param array $form_args
+//	 *
+//	 * @return array
+//	 */
+//	function pre_assign_args( $form_args ) {
+//
+//		if ( isset( $form_args[ 'view' ] ) ) {
+//
+//			if ( false !== $form_args[ 'view' ] ) {
+//
+//				$this->view = $form_args['view'];
+//
+//			}
+//
+//		} else {
+//
+//		 	$this->view = 'default';
+//		}
+//
+//		return $form_args;
+//
+//	}
+//
 
-		unset( $form_args[ 'view' ] );
-
-		return $form_args;
-
-	}
-
-	/**
-	 * @param array $form_args
-	 *
-	 * @return array
-	 */
-	function pre_delegate_args( $form_args ) {
-
-		if ( isset( $form_args[ 'view' ] ) ) {
-
-			if ( false !== $form_args[ 'view' ] ) {
-
-				$this->view = $form_args['view'];
-
-			}
-
-		} else {
-
-		 	$this->view = 'default';
-		}
-
-		return $form_args;
-
-	}
-
-
-
-  /**
- 	 * @param string $form_name
- 	 * @param string|WP_Object_Type $object_type
- 	 * @param array $form_args
- 	 *
- 	 * @return WP_Form
-   *
-   * @todo Support more than one type of form. Maybe. If needed.
-   *
- 	 */
- 	static function make_new( $form_name, $object_type, $form_args = array() ) {
-
- 		$form = new WP_Form( $form_name, $object_type, $form_args );
-
- 		return $form;
-
- 	}
 
 }

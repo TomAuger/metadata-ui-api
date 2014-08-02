@@ -25,13 +25,6 @@ class WP_Annotated_Property {
   var $array_of = null;
 
   /**
-   * @var string
-   * @example
-   *    array( 'WP_Metadata', 'make_field' ), 'make
-   */
-  var $factory;
-
-  /**
    * @var mixed
    */
   var $default;
@@ -41,12 +34,17 @@ class WP_Annotated_Property {
    */
   var $parameters = array();
 
-  /**
-   * @var string
-   * @example
-   *    'form', 'field', 'storage', etc.
-   */
-  var $prefix;
+	/**
+  * @var string
+  * @example
+  *    'form', 'field', 'storage', etc.
+  */
+ var $prefix;
+
+	/**
+	 * @var bool
+	 */
+	var $auto_create = true;
 
   /**
    * @var array
@@ -60,6 +58,8 @@ class WP_Annotated_Property {
   function __construct( $property_name, $args ) {
     $args = wp_parse_args( $args );
 
+	  $this->property_name = $property_name;
+
     if ( empty( $args['type'] ) ) {
       $this->property_type = 'string';
     } else if ( preg_match( '#(.+)\[\]$#', $args['type'], $match ) ) {
@@ -70,7 +70,14 @@ class WP_Annotated_Property {
     }
     unset( $args['type'] );
 
-    $this->property_name = $property_name;
+	  /**
+	   * Default 'prefix' and 'factory' to property name, for convenience.
+	   */
+	  if ( class_exists( $this->property_type ) ) {
+			if ( ! isset( $args[ 'prefix' ] ) ) {
+				$this->prefix  = $property_name;
+			}
+		}
 
     foreach( $args as $arg_name => $arg_value ) {
       if ( property_exists( $this, $arg_name ) && 'extra' != $arg_name ) {
@@ -86,7 +93,76 @@ class WP_Annotated_Property {
    * @return bool
    */
   function is_class() {
+
     return class_exists( $this->property_type );
+
   }
+
+
+	/**
+  * @param array $object_args
+  *
+  * @return object
+  */
+ function make_object( $object_args ) {
+
+   if ( $this->is_class() && method_exists( $this->property_type, 'make_new' ) ) {
+
+	   $parameters = $this->_build_parameters( $this->property_type, $object_args );
+
+     $object = call_user_func_array( array( $this->property_type, 'make_new' ), $parameters );
+
+   } else {
+
+     $object = $object_args;
+
+   }
+
+   return $object;
+
+ }
+
+	/**
+  * Build Parameters for Object Constructor
+  *
+  * @param string $class_name
+  * @param array $object_args
+  *
+  * @return array
+  */
+ private function _build_parameters( $class_name, $object_args ) {
+
+   $parameters = array();
+
+   foreach( WP_Metadata::get_make_new_parameters( $class_name ) as $parameter_name ) {
+
+     if ( preg_match( '#^(\$value|\$parent)$#', $parameter_name ) ) {
+
+       $parameters[] = $object_args[ $parameter_name ];
+
+     } else if ( '$args' == $parameter_name ) {
+
+       $parameters[] = $object_args;
+
+     } else {
+
+      if ( property_exists( $class_name, $parameter_name ) ) {
+        $parameters[] = $object_args[ '$parent' ]->{$parameter_name};
+
+      } else if ( isset( $object_args[ $parameter_name ] ) ) {
+        $parameters[] = $object_args[ $parameter_name ];
+
+      } else {
+	      $parameters[] = null;
+      }
+
+     }
+
+   }
+
+   return $parameters;
+
+ }
+
 
 }

@@ -45,9 +45,9 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
   static function PROPERTIES() {
 
     return array(
-      'field'   => array( 'factory' => 'field',        'prefix' => 'field' ),
-      'wrapper' => array( 'factory' => 'html_element', 'prefix' => 'wrapper' ),
-      'element' => array( 'factory' => 'html_element', 'prefix' => 'html' ),
+      'field'   => array( 'type' => 'WP_Field_Base',   'prefix' => 'field' ),
+      'wrapper' => array( 'type' => 'WP_Html_Element', 'prefix' => 'wrapper' ),
+      'element' => array( 'type' => 'WP_Html_Element', 'prefix' => 'html' ),
     );
 
   }

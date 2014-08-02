@@ -26,6 +26,11 @@ class WP_Field_Base extends WP_Metadata_Base {
 	var $field_name = false;
 
 	/**
+	 * @var bool|string
+	 */
+	var $field_type = false;
+
+	/**
 	 * @var bool
 	 */
 	var $field_required = false;
@@ -71,6 +76,57 @@ class WP_Field_Base extends WP_Metadata_Base {
 	protected $_value = null;
 
 	/**
+	 * @return array
+	 */
+	static function TRANSFORMS() {
+
+		static $transforms;
+		if ( ! isset( $transforms ) ) {
+			/**
+			 * Create a regex to insure delegated and no_prefix $args are not matched
+			 * nor are $args that contain underscores.
+			 *
+			 * @see     http://stackoverflow.com/a/5334825/102699 for 'not' regex logic
+			 * @see     http://www.rexegg.com/regex-lookarounds.html for negative lookaheads
+			 * @see     http://ocpsoft.org/tutorials/regular-expressions/and-in-regex/ for logical 'and'
+			 * @see     http://www.regular-expressions.info/refadv.html for "Keep text out of the regex match"
+			 *
+			 * @example Regex if 'foo' and 'bar' are no_prefix or contained:
+			 *
+			 *  '^(?!(?|foo|bar)$)(?!.*_)(.*)'
+			 *
+			 * @note    Other similar regex that might work the same
+			 *
+			 *  '^(?!foo$)(?!bar$)(?!.*_)(.*)';
+			 *  '^(?!(?>(foo|bar))$)(?!.*_)(.*)'
+			 *  '^(?!\K(foo|bar)$)(?!.*_)(.*)'
+			 *
+			 * Example matches any string except 'foo', 'bar' or one containing an underscore ('_').
+			 */
+
+			$properties = array_merge( WP_Metadata::get_html_attributes( 'input' ) );
+
+			unset( $properties['form'] ); // Reserve 'form' for instances of WP_Form.
+
+			$properties = implode( '|', array_keys( $properties ) );
+
+			$transforms = array(
+				'^label$'                           => 'label:label_text',
+				"^({$properties})$"                 => 'html:$1',
+				'^input:([^_]+)$'                   => 'input:html:$1',
+				'^html:([^_]+)$'                    => 'input:html:$1',
+				'^input:wrapper:([^_]+)$'           => 'input:wrapper:html:$1',
+				'^wrapper:([^_]+)$'                 => 'input:wrapper:html:$1',
+				'(?:^|_)wrapper(:wrapper)+(?:_|$)'  => 'wrapper',
+				'(?:^|_)html(_html)+(?:_|$)'        => 'html',
+			);
+		}
+
+		return $transforms;
+
+	}
+
+	/**
 	 * Returns an array of object properties and their annotations.
 	 *
 	 * @return array
@@ -80,53 +136,99 @@ class WP_Field_Base extends WP_Metadata_Base {
     return array(
       'value'   => array( 'type' => 'mixed' ),
       'form'    => array( 'type' => 'WP_Form', 'auto_create' => false, ),
-      'view'    => array( 'prefix' => 'view', 'factory' => 'view' ),
-      'storage' => array( 'prefix' => 'storage', 'factory' => 'storage', 'default' => 'meta' ),
+      'view'    => array( 'type' => 'WP_Field_View', 'default' => 'default', 'parameters' => array( '$object_type' => 'object_type' ) ),
+      'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
     );
 
 	}
 
 	/**
-   * @param self $this_obj
-	 * @return array
+  * Defines the make_new() PARAMETERS in order they need to be passed.
+  *
+  * @return array
+  */
+ static function PARAMETERS() {
+
+   return array(
+     '$value',
+     '$object_type',
+     '$args',
+   );
+
+ }
+
+  /**
+	 * Make a New Field object
+	 *
+	 * @param string $field_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $field_args
+	 *
+	 * @return WP_Field_Base
+	 *
 	 */
-	static function TRANSFORMS( $this_obj ) {
+  static function make_new( $field_name, $object_type, $field_args = array() ) {
+
+		$field = false;
+
+		if ( ! isset( $field_args[ 'field_type' ] ) ) {
+			/*
+			 * We have to do this normalization of the 'type' $arg prior to
+			 * the Field classes __construct() because it drives the class used
+			 * to instantiate the Field. All other $args can be normalized
+			 * in the Field class constructor.
+			 */
+			if ( ! isset( $field_args[ 'type' ] ) ) {
+
+				$field_args[ 'field_type' ] = 'text';
+
+			} else {
+
+				$field_args[ 'field_type' ] = $field_args[ 'type' ];
+
+				unset( $field_args[ 'type' ] );
+
+			}
+		}
 
 		/**
-		 * Create a regex to insure delegated and no_prefix $args are not matched
-		 * nor are $args that contain underscores.
-		 *
-		 * @see http://stackoverflow.com/a/5334825/102699 for 'not' regex logic
-		 * @see http://www.rexegg.com/regex-lookarounds.html for negative lookaheads
-		 * @see http://ocpsoft.org/tutorials/regular-expressions/and-in-regex/ for logical 'and'
-		 * @see http://www.regular-expressions.info/refadv.html for "Keep text out of the regex match"
-		 *
-		 * @example Regex if 'foo' and 'bar' are no_prefix or contained:
-		 *
-		 *  '^(?!(?|foo|bar)$)(?!.*_)(.*)'
-		 *
-		 * @note Other similar regex that might work the same
-		 *
-		 *  '^(?!foo$)(?!bar$)(?!.*_)(.*)';
-		 *  '^(?!(?>(foo|bar))$)(?!.*_)(.*)'
-		 *  '^(?!\K(foo|bar)$)(?!.*_)(.*)'
-		 *
-		 * Example matches any string except 'foo', 'bar' or one containing an underscore ('_').
+		 * @var string|object $field_type If string, a class. If object a filepath to load a class and $args
 		 */
-		 $properties = implode( '|', $this_obj->get_annotated_property_names() );
+		$field_type = WP_Metadata::get_field_type( $field_args[ 'field_type' ] );
 
-		$html_attributes = "^(?!(?|$properties)$)(?!.*_)(.*)$";
+		if ( is_object( $field_type ) ) {
+			/**
+			 * Field type is Class name with external filepath
+			 */
 
-		return array(
-			'^label$'                           => 'label:label_text',
-			$html_attributes                    => 'html:$1',
-			'^input:([^_]+)$'                   => 'input:html:$1',
-			'^html:([^_]+)$'                    => 'input:html:$1',
-			'^input:wrapper:([^_]+)$'           => 'input:wrapper:html:$1',
-			'^wrapper:([^_]+)$'                 => 'input:wrapper:html:$1',
-			'(?:^|_)wrapper(:wrapper)+(?:_|$)'  => 'wrapper',
-			'(?:^|_)html(_html)+(?:_|$)'        => 'html',
-		);
+			if ( $field_type->filepath ) {
+
+				require_once( $field_type->filepath );
+
+			}
+
+			$field_type = $field_type->field_args;
+		}
+
+		if ( is_string( $field_type ) && class_exists( $field_type ) ) {
+
+			/**
+			 * Field type is a Class name
+			 */
+			$field = new $field_type( $field_name, $field_args );
+
+		} else if ( is_array( $field_type ) ) {
+
+			/**
+			 * Field type is a 'Prototype'
+			 */
+			$field_args = wp_parse_args( $field_args, $field_type );
+
+			$field = self::make_new( $field_name, $object_type, $field_args );
+
+		}
+
+		return $field;
 
 	}
 
@@ -151,55 +253,56 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	}
 
+//
+//	/**
+//	 * @param array $field_args
+//	 *
+//	 * @return array
+//	 */
+//	function reject_args( $field_args ) {
+//
+//		unset( $field_args[ 'view' ] );
+//
+//		unset( $field_args[ 'form' ] );
+//
+//		return $field_args;
+//
+//	}
 
-	/**
-	 * @param array $field_args
-	 *
-	 * @return array
-	 */
-	function reject_args( $field_args ) {
-
-		unset( $field_args[ 'view' ] );
-
-		unset( $field_args[ 'form' ] );
-
-		return $field_args;
-
-	}
-
-	/**
-	 * @param array $field_args
-	 *
-	 * @return array
-	 */
-	function pre_delegate_args( $field_args ) {
-
-		if ( ! empty( $field_args[ 'form' ] ) ) {
-
-			$this->form = $field_args[ 'form' ];
-
-		}
-
-		if ( $this->form && empty( $this->form->view ) ) {
-
-			$this->view = null;
-
-		} else if ( isset( $field_args[ 'view' ] ) ) {
-
-			if ( false !== $field_args[ 'view' ] ) {
-
-				$this->view = $field_args['view'];
-
-			}
-
-		} else {
-
-		 	$this->view = 'default';
-		}
-
-		return $field_args;
-
-	}
+//	/**
+//	 * @param array $field_args
+//	 *
+//	 * @return array
+//	 */
+//	function pre_assign_args( $field_args ) {
+//
+//		if ( ! empty( $field_args[ 'form' ] ) ) {
+//
+//			$this->form = $field_args[ 'form' ];
+//
+//		}
+//
+//		if ( $this->form && empty( $this->form->view ) ) {
+//
+//			$this->view = null;
+//
+//		} else if ( isset( $field_args[ 'view' ] ) ) {
+//
+//			if ( false !== $field_args[ 'view' ] ) {
+//
+//				$this->view = $field_args['view'];
+//
+//			}
+//
+//		} else {
+//
+//		 	$this->view = 'default';
+//
+//		}
+//
+//		return $field_args;
+//
+//	}
 
 	/**
 	 * Register the default view for this class.
@@ -210,19 +313,19 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	}
 
-	function initialize( $field_args ) {
-
-		$this->initialize_storage( $this->storage, $this->get_storage_args() );
-
-		$this->initialize_field_view( $this->view, $this->get_view_args() );
-
-	}
+//	function initialize( $field_args ) {
+//
+////		$this->initialize_field_view( $this->view, $this->get_view_args() );
+////
+////		$this->initialize_storage( $this->storage, $this->get_storage_args() );
+//
+//	}
 
 	/**
 	 * @return array
 	 */
 	function get_storage_args() {
-
+		trigger_error( 'Need to fix ' . __CLASS__ . '::' . __METHOD__ );
 		return $this->delegated_args[ 'storage' ];
 
 	}
@@ -244,10 +347,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function get_view_contained() {
 
-		$contained = call_user_func( array( $this->get_view_class(), 'CONTAINED' ) );
-		$contained[ 'view' ] = 'view';
-
-		return $contained;
+		return array();
 
 	}
 

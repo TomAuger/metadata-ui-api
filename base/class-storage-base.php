@@ -49,7 +49,7 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 
     return array(
       '$value',
-      '$this',
+      '$parent',
       '$args',
     );
 

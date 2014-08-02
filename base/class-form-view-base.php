@@ -10,23 +10,60 @@ abstract class WP_Form_View_Base extends WP_Metadata_Base {
 	const HTML_TAG = 'div'; // @TODO Should this be WRAPPER_TAG
 
 	/**
+	 * @var string
+	 */
+	var $view_name;
+
+	/**
 	 * @var WP_Form
 	 */
 	var $form;
 
 	/**
-	 * @var string
-	 */
-	var $form_method = 'post';
+	  * Defines the PARAMETERS for the static class factory method 'make_new'.
+	  *
+	  * @return array
+	  */
+	 static function PARAMETERS() {
+
+	   return array(
+	     '$value',
+		   '$parent',
+	     '$args',
+	   );
+
+	 }
 
 	/**
-	 * @var string
+	 * @param string $view_name
+	 * @param string $form
+	 * @param array $view_args
+	 *
+	 * @return WP_Form_View
+   *
 	 */
-	var $form_action = '';
+	static function make_new( $view_name, $form, $view_args = array() ) {
 
-	function __construct( $form, $view_name ) {
+		$form_view = new WP_Form_View( $view_name, $form, $view_args );
+
+		return $form_view;
+
+	}
+
+	/**
+	 * @param string $view_name
+	 * @param string $form
+	 * @param array $view_args
+	 *
+	 */
+	function __construct( $view_name, $form, $view_args = array() ) {
+
+		$view_args['view_name'] = $view_name;
 
 		$this->form = $form;
+
+		parent::__construct( $view_args );
+
 	}
 
 	/**

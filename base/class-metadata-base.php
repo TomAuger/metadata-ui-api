@@ -44,6 +44,11 @@ abstract class WP_Metadata_Base {
    */
   private static $_annotated_properties;
 
+	/**
+  * @var array
+  */
+	private static $_defaulted_property_values;
+
 
   /**
    * @return array
@@ -96,9 +101,11 @@ abstract class WP_Metadata_Base {
       $this->do_class_action( 'initialize_class' );
     }
 
-    $args = wp_parse_args( $args, $this->default_args() );
-
     if ( $this->apply_class_filters( 'do_assign_args', $args ) ) {
+
+	    $default_args = $this->apply_class_filters( 'default_args', $this->default_args() );
+
+	    $args = wp_parse_args( $args, $default_args );
 
       $args = $this->apply_class_filters( 'pre_prefix_args', $args );
       $args = $this->prefix_args( $args );
@@ -109,10 +116,12 @@ abstract class WP_Metadata_Base {
       $args = $this->apply_class_filters( 'pre_collect_args', $args );
       $args = $this->collect_args( $args );
 
-      $args = $this->apply_class_filters( 'reject_args', $args, null );
+      $args = $this->apply_class_filters( 'reject_args', $args );
 
-      $args       = $this->apply_class_filters( 'pre_assign_args', $args );
+      $args = $this->apply_class_filters( 'pre_assign_args', $args );
+
       $this->args = $args;
+
       $this->assign_args( $args );
 
     }
@@ -168,7 +177,7 @@ abstract class WP_Metadata_Base {
    */
   function get_transforms() {
 
-    return $this->get_annotations( 'TRANSFORMS' );
+    return $this->get_annotations( 'TRANSFORMS'  );
 
   }
 
@@ -198,11 +207,15 @@ abstract class WP_Metadata_Base {
   function transform_args( $args ) {
 
     if ( count( $transforms = $this->get_transforms() ) ) {
-      foreach ( $transforms as $regex => $result ) {
-        foreach ( $args as $name => $value ) {
+
+	    foreach ( $transforms as $regex => $result ) {
+		    foreach ( $args as $name => $value ) {
           if ( preg_match( "#{$regex}#", $name, $matches ) ) {
 
             $args['transformed_args'][ $name ] = $value;
+            if ( 'form' == $name ) {
+	          	echo '';
+            }
             unset( $args[ $name ] );
 
             $new_name = $result;
@@ -215,6 +228,7 @@ abstract class WP_Metadata_Base {
           }
         }
       }
+
     }
 
     return $args;
@@ -311,6 +325,42 @@ abstract class WP_Metadata_Base {
 
   }
 
+	/**
+	 * Return an array of annotated property names and their default values.
+	 *
+	 * @return array
+	 */
+	function get_defaulted_property_values() {
+
+		if ( ! isset( self::$_defaulted_property_values[ $class_name = get_class( $this ) ] ) ) {
+
+			$property_values = array();
+
+			foreach( $this->get_annotated_properties() as $class_name => $property ) {
+
+				$property_name = $property->property_name;
+
+				if ( is_null( $property->default ) && isset( $this->{$property_name} ) ) {
+
+					$default_value = $this->{$property_name};
+
+				} else {
+
+					$default_value = $property->default;
+
+				}
+
+				$property_values[$property_name] = $default_value;
+
+			}
+
+			self::$_defaulted_property_values = $property_values;
+
+		}
+
+		return self::$_defaulted_property_values;
+	}
+
   /**
    * Assign the element values in the $args array to the properties of this object.
    *
@@ -318,17 +368,9 @@ abstract class WP_Metadata_Base {
    */
   function assign_args( $args ) {
 
-    $annotated_properties = $this->get_annotated_properties();
-
     $class_name = get_class( $this );
 
-    $real_properties = get_class_vars( get_class( $this ) );
-
-    $context = array(
-      '$this' => $this,
-      '$value' => null,
-    );
-
+		$args = array_merge( $this->get_defaulted_property_values(), $args );
 
     /*
      * Assign the arg values to properties, if they exist.
@@ -336,55 +378,45 @@ abstract class WP_Metadata_Base {
      */
     foreach ( $args as $name => $value ) {
 
-      $property = false;
+      $property = $property_name = false;
 
       /**
        * @var WP_Annotated_Property $property
        */
-      if ( method_exists( $this, $method_name = "set_{$name}" ) ) {
+      if (  '$' == $name[0] ) {
+
+	      continue;
+
+      } else if ( method_exists( $this, $method_name = "set_{$name}" ) ) {
 
         call_user_func( array( $this, $method_name ), $value );
 
-      } else if ( isset( $annotated_properties[ $name ] ) ) {
+      } else if ( $this->has_annotated_property( $name ) ) {
 
-        $property = $annotated_properties[ $name ];
+        $annotated_property = $this->get_annotated_property( $property_name = $name );
 
-        /**
-         * @var WP_Annotated_Property $annotated_property
-         */
-        $annotated_property = $this->get_annotated_property( $name );
+				if ( $annotated_property->is_class() && $annotated_property->auto_create ) {
 
-      } else if ( isset( $real_properties[ $name ] ) ) {
+					$object_args = $this->extract_prefixed_args( $annotated_property->prefix, $args );
 
-        $property = $real_properties[ $name ];
+					$object_args['$value'] = $value;
+				  $object_args['$parent'] = $this;
 
-      } elseif ( WP_Metadata::non_public_property_exists( $class_name, $property_name = "_{$name}" ) ) {
+			    $value = $annotated_property->make_object( $object_args );
+
+				}
+
+      } else if ( property_exists( $this, $name ) ) {
+
+        $property_name = $name;
+
+      } else if ( property_exists( $this, $non_public_name = "_{$name}" ) ) {
+
+	      $property_name = $non_public_name;
+
+      } else {
 
         $this->extra_args[ $name ] = $value;
-
-      }
-
-      if ( $property ) {
-
-        $property_name = $property->property_name;
-
-        if ( isset( $annotated_property ) && $annotated_property->is_class() ) {
-
-          if ( $annotated_property->prefix ) {
-
-            $object_args = $this->extract_prefixed_args( $annotated_property->prefix, $args );
-
-          } else {
-
-            $object_args = array();
-
-          }
-          $object_args['$object'] = $this;
-          $object_args['$value'] = $value;
-
-          $this->make_object( $annotated_property->property_type, $object_args );
-
-        }
 
       }
 
@@ -393,6 +425,7 @@ abstract class WP_Metadata_Base {
         $this->{$property_name} = $value;
 
       }
+
     }
 
   }
@@ -474,13 +507,23 @@ abstract class WP_Metadata_Base {
    *
    * @param string $property_name
    *
-   * @return WP_Annotated_Property[]|bool
+   * @return WP_Annotated_Property|bool
    */
   function get_annotated_property( $property_name ) {
 
     $annotated_properties = $this->get_annotated_properties();
 
     return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : false;
+
+  }
+
+  /**
+   * @param string $property_name
+   * @return bool
+   */
+  function has_annotated_property( $property_name ) {
+
+	  return isset( self::$_annotated_properties[ get_class( $this ) ][ $property_name ] );
 
   }
 
@@ -551,7 +594,7 @@ abstract class WP_Metadata_Base {
    */
   function apply_class_filters( $filter, $value ) {
 
-    call_user_func_array(
+    return call_user_func_array(
       array( 'WP_Metadata', 'apply_class_filters' ),
       array( $this, get_class( $this ), $filter, $value, array_slice( func_get_args(), 2 ) )
     );
@@ -576,72 +619,19 @@ abstract class WP_Metadata_Base {
   }
 
   /**
-   * @param string $class_name
-   * @param array $object_args
-   *
-   * @return object
-   */
-  function make_object( $class_name, $object_args ) {
-
-    $parameters = self::_build_parameters( $class_name, $object_args );
-
-    if ( method_exists( $class_name, 'make_new' ) ) {
-
-      $object = call_user_func_array( array( $class_name, 'make_new' ), $parameters );
-
-    } else {
-
-      $object = null;
-
-    }
-
-    return $object;
-
-  }
-
-
-  /**
-   * Build Parameters for Object Constructor
-   *
-   * @param string $class_name
-   * @param array $object_args
-   *
-   * @return array
-   */
-  private function _build_parameters( $class_name, $object_args ) {
-
-    $parameters = array();
-
-    foreach( $this->PARAMETERS() as $parameter_name ) {
-
-      if ( preg_match( '#^(\$object|\$value)$#', $parameter_name ) ) {
-        $parameters[] = $object_args[ $parameter_name ];
-
-      } else if ( '$args' == $parameter_name ) {
-        $parameters[] = $object_args;
-
-      } else if ( property_exists( $class_name, $parameter_name ) ) {
-        $parameters[] = $object_args[ '$object' ]->$parameter_name;
-
-      } else if ( isset( $object_args[ $parameter_name ] ) ) {
-        $parameters[] = $object_args[ $parameter_name ];
-
-      }
-
-    }
-
-    return $parameters;
-
-  }
-
-  /**
    * @param string $prefix
    * @param array $args
    * @return mixed|array;
    */
   function extract_prefixed_args( $prefix, $args ) {
 
-    return ! empty( $args[$prefix] ) ? $args[$prefix] : array();
+	  if ( ! $prefix || empty( $args[$prefix] ) || ! is_array( $prefixed_args = $args[$prefix] ) ) {
+
+			  $prefixed_args = array();
+
+		}
+
+    return $prefixed_args;
 
   }
 
