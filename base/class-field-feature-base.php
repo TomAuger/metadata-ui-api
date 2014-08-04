@@ -30,6 +30,11 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	var $field;
 
 	/**
+	 * @var WP_Field_View_Base
+	 */
+	var $view;
+
+	/**
 	 * @var WP_Html_Element
 	 */
 	var $wrapper;
@@ -39,18 +44,6 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 	 */
 	var $element;
 
-  /**
- 	 * @return array
- 	 */
-  static function PROPERTIES() {
-
-    return array(
-      'field'   => array( 'type' => 'WP_Field_Base',   'prefix' => 'field' ),
-      'wrapper' => array( 'type' => 'WP_Html_Element', 'prefix' => 'wrapper' ),
-      'element' => array( 'type' => 'WP_Html_Element', 'prefix' => 'html' ),
-    );
-
-  }
 
 	/**
 	 * @return array
@@ -65,22 +58,81 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 		);
 	}
 
+  /**
+ 	 * @return array
+ 	 */
+  static function PROPERTIES() {
+
+    return array(
+      'field'   => array( 'type' => 'WP_Field_Base',   'prefix' => 'field', 'auto_create' => false ),
+      'wrapper' => array( 'type' => 'WP_Html_Element', 'prefix' => 'wrapper' ),
+      'element' => array( 'type' => 'WP_Html_Element', 'prefix' => 'html' ),
+    );
+
+  }
+
 	/**
-	 * @param WP_Field_Base $field
+  * Defines the PARAMETERS for the static class factory method 'make_new'.
+  *
+  * @return array
+  */
+ static function PARAMETERS() {
+
+   return array(
+     '$value',
+     '$parent',
+     '$args',
+   );
+
+ }
+
+
+ /**
+  * Returns a new instance of a Field Feature object.
+  *
+  * @param string $feature_type
+  * @param WP_Field_View_Base $view
+  * @param array $feature_args
+	*
+	* @return null|WP_Field_Feature_Base
+	*/
+ static function make_new( $feature_type, $view, $feature_args = array() ) {
+
+   if ( $feature_type_class = WP_Metadata::get_feature_type_class( $feature_type ) ) {
+
+	   $feature_args['feature_type'] = $feature_type;
+
+     $feature = new $feature_type_class( $view, $feature_args );
+
+   } else {
+
+     $feature = null;
+
+   }
+
+		return $feature;
+
+	}
+
+	/**
+	 * @param WP_Field_View_Base $view
 	 * @param array $feature_args
 	 */
-	function __construct( $field, $feature_args = array() ) {
+	function __construct( $view, $feature_args = array() ) {
 
-		//$this->field =
-		$feature_args[ 'field' ] = $field;
+		$this->field = $view->field;
+		$this->view = $view;
 
 		parent::__construct( $feature_args );
 	}
 
+	/**
+	 * @param $feature_args
+	 */
 	function initialize( $feature_args ) {
 
 		if ( ! is_object( $this->element ) ) {
-			$html_attributes = WP_Metadata::collect_args( $feature_args, 'prefix=html&include=prefixed' );
+			$html_attributes = $this->extract_prefixed_args( 'html', $feature_args );
 
 			$html_attributes[ 'id' ] = $this->html_id();
 			$html_attributes[ 'name' ] = $this->html_name();
@@ -89,7 +141,7 @@ abstract class WP_Field_Feature_Base extends WP_Metadata_Base {
 		}
 
 		if ( !is_object( $this->wrapper ) ) {
-			$wrapper_attributes = WP_Metadata::collect_args( $feature_args, 'prefix=wrapper&include=prefixed' );
+			$wrapper_attributes = $this->extract_prefixed_args( 'wrapper', $feature_args );
 
 			$wrapper_attributes[ 'id' ] = $this->wrapper_html_id();
 			$wrapper_attributes[ 'name' ] = $this->wrapper_html_name();

@@ -101,7 +101,7 @@ abstract class WP_Metadata_Base {
       $this->do_class_action( 'initialize_class' );
     }
 
-    if ( $this->apply_class_filters( 'do_assign_args', $args ) ) {
+    if ( $this->apply_class_filters( 'do_assign_args', true, $args ) ) {
 
 	    $default_args = $this->apply_class_filters( 'default_args', $this->default_args() );
 
@@ -137,7 +137,11 @@ abstract class WP_Metadata_Base {
     if ( ! isset( $this->_default_args ) ) {
       $properties   = $this->get_annotated_properties();
       foreach ( $properties as $property_name => $property ) {
-        $properties[ $property_name ] = $property->default;
+        if ( is_null( $property->default ) || ! $property->auto_create ) {
+	        unset( $properties[ $property_name ] );
+        } else {
+	        $properties[ $property_name ] = $property->default;
+        }
       }
       $this->_default_args = $properties;
     }
@@ -338,6 +342,10 @@ abstract class WP_Metadata_Base {
 
 			foreach( $this->get_annotated_properties() as $class_name => $property ) {
 
+				if ( ! $property->auto_create ) {
+					continue;
+				}
+
 				$property_name = $property->property_name;
 
 				if ( is_null( $property->default ) && isset( $this->{$property_name} ) ) {
@@ -346,7 +354,15 @@ abstract class WP_Metadata_Base {
 
 				} else {
 
-					$default_value = $property->default;
+					if ( 'array' == $property->property_type && isset( $property->keys ) ) {
+
+						$default_value = array_fill_keys( $property->keys, $property->default );
+
+					} else {
+
+						$default_value = $property->default;
+
+					}
 
 				}
 
@@ -395,14 +411,62 @@ abstract class WP_Metadata_Base {
 
         $annotated_property = $this->get_annotated_property( $property_name = $name );
 
-				if ( $annotated_property->is_class() && $annotated_property->auto_create ) {
+				if ( $annotated_property->auto_create ) {
 
-					$object_args = $this->extract_prefixed_args( $annotated_property->prefix, $args );
+					if ( $annotated_property->is_class() ) {
 
-					$object_args['$value'] = $value;
-				  $object_args['$parent'] = $this;
+						$object_args = $this->extract_prefixed_args( $annotated_property->prefix, $args );
 
-			    $value = $annotated_property->make_object( $object_args );
+						$object_args['$value'] = $value;
+					  $object_args['$parent'] = $this;
+
+				    $value = $annotated_property->make_object( $object_args );
+
+	        } else if ( $annotated_property->is_array()  ) {
+
+						$original_value = $value;
+						$value = array();
+
+	          if ( ! empty( $original_value ) ) {
+
+		          $parent_class_name = $annotated_property->array_of;
+
+							if ( is_array( $annotated_property->keys )
+								&& ! empty( $annotated_property->registry )
+								&& WP_Metadata::registry_exists( $annotated_property->registry ) ) {
+
+			          foreach( $annotated_property->keys as $key_name ) {
+
+				          $key_value = '$key_name' == $original_value ? $key_name : $value;
+
+				          $object_args = $this->extract_prefixed_args( $key_name, $args );
+
+				          $object_args['$value'] = $key_value;
+				          $object_args['$parent'] = $this;
+
+									$class_name = WP_Metadata::get_registry_item( $annotated_property->registry, $key_name );
+
+									if ( ! is_subclass_of( $class_name, $parent_class_name ) ) {
+
+										$error_msg = __( 'ERROR: No registered class %s in registry %s.', 'wp-metadata' );
+										trigger_error( sprintf( $error_msg, $key_name, $annotated_property->registry ) );
+									} else {
+
+
+					          $parameters = WP_Metadata::build_property_parameters( $class_name, $object_args );
+
+										$obj = call_user_func_array( array( $class_name, 'make_new' ), $parameters );
+		                $value[$key_name] = $obj;
+
+									}
+
+			          }
+
+							}
+
+	          }
+
+	        }
 
 				}
 

@@ -15,12 +15,12 @@ class WP_Field_Label_Feature extends WP_Field_Feature_Base {
 	var $label_text;
 
 	/**
-	 * @param WP_Field_Base $field
+	 * @param WP_Field_View_Base $view
 	 * @param array $feature_args
 	 */
-	function __construct( $field, $feature_args = array() ) {
+	function __construct( $view, $feature_args = array() ) {
 
-		parent::__construct( $field, $feature_args );
+		parent::__construct( $view, $feature_args );
 
 	}
 

@@ -38,15 +38,21 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
- static function PROPERTIES() {
+	static function PROPERTIES() {
 
-   return array(
-			'label'   => array( 'type' => 'WP_Field_Label_Feature' ),
-			'input'   => array( 'type' => 'WP_Field_Input_Feature' ),
-			'help'    => array( 'type' => 'WP_Field_Help_Feature' ),
-			'message' => array( 'type' => 'WP_Field_Message_Feature' ),
-			'infobox' => array( 'type' => 'WP_Field_Infobox_Feature' ),
-   );
+		return array(
+	    'features' => array(
+	      'type' => 'WP_Field_Feature_Base[]',
+	      'default' => '$key_name',
+	      'registry' => 'field_feature_types',
+	      'keys' => array(
+				  'label',
+					'input',
+					'help',
+					'message',
+					'infobox',
+	      ),
+    ));
 
  }
 
@@ -98,8 +104,6 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 
 		$this->field = $field;
 
-		$this->features = array_fill_keys( $this->get_feature_types(), array() );
-
 		parent::__construct( $view_args );
 
 		if ( !is_object( $this->wrapper ) ) {
@@ -116,14 +120,6 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	 * @param $args
 	 */
 	function initialize( $args ) {
-
-		foreach ( $this->get_feature_types() as $feature_type ) {
-			$this->delegated_args[ $feature_type ][ 'feature_type' ] = $feature_type;
-
-			$feature = $this->field->make_field_feature( $feature_type, $this->get_feature_args( $feature_type ) );
-
-			$this->features[ $feature_type ] = $feature;
-		}
 
 		if ( is_object( $label = $this->label ) ) {
 			$label->set_html_attribute( 'for', $this->input->html_id() );
@@ -208,14 +204,9 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	 * @return array
 	 */
 	function get_feature_types() {
-		$feature_types = array();
-		foreach( $this->get_annotated_properties() as $name => $property ) {
-			if ( is_subclass_of( $property->property_type, 'WP_Field_Feature_Base' ) ) {
-				$feature_types[] = $name;
-			}
-		}
 
-		return $feature_types;
+		$features = $this->get_annotated_property( 'features' );
+		return is_array( $features->keys ) ? $features->keys : array();
 
 	}
 
@@ -337,10 +328,15 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 			$feature = $this->features[ $feature_type ];
 
 			if ( 'input' == $feature_type ) {
+
 				$features_html[ $feature_type ] = $this->get_input_html();
+
 			} else {
+
 				$features_html[ $feature_type ] = $feature->get_feature_html();
+
 			}
+
 		}
 
 		return implode( "\n", $features_html );

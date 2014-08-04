@@ -10,18 +10,12 @@ class WP_Field_Input_Feature extends WP_Field_Feature_Base {
 	const HTML_TAG = 'input';
 
 	/**
-	 * @param WP_Field_Base $field
-	 * @param array $attributes
-	 * @param null|callable|string $value
+	 * @return array
 	 */
-	function __construct( $field, $attributes = array(), $value = null ) {
-
-		$this->field = $field;
-
-		$attributes[ 'html_type' ] = $this->html_type();
-
-		parent::__construct( $field, $attributes, $value );
-
+	function default_args() {
+		return array(
+			'input:html:type' => $this->html_type()
+		);
 	}
 
 	/**

@@ -39,17 +39,29 @@ class WP_Annotated_Property {
   * @example
   *    'form', 'field', 'storage', etc.
   */
- var $prefix;
+  var $prefix;
+
+	/**
+  * @var string
+  * @example
+  *    'field_type', 'storage_type', 'field_feature_type', etc.
+  */
+  var $registry;
 
 	/**
 	 * @var bool
 	 */
 	var $auto_create = true;
 
-  /**
-   * @var array
-   */
+	/**
+  * @var array
+  */
   var $extra = array();
+
+	/**
+  * @var array
+  */
+  var $keys = array();
 
   /**
    * @param string $property_name
@@ -89,14 +101,23 @@ class WP_Annotated_Property {
 
   }
 
-  /**
-   * @return bool
-   */
-  function is_class() {
+	/**
+  * @return bool
+  */
+ function is_array() {
 
-    return class_exists( $this->property_type );
+   return 'array' == $this->property_type;
 
-  }
+ }
+
+	/**
+  * @return bool
+  */
+ function is_class() {
+
+   return class_exists( $this->property_type );
+
+ }
 
 
 	/**
@@ -108,7 +129,7 @@ class WP_Annotated_Property {
 
    if ( $this->is_class() && method_exists( $this->property_type, 'make_new' ) ) {
 
-	   $parameters = $this->_build_parameters( $this->property_type, $object_args );
+	   $parameters = self::build_parameters( $this->property_type, $object_args );
 
      $object = call_user_func_array( array( $this->property_type, 'make_new' ), $parameters );
 
@@ -130,9 +151,11 @@ class WP_Annotated_Property {
   *
   * @return array
   */
- private function _build_parameters( $class_name, $object_args ) {
+ static function build_parameters( $class_name, $object_args ) {
 
    $parameters = array();
+
+   $args_index = false;
 
    foreach( WP_Metadata::get_make_new_parameters( $class_name ) as $parameter_name ) {
 
@@ -142,9 +165,12 @@ class WP_Annotated_Property {
 
      } else if ( '$args' == $parameter_name ) {
 
+	     $args_index = count( $parameters );
        $parameters[] = $object_args;
 
      } else {
+
+	    trigger_error( 'Inside WP_Annotated_Property::build_parameters(); assumption failed.' );
 
       if ( property_exists( $class_name, $parameter_name ) ) {
         $parameters[] = $object_args[ '$parent' ]->{$parameter_name};
@@ -157,6 +183,15 @@ class WP_Annotated_Property {
       }
 
      }
+
+   }
+
+	 if ( $args_index ) {
+
+     foreach( array_keys( $parameters[ $args_index ] ) as $key_name )
+	      if ( '$' == $key_name[0] ) {
+	       unset( $parameters[ $args_index ][ $key_name ] );
+	      }
 
    }
 

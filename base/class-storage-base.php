@@ -75,6 +75,8 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 
     }
 
+	  $storage_args['owner'] = $owner;
+
     if ( $storage_class = WP_Metadata::get_storage_type_class( $storage_type ) ) {
 
       $storage = new $storage_class( $storage_args );

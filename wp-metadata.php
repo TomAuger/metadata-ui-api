@@ -56,12 +56,12 @@ class WP_Metadata {
   private static $_class_annotations;
 
   /**
- 	 * @var WP_Registry[]|object
+ 	 * @var WP_Registry[]
  	 */
  	private static $_registries = array(
     'storage_types'  => null,
     'field_types'    => null,
-    'feature_types'  => null,
+    'field_feature_types'  => null,
  	);
 
   /**
@@ -166,10 +166,6 @@ class WP_Metadata {
       self::$_registries[$registry_name] = new WP_Registry( $registry_name );
 
     }
-    /*
-     * Convert to object to ensure by-reference passing
-     */
-    self::$_registries = (object)self::$_registries;
 
   }
 
@@ -608,9 +604,9 @@ class WP_Metadata {
 	 */
 	static function register_field_type( $type_name, $type_def = array() ) {
 
-		if ( ! isset( self::$_registries->field_types->$type_name ) ) {
+		if ( ! isset( self::$_registries['field_types']->$type_name ) ) {
 
-      self::$_registries->field_types->$type_name = $type_def;
+      self::$_registries['field_types']->$type_name = $type_def;
 
 			return true;
 
@@ -626,7 +622,7 @@ class WP_Metadata {
  	 */
  	static function get_field_type( $field_type ) {
 
- 		return self::$_registries->field_types->$field_type;
+ 		return self::$_registries['field_types']->$field_type;
 
  	}
 
@@ -900,7 +896,7 @@ class WP_Metadata {
 	 */
 	static function register_feature_type( $feature_type, $feature_class ) {
 
-    self::$_registries->feature_types->register_entry( $feature_type, $feature_class );
+    self::$_registries['field_feature_types']->register_entry( $feature_type, $feature_class );
 
 	}
 
@@ -909,9 +905,9 @@ class WP_Metadata {
    *
    * @return string
    */
-  static function get_feature_type( $feature_type ) {
+  static function get_feature_type_class( $feature_type ) {
 
-		return self::$_registries->feature_types->get_entry( $feature_type );
+		return self::$_registries['field_feature_types']->get_entry( $feature_type );
 
 	}
 
@@ -924,7 +920,7 @@ class WP_Metadata {
  	 */
  	static function feature_type_exists( $feature_type_name ) {
 
-     return self::$_registries->feature_types->entry_exists( $feature_type_name );
+     return self::$_registries['field_feature_types']->entry_exists( $feature_type_name );
 
  	}
 
@@ -938,7 +934,7 @@ class WP_Metadata {
 	 */
 	static function register_storage_type( $storage_type_name, $storage_type_class = false ) {
 
-    self::$_registries->storage_types->register_entry( $storage_type_name, $storage_type_class );
+    self::$_registries['storage_types']->register_entry( $storage_type_name, $storage_type_class );
 
 	}
 
@@ -949,7 +945,7 @@ class WP_Metadata {
    */
   static function get_storage_type_class( $storage_type ) {
 
-    return self::$_registries->storage_types->get_entry( $storage_type );
+    return self::$_registries['storage_types']->get_entry( $storage_type );
 
 	}
 
@@ -962,7 +958,61 @@ class WP_Metadata {
 	 */
 	static function storage_type_exists( $storage_type_name ) {
 
-    return self::$_registries->storage_types->entry_exists( $storage_type_name );
+    return self::$_registries['storage_types']->entry_exists( $storage_type_name );
+
+	}
+
+ 	/*********************************************/
+	/***    Generic Registry Item Methods      ***/
+	/*********************************************/
+
+	/**
+	 * @param string $registry_name - Name of Registry
+	 * @param string $item_name - Name of item in registry
+	 * @param null|mixed $item_value - Value of item in registry
+	 */
+	static function register_registry_item( $registry_name, $item_name, $item_value = null ) {
+
+    self::$_registries[ $registry_name ]->register_entry( $item_name, $item_value );
+
+	}
+
+  /**
+   * @param string $registry_name - Name of Registry
+ 	 * @param string $item_name - Name of item in registry
+   *
+   * @return null|mixed
+   */
+  static function get_registry_item( $registry_name, $item_name ) {
+
+    return self::$_registries[ $registry_name ]->get_entry( $item_name );
+
+	}
+
+	/**
+   * Does the named registry item exist?
+	 *
+	 * @param string $registry_name - Name of Registry
+	 * @param string $item_name - Name of item in registry
+	 *
+	 * @return bool
+	 */
+	static function registry_item_exists( $registry_name, $item_name ) {
+
+		return self::$_registries[ $registry_name ]->entry_exists( $item_name );
+
+	}
+
+	/**
+   * Does the named registry exist?
+	 *
+	 * @param string $registry_name - Name of Registry
+	 *
+	 * @return bool
+	 */
+	static function registry_exists( $registry_name ) {
+
+		return isset( self::$_registries[ $registry_name ] );
 
 	}
 
@@ -1363,6 +1413,19 @@ class WP_Metadata {
 
 	}
 
+	/**
+	  * Build Property Parameters for Object Constructor
+	  *
+	  * @param string $class_name
+	  * @param array $object_args
+	  *
+	  * @return array
+	  */
+	 static function build_property_parameters( $class_name, $object_args = array() ) {
+
+		 return WP_Annotated_Property::build_parameters( $class_name, $object_args );
+
+	 }
 }
 
 WP_Metadata::on_load();

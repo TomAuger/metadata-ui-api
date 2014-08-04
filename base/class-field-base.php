@@ -135,7 +135,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 
     return array(
       'value'   => array( 'type' => 'mixed' ),
-      'form'    => array( 'type' => 'WP_Form', 'auto_create' => false, ),
+      'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
       'view'    => array( 'type' => 'WP_Field_View', 'default' => 'default', 'parameters' => array( '$object_type' => 'object_type' ) ),
       'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
     );
@@ -238,7 +238,16 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function __construct( $field_name, $field_args = array() ) {
 
-		$field_args[ 'field_name' ] = $field_name;
+		$this->field_name = $field_name;
+
+		if ( isset( $field_args['form'] ) ) {
+			/**
+			 * This may be needed by subobjects before it is assigned
+			 * in $this->assign_args(), so do now rather than wait.
+			 */
+			$this->form = $field_args['form'];
+			unset( $field_args['form'] );
+		}
 
 		parent::__construct( $field_args );
 
