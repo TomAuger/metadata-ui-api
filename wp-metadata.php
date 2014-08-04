@@ -1030,25 +1030,18 @@ class WP_Metadata {
    *       Subnames will get split later thanks to calls that drill down recursively.
    *
    * @param array $prefixed_args
-   * @param array $args
+   * @param array $prefixes
 	 *
 	 * @return array
 	 */
-	static function collect_args( $prefixed_args, $args = array() ) {
-    $args = wp_parse_args( $args, array(
-      'prefixes' => false,
-      'include' => 'all',   // Or 'prefixed'
-    ));
+	static function collect_args( $prefixed_args, $prefixes ) {
     $collected_args = array();
-    if ( is_string( $args['prefixes'] ) ) {
-      $args['prefixes'] = array( $args['prefixes'] );
-    }
 		foreach ( $prefixed_args as $arg_name => $arg_value ) {
-			if ( 'all' == $args['include'] && false === strpos( $arg_name, ':' ) ) {
+			if ( false === strpos( $arg_name, ':' ) ) {
         $collected_args[ $arg_name ] = $arg_value;
 			} else {
 				list( $new_name, $sub_name ) = preg_split( '#:#', $arg_name, 2 );
-				if ( 'all' == $args['include'] || in_array( $new_name, $args['prefixes'] ) ) {
+				if ( isset( $prefixes[ $new_name ] ) ) {
           $collected_args[ '_collected_args' ][ $arg_name ] = $arg_value;
           $collected_args[ $new_name ][ $sub_name ] = $arg_value;
           unset( $collected_args[ $arg_name ] );

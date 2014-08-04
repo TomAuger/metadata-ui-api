@@ -38,6 +38,52 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
+	static function TRANSFORMS() {
+
+		static $transforms;
+		if ( ! isset( $transforms ) ) {
+			/**
+			 * Create a regex to insure delegated and no_prefix $args are not matched
+			 * nor are $args that contain underscores.
+			 *
+			 * @see     http://stackoverflow.com/a/5334825/102699 for 'not' regex logic
+			 * @see     http://www.rexegg.com/regex-lookarounds.html for negative lookaheads
+			 * @see     http://ocpsoft.org/tutorials/regular-expressions/and-in-regex/ for logical 'and'
+			 * @see     http://www.regular-expressions.info/refadv.html for "Keep text out of the regex match"
+			 *
+			 * @example Regex if 'foo' and 'bar' are no_prefix or contained:
+			 *
+			 *  '^(?!(?|foo|bar)$)(?!.*_)(.*)'
+			 *
+			 * @note    Other similar regex that might work the same
+			 *
+			 *  '^(?!foo$)(?!bar$)(?!.*_)(.*)';
+			 *  '^(?!(?>(foo|bar))$)(?!.*_)(.*)'
+			 *  '^(?!\K(foo|bar)$)(?!.*_)(.*)'
+			 *
+			 * Example matches any string except 'foo', 'bar' or one containing an underscore ('_').
+			 */
+
+			$properties = self::PROPERTIES();
+
+			$features = implode( '|', $properties['features']['keys'] );
+
+			$attributes = implode( '|', array_keys( array_merge( WP_Metadata::get_html_attributes( 'input' ) ) ) );
+
+			$transforms = array(
+				'^({$features}):(.+)$'                       => 'features[$1]:$2',
+				"^features\[([^]]+)\]:({$attributes})$"          => 'features[$1]:html:$2',
+				"^features\[([^]]+)\]:wrapper:({$attributes})$"  => 'features[$1]:wrapper:html:$2',
+			);
+		}
+
+		return $transforms;
+
+	}
+
+	/**
+	 * @return array
+	 */
 	static function PROPERTIES() {
 
 		return array(

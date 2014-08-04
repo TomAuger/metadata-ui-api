@@ -104,21 +104,18 @@ class WP_Field_Base extends WP_Metadata_Base {
 			 * Example matches any string except 'foo', 'bar' or one containing an underscore ('_').
 			 */
 
-			$properties = array_merge( WP_Metadata::get_html_attributes( 'input' ) );
+			$attributes = array_merge( WP_Metadata::get_html_attributes( 'input' ) );
 
-			unset( $properties['form'] ); // Reserve 'form' for instances of WP_Form.
+			unset( $attributes['form'] ); // Reserve 'form' for instances of WP_Form.
 
-			$properties = implode( '|', array_keys( $properties ) );
+			$attributes = implode( '|', array_keys( $attributes ) );
 
 			$transforms = array(
-				'^label$'                           => 'label:label_text',
-				"^({$properties})$"                 => 'html:$1',
-				'^input:([^_]+)$'                   => 'input:html:$1',
-				'^html:([^_]+)$'                    => 'input:html:$1',
-				'^input:wrapper:([^_]+)$'           => 'input:wrapper:html:$1',
-				'^wrapper:([^_]+)$'                 => 'input:wrapper:html:$1',
-				'(?:^|_)wrapper(:wrapper)+(?:_|$)'  => 'wrapper',
-				'(?:^|_)html(_html)+(?:_|$)'        => 'html',
+				'^label$'                           => 'view:label:label_text',
+				'^label:([^_]+)$'                   => 'view:label:$1',
+				"^({$attributes})$"                 => 'view:input:html:$1',
+				'^(input|html):([^_]+)$'            => 'view:input:html:$2',
+				'^(input:)?wrapper:([^_]+)$'        => 'view:input:wrapper:html:$2',
 			);
 		}
 
@@ -136,7 +133,7 @@ class WP_Field_Base extends WP_Metadata_Base {
     return array(
       'value'   => array( 'type' => 'mixed' ),
       'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
-      'view'    => array( 'type' => 'WP_Field_View', 'default' => 'default', 'parameters' => array( '$object_type' => 'object_type' ) ),
+      'view'    => array( 'type' => 'WP_Field_View', 'parameters' => array( '$object_type' => 'object_type' ) ),
       'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
     );
 

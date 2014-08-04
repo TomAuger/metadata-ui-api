@@ -55,7 +55,6 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 
   }
 
-
   /**
    * Returns a new instance of a storage object.
    *
@@ -75,11 +74,9 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 
     }
 
-	  $storage_args['owner'] = $owner;
-
     if ( $storage_class = WP_Metadata::get_storage_type_class( $storage_type ) ) {
 
-      $storage = new $storage_class( $storage_args );
+      $storage = new $storage_class( $owner, $storage_args );
 
       if ( property_exists( $owner, 'storage' ) ) {
 
@@ -96,6 +93,18 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
  		return $storage;
 
  	}
+
+	/**
+	 * @param object $owner
+	 * @param array $storage_args
+	 */
+	function __construct( $owner, $storage_args = array() ) {
+
+		$this->owner = $owner;
+
+		parent::__construct( $storage_args );
+
+	}
 
 	/**
 	 * @return mixed $value

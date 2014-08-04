@@ -32,11 +32,6 @@ abstract class WP_Metadata_Base {
   /**
    * @var array
    */
-  private $_property_prefixes;
-
-  /**
-   * @var array
-   */
   private $_default_args;
 
   /**
@@ -216,15 +211,15 @@ abstract class WP_Metadata_Base {
 		    foreach ( $args as $name => $value ) {
           if ( preg_match( "#{$regex}#", $name, $matches ) ) {
 
-            $args['transformed_args'][ $name ] = $value;
-            if ( 'form' == $name ) {
-	          	echo '';
-            }
+            $args['_transformed_args'][ $name ] = $value;
+
+
+
             unset( $args[ $name ] );
 
             $new_name = $result;
-            if ( 1 <= ( $match_count = count( $matches ) - 1 ) ) {
-              for ( $i = 1; $i <= $match_count; $i ++ ) {
+            if ( 1 <= ( $top_index = count( $matches ) - 1 ) ) {
+              for ( $i = 1; $i <= $top_index; $i++ ) {
                 $new_name = str_replace( '$' . $i, $matches[ $i ], $new_name );
               }
             }
@@ -298,10 +293,7 @@ abstract class WP_Metadata_Base {
    */
   function collect_args( $args ) {
 
-    $args = WP_Metadata::collect_args( $args, array(
-      'prefixes' => $this->get_property_prefixes(),
-      'include' => 'all',
-    ));
+    $args = WP_Metadata::collect_args( $args, $this->get_property_prefixes() );
 
     return $args;
 
@@ -311,21 +303,29 @@ abstract class WP_Metadata_Base {
    * @return string[]
    */
   function get_property_prefixes() {
+	  /**
+	   * @var string[] $property_prefixes
+	   */
+	  static $property_prefixes;
 
-    if ( ! isset( $this->_property_prefixes ) ) {
+    if ( ! isset( $property_prefixes[ $class_name = get_class( $this ) ] ) ) {
 
-      $this->_property_prefixes = array();
+      $property_prefixes = array();
 
-      $annotated_properties = $this->get_annotated_properties( get_class( $this ) );
+      $annotated_properties = $this->get_annotated_properties( $class_name );
 
       foreach ( $annotated_properties as $field_name => $annotated_property ) {
 
-        $this->_property_prefixes[ $field_name ] = $annotated_property->prefix ? $annotated_property->prefix : false;
+        if ( $annotated_property->is_class() || $annotated_property->is_array() && ! empty( $annotated_property->prefix ) ) {
+
+	        $property_prefixes[ $field_name ] = $annotated_property->prefix;
+
+        }
 
       }
 
     }
-    return $this->_property_prefixes;
+    return $property_prefixes;
 
   }
 
@@ -592,7 +592,7 @@ abstract class WP_Metadata_Base {
   }
 
   /**
-   * @return array
+   * @return WP_Annotated_Property[]
    */
   function get_annotated_properties() {
 
