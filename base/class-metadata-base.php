@@ -111,8 +111,6 @@ abstract class WP_Metadata_Base {
       $args = $this->apply_class_filters( 'pre_collect_args', $args );
       $args = $this->collect_args( $args );
 
-      $args = $this->apply_class_filters( 'reject_args', $args );
-
       $args = $this->apply_class_filters( 'pre_assign_args', $args );
 
       $this->args = $args;
@@ -399,7 +397,7 @@ abstract class WP_Metadata_Base {
       /**
        * @var WP_Annotated_Property $property
        */
-      if (  '$' == $name[0] ) {
+      if (  '$' == $name[0] || preg_match( '#^_(transformed|collected)_args$#', $name ) ) {
 
 	      continue;
 
@@ -424,10 +422,7 @@ abstract class WP_Metadata_Base {
 
 	        } else if ( $annotated_property->is_array()  ) {
 
-						$original_value = $value;
-						$value = array();
-
-	          if ( ! empty( $original_value ) ) {
+	          if ( ! empty( $value ) ) {
 
 		          $parent_class_name = $annotated_property->array_of;
 
@@ -437,11 +432,9 @@ abstract class WP_Metadata_Base {
 
 			          foreach( $annotated_property->keys as $key_name ) {
 
-				          $key_value = '$key_name' == $original_value ? $key_name : $value;
+				          $object_args = isset( $value[$key_name] ) ? $value[$key_name] : array();
 
-				          $object_args = $this->extract_prefixed_args( $key_name, $args );
-
-				          $object_args['$value'] = $key_value;
+				          $object_args['$value'] = $key_name;
 				          $object_args['$parent'] = $this;
 
 									$class_name = WP_Metadata::get_registry_item( $annotated_property->registry, $key_name );
@@ -450,13 +443,13 @@ abstract class WP_Metadata_Base {
 
 										$error_msg = __( 'ERROR: No registered class %s in registry %s.', 'wp-metadata' );
 										trigger_error( sprintf( $error_msg, $key_name, $annotated_property->registry ) );
+
 									} else {
 
 
 					          $parameters = WP_Metadata::build_property_parameters( $class_name, $object_args );
 
-										$obj = call_user_func_array( array( $class_name, 'make_new' ), $parameters );
-		                $value[$key_name] = $obj;
+		                $value[$key_name] = call_user_func_array( array( $class_name, 'make_new' ), $parameters );
 
 									}
 

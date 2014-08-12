@@ -85,7 +85,8 @@ class WP_Annotated_Property {
 	  /**
 	   * Default 'prefix' and 'factory' to property name, for convenience.
 	   */
-	  if ( class_exists( $this->property_type ) ) {
+	  if ( class_exists( $this->property_type )
+	    || ( $this->is_array() && class_exists( $this->array_of ) ) ) {
 			if ( ! isset( $args[ 'prefix' ] ) ) {
 				$this->prefix  = $property_name;
 			}

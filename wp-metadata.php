@@ -1040,10 +1040,21 @@ class WP_Metadata {
 			if ( false === strpos( $arg_name, ':' ) ) {
         $collected_args[ $arg_name ] = $arg_value;
 			} else {
+				$index = false;
 				list( $new_name, $sub_name ) = preg_split( '#:#', $arg_name, 2 );
+				if ( preg_match( '#^(.+)\[([^]]+)\]$#', $new_name, $matches ) ) {
+					list( $null, $new_name, $index ) = $matches;
+					if ( ! is_array( $collected_args[ $new_name ] ) ) {
+						$collected_args[ $new_name ] = array();
+					}
+				}
 				if ( isset( $prefixes[ $new_name ] ) ) {
           $collected_args[ '_collected_args' ][ $arg_name ] = $arg_value;
-          $collected_args[ $new_name ][ $sub_name ] = $arg_value;
+          if ( false === $index ) {
+	          $collected_args[ $new_name ][ $sub_name ] = $arg_value;
+          } else {
+	          $collected_args[ $new_name ][ $index ][ $sub_name ] = $arg_value;
+          }
           unset( $collected_args[ $arg_name ] );
         }
 			}

@@ -71,7 +71,7 @@ abstract class WP_Field_View_Base extends WP_Metadata_Base {
 			$attributes = implode( '|', array_keys( array_merge( WP_Metadata::get_html_attributes( 'input' ) ) ) );
 
 			$transforms = array(
-				'^({$features}):(.+)$'                       => 'features[$1]:$2',
+				"^({$features}):(.+)$"                           => 'features[$1]:$2',
 				"^features\[([^]]+)\]:({$attributes})$"          => 'features[$1]:html:$2',
 				"^features\[([^]]+)\]:wrapper:({$attributes})$"  => 'features[$1]:wrapper:html:$2',
 			);
