@@ -230,9 +230,11 @@ class WP_Form extends WP_Metadata_Base {
 	/**
 	 * @return mixed
 	 */
-	function html_name() {
+	function default_args() {
 
-		return str_replace( '-', '_', $this->form_name );
+		return array(
+			'element_name' => str_replace( '-', '_', $this->form_name ),
+		);
 
 	}
 
@@ -309,19 +311,6 @@ class WP_Form extends WP_Metadata_Base {
 
 	}
 
-//	/**
-//	 * @param array $form_args
-//	 *
-//	 * @return array
-//	 */
-//	function reject_args( $form_args ) {
-//
-//		unset( $form_args[ 'view' ] );
-//
-//		return $form_args;
-//
-//	}
-//
 //	/**
 //	 * @param array $form_args
 //	 *

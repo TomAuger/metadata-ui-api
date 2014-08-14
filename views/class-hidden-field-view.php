@@ -29,33 +29,33 @@ class WP_Hidden_Field_View extends WP_Field_View_Base {
 	/**
 	 * @return bool|string
 	 */
-	function html_id() {
+	function element_id() {
 
 		if ( $this->field->shared_name ) {
 
 			/*
-			 * If $shared_name is true there will be '[]' contained in the html ID from $this->html_name().
+			 * If $shared_name is true there will be '[]' contained in the html ID from $this->element_name().
 			 * Remove it.
 			 */
-			return preg_replace( '#\[\]#', '', parent::html_id() );
+			return preg_replace( '#\[\]#', '', parent::element_id() );
 
 		}
 
-		return  parent::html_id();
+		return  parent::element_id();
 	}
 
 	/**
 	 * @return bool|string
 	 */
-	function html_name() {
+	function element_name() {
 
 		if ( $this->field->shared_name ) {
 
-			return parent::html_name() . '[]';
+			return parent::element_name() . '[]';
 
 		}
 
-		return parent::html_name();
+		return parent::element_name();
 
 	}
 

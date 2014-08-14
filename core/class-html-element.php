@@ -17,17 +17,58 @@ class WP_Html_Element extends WP_Metadata_Base {
 	/**
 	 * @var string
 	 */
-	var $element_value;
+	var $value;
 
 	/**
 	 * @var array
 	 */
-	private $_attributes;
+	protected $_attributes;
 
 	/**
 	 * @var bool
 	 */
 	private $_attributes_parsed;
+
+  /**
+ 	 * @return array
+ 	 */
+  static function PROPERTIES() {
+
+    return array(
+      '_attributes' => array( 'type' => 'string[]', 'prefix' => false ),
+    );
+
+  }
+
+	/**
+	 * Defines the PARAMETERS for the static class factory method 'make_new'.
+	 *
+	 * @return array
+	 */
+	static function PARAMETERS() {
+
+	 return array(
+	   '$html_tag',
+		 '$value',
+	    null,
+	 );
+
+	}
+
+	/**
+	 * Factory method for WP_Html_Element
+	 *
+	 * @param string $tag_name
+	 * @param array $attributes
+	 * @param null|callable|string $value
+	 *
+	 * @return self
+	 */
+	static function make_new( $tag_name, $attributes = array(), $value = null ) {
+
+		return new self( $tag_name, $attributes, $value );
+
+	}
 
 	/**
 	 * @param string $tag_name
@@ -50,8 +91,11 @@ class WP_Html_Element extends WP_Metadata_Base {
 	function reset_element( $tag_name, $attributes = array(), $value = null ) {
 
 		$this->tag_name = $tag_name;
+		if ( is_null( $attributes ) ) {
+			$attributes = array();
+		}
 		$this->_attributes = wp_parse_args( $attributes );
-		$this->element_value = $value;
+		$this->value = $value;
 		$this->_attributes_parsed = false;
 
 	}
@@ -68,12 +112,12 @@ class WP_Html_Element extends WP_Metadata_Base {
 	/**
 	 * @return string
 	 */
-	function get_element_html() {
+	function get_html() {
 
 		$html = "<{$this->tag_name} " . $this->get_attributes_html() . '>';
 
-		if ( !$this->is_void_element() ) {
-			$value = is_callable( $this->element_value ) ? call_user_func( $this->element_value, $this ) : $this->element_value;
+		if ( ! $this->is_void_element() ) {
+			$value = is_callable( $this->value ) ? call_user_func( $this->value, $this ) : $this->value;
 
 			$html .= "{$value}</{$this->tag_name}>";
 		}
@@ -93,7 +137,7 @@ class WP_Html_Element extends WP_Metadata_Base {
 		$html = array();
 
 		if ( isset( $valid_attributes['value'] ) ) {
-			$attributes['value'] = esc_attr( $this->element_value );
+			$attributes['value'] = esc_attr( $this->value );
 		}
 
 		foreach ( $attributes as $name => $value ) {
@@ -131,7 +175,7 @@ class WP_Html_Element extends WP_Metadata_Base {
 	 *
 	 * @return mixed
 	 */
-	function get_attribute( $attribute_name ) {
+	function get_attribute_value( $attribute_name ) {
 
 		$attributes = $this->attributes();
 
@@ -144,7 +188,7 @@ class WP_Html_Element extends WP_Metadata_Base {
 	 *
 	 * @return mixed
 	 */
-	function set_attribute( $attribute_name, $value ) {
+	function set_attribute_value( $attribute_name, $value ) {
 
 		if ( !$this->_attributes_parsed ) {
 			$this->attributes();
@@ -161,9 +205,12 @@ class WP_Html_Element extends WP_Metadata_Base {
 	 */
 	function get_attribute_html( $attribute_name ) {
 
-		$value = $this->get_attribute( $attribute_name );
+		$value = $this->get_attribute_value( $attribute_name );
 
-		return $value ? " {$attribute_name}=\"{$value}\"" : false;
+		/**
+		 * @todo How best to escape the attribute_name; esc_attr() or other?
+		 */
+		return $value ? esc_attr( $attribute_name ) . '="' . esc_attr( $value ) . '"' : false;
 
 	}
 

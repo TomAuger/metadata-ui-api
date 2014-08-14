@@ -14,14 +14,14 @@ class WP_Field_Input_Feature extends WP_Field_Feature_Base {
 	 */
 	function default_args() {
 		return array(
-			'input:html:type' => $this->html_type()
+			'input:html:type' => $this->element_type()
 		);
 	}
 
 	/**
 	 * @return mixed
 	 */
-	function html_value() {
+	function element_value() {
 
 		return $this->field->value();
 

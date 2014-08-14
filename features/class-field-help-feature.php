@@ -9,7 +9,7 @@ class WP_Field_Help_Feature extends WP_Field_Feature_Base {
 	/**
 	 * @return string
 	 */
-	function html_value() {
+	function element_value() {
 
 		return $this->help_text;
 

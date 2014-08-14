@@ -5,29 +5,25 @@
 class WP_Field_Label_Feature extends WP_Field_Feature_Base {
 
 	/**
-	 *
-	 */
-	const HTML_TAG = 'label';
-
-	/**
 	 * @var string
 	 */
 	var $label_text;
 
 	/**
-	 * @param WP_Field_View_Base $view
-	 * @param array $feature_args
+	 * @return array
 	 */
-	function __construct( $view, $feature_args = array() ) {
+ static function PROPERTIES() {
 
-		parent::__construct( $view, $feature_args );
+   return array(
+     'element' => array( 'html_tag' => 'label'  ),
+   );
 
-	}
+ }
 
 	/**
 	 * @return mixed|string
 	 */
-	function html_value() {
+	function element_value() {
 
 		return $this->label_text;
 

@@ -76,6 +76,7 @@ class WP_Metadata {
 		'WP_Storage_Base'          => 'base/class-storage-base.php',
 		'WP_Field_Base'            => 'base/class-field-base.php',
 		'WP_Field_Feature_Base'    => 'base/class-field-feature-base.php',
+		'WP_View_Base'             => 'base/class-view-base.php',
 		'WP_Form_View_Base'        => 'base/class-form-view-base.php',
 		'WP_Field_View_Base'       => 'base/class-field-view-base.php',
 		'WP_Core_Storage'          => 'storage/class-core-storage.php',
@@ -1216,19 +1217,19 @@ class WP_Metadata {
       foreach ( $parents as $parent ) {
 
         if ( defined( $const_ref = "{$parent}::{$annotation_name}" ) ) {
-
-          $annotations = array_merge( $annotations, array( self::constant( $annotation_name, $parent ) ) );
-
+          $class_annotations = array( self::constant( $annotation_name, $parent ) );
         } else if ( self::has_own_method( $parent, $annotation_name ) ) {
-
-          $annotations = array_merge( $annotations,
-            self::invoke_instance_method( $instance, $parent, $annotation_name, $annotations ) )
-          ;
-
+          $class_annotations = self::invoke_instance_method( $instance, $parent, $annotation_name, $annotations );
         }
 
+        foreach ( $class_annotations as $field_name => $class_annotation ) {
+          if ( isset( $annotations[ $field_name ] ) && is_array( $annotations[ $field_name ] ) ) {
+            $annotations[ $field_name ] = array_merge( $annotations[ $field_name ], $class_annotation );
+          } else {
+	          $annotations[ $field_name ] = $class_annotation;
+          }
+        }
       }
-
       /*
        * Remove any annotations values that are null.
        */
@@ -1430,6 +1431,8 @@ class WP_Metadata {
 		 return WP_Annotated_Property::build_parameters( $class_name, $object_args );
 
 	 }
+
+
 }
 
 WP_Metadata::on_load();

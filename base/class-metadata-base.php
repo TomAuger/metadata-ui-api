@@ -112,9 +112,7 @@ abstract class WP_Metadata_Base {
       $args = $this->collect_args( $args );
 
       $args = $this->apply_class_filters( 'pre_assign_args', $args );
-
       $this->args = $args;
-
       $this->assign_args( $args );
 
     }
@@ -274,7 +272,7 @@ abstract class WP_Metadata_Base {
    *  $input = array(
    *    'field_name' => 'Foo',
    *    'html:size' => 50,     // Will be split and "collect" like
-   *    'wrapper:size' => 25,  // Assumes a TRANSFORMS() value that add's 'html' between 'wrapper' and 'size'
+   *    'wrapper:size' => 25,  // Assumes a TRANSFORMS() value that add's 'element' between 'wrapper' and 'size'
    *  );
    *  print_r( self::collect_args( $input ) );
    *  // Outputs:
@@ -375,6 +373,49 @@ abstract class WP_Metadata_Base {
 		return self::$_defaulted_property_values;
 	}
 
+
+	/**
+	 * @param array $args
+	 *
+	 * @return array
+	 */
+	private function _sort_args_scaler_types_first( $args ) {
+
+		uksort( $args, array( $this, '_scaler_types_first' ) );
+		return $args;
+
+	}
+
+	private function _scaler_types_first( $field1, $field2 ) {
+
+		$sort = 0;
+		$has_field1 = $this->has_annotated_property( $field1 );
+		$has_field2 = $this->has_annotated_property( $field2 );
+
+		if ( $has_field1 && $has_field2 ) {
+
+			$field1 = $this->get_annotated_property( $field1 );
+			$field2 = $this->get_annotated_property( $field2 );
+
+			if ( $field1->is_array() && $field2->is_class() ) {
+				$sort = -1;
+
+			} else if ( $field1->is_class() && $field2->is_array() ) {
+				$sort = +1;
+
+			}
+
+		} else if ( $has_field1 ) {
+			$sort = +1;
+
+		} else if ( $has_field2 ) {
+			$sort = -1;
+
+		}
+		return $sort;
+
+	}
+
   /**
    * Assign the element values in the $args array to the properties of this object.
    *
@@ -385,6 +426,9 @@ abstract class WP_Metadata_Base {
     $class_name = get_class( $this );
 
 		$args = array_merge( $this->get_defaulted_property_values(), $args );
+
+
+	  $args = $this->_sort_args_scaler_types_first( $args );
 
     /*
      * Assign the arg values to properties, if they exist.
@@ -416,7 +460,8 @@ abstract class WP_Metadata_Base {
 						$object_args = $this->extract_prefixed_args( $annotated_property->prefix, $args );
 
 						$object_args['$value'] = $value;
-					  $object_args['$parent'] = $this;
+						$object_args['$parent'] = $this;
+						$object_args['$property'] = $annotated_property;
 
 				    $value = $annotated_property->make_object( $object_args );
 
@@ -691,5 +736,16 @@ abstract class WP_Metadata_Base {
     return $prefixed_args;
 
   }
+
+	/**
+	 * @param string $property_name
+	 * @param string $annotation_name
+	 *
+	 * @return mixed
+	 */
+	function get_annotation_of( $property_name, $annotation_name ) {
+		return $this->get_annotated_property( $property_name )->get_annotation( $annotation_name );
+	}
+
 
 }

@@ -113,9 +113,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 			$transforms = array(
 				'^label$'                           => 'view:label:label_text',
 				'^label:([^_]+)$'                   => 'view:label:$1',
-				"^({$attributes})$"                 => 'view:input:html:$1',
-				'^(input|html):([^_]+)$'            => 'view:input:html:$2',
-				'^(input:)?wrapper:([^_]+)$'        => 'view:input:wrapper:html:$2',
+				"^({$attributes})$"                 => 'view:input:$1',
+				'^(input|html):([^_]+)$'            => 'view:input:$2',
+				'^(input:)?wrapper:([^_]+)$'        => 'view:input:wrapper:$2',
 			);
 		}
 
@@ -253,9 +253,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 	/**
 	 * @return mixed
 	 */
-	function form_html_name() {
+	function form_element_name() {
 
-		return $this->form->html_name();
+		return $this->form->element_name();
 
 	}
 

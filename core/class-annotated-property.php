@@ -120,6 +120,34 @@ class WP_Annotated_Property {
 
  }
 
+	/**
+	 * @param string $annotation_name
+	 *
+	 * @return null
+	 */
+	function get_annotation( $annotation_name ) {
+
+	  if ( property_exists( $this, $annotation_name ) ) {
+
+		  $annotation = $this->{$annotation_name};
+
+	  } else if ( property_exists( $this, $long_name = "property_{$annotation_name}" ) ) {
+
+		  $annotation = $this->{$long_name};
+
+	  } else if ( isset( $this->extra[ $annotation_name ] ) ) {
+
+		  $annotation = $this->extra[ $annotation_name ];
+
+	  } else {
+
+	    $annotation = null;
+
+	  }
+
+	  return $annotation;
+
+	}
 
 	/**
   * @param array $object_args
@@ -162,26 +190,29 @@ class WP_Annotated_Property {
 
      if ( preg_match( '#^(\$value|\$parent)$#', $parameter_name ) ) {
 
-       $parameters[] = $object_args[ $parameter_name ];
+	     $parameters[] = $object_args[ $parameter_name ];
 
      } else if ( '$args' == $parameter_name ) {
 
 	     $args_index = count( $parameters );
        $parameters[] = $object_args;
 
+     } else if ( is_null( $parameter_name ) || is_bool( $parameter_name ) ) {
+
+       $parameters[] = $parameter_name;
+
      } else {
 
-	    trigger_error( 'Inside WP_Annotated_Property::build_parameters(); assumption failed.' );
-
-      if ( property_exists( $class_name, $parameter_name ) ) {
-        $parameters[] = $object_args[ '$parent' ]->{$parameter_name};
-
-      } else if ( isset( $object_args[ $parameter_name ] ) ) {
-        $parameters[] = $object_args[ $parameter_name ];
-
-      } else {
-	      $parameters[] = null;
-      }
+	     /**
+	      * Allow for user defined values in WP_Annotated_Property
+	      * @var array $annotation_args
+	      */
+        $property_args = $object_args['$property']->extra;
+	      if ( isset( $property_args[ $property_key = ltrim( $parameter_name, '$' ) ] ) ) {
+		      $parameters[] = $property_args[ $property_key ];
+	      } else {
+		      trigger_error( 'Inside WP_Annotated_Property::build_parameters(); assumption failed.' );
+	      }
 
      }
 
@@ -199,6 +230,5 @@ class WP_Annotated_Property {
    return $parameters;
 
  }
-
 
 }
