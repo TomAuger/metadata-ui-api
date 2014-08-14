@@ -7,6 +7,7 @@
  * @method null|int element_id()
  * @method null|string element_name()
  * @method null|string element_class()
+ * @method null|string wrapper_class()
  *
  */
 class WP_View_Base extends WP_Metadata_Base {
@@ -179,25 +180,20 @@ class WP_View_Base extends WP_Metadata_Base {
 		$this->get_attribute_value_of( 'name', 'element', true );
 		$this->get_attribute_value_of( 'id', 'element', true );
 
+		$class = $this->get_attribute_value_of( 'class', 'element' );
+		if ( $class != ( $more_class = $this->element_class() ) ) {
+			$class = "{$class} {$more_class}";
+		}
+		$this->set_attribute_value_of( 'class', $class, 'element' );
+
+
 		$this->get_attribute_value_of( 'name', 'wrapper', true );
 		$this->get_attribute_value_of( 'id', 'wrapper', true );
 
-		$class = $this->get_attribute_value_of( 'class', 'element' );
-
-		if ( $class != ( $more_class = $this->element_class() ) ) {
-
+		$class = $this->get_attribute_value_of( 'class', 'wrapper' );
+		if ( $class != ( $more_class = $this->wrapper_class() ) ) {
 			$class = "{$class} {$more_class}";
-
 		}
-
-		$this->set_attribute_value_of( 'class', $class, 'element' );
-
-		$class = explode( ' ', trim( $class ) );
-		foreach( array_keys( $class ) as $index ) {
-			$class[ $index ] .= '-wrapper';
-		}
-		$class = implode( ' ', $class );
-
 		$this->set_attribute_value_of( 'class', $class, 'wrapper' );
 
 	}
@@ -239,6 +235,7 @@ class WP_View_Base extends WP_Metadata_Base {
 		return $attribute_value;
 
 	}
+
 
 	/**
 	 *
@@ -284,18 +281,22 @@ class WP_View_Base extends WP_Metadata_Base {
 
 		if ( preg_match( "#^get_(element|wrapper)_(id|name|class)$#", $method_name, $matches ) ) {
 
-			$value = $this->_get_element_attribute_value( $matches[1], $matches[2] );
+			$value = $this->get_attribute_value_of( $matches[2], $matches[1], true );
 
 		} else if ( preg_match( "#^(wrapper)_(id|name|class)$#", $method_name, $matches ) ) {
 
 				if ( ! method_exists( $this, $method_name = "{$matches[1]}_{$matches[2]}" ) ) {
 
 					if ( 'class' == $matches[2] ) {
-						/*
 
-						 * @todo Figure out what to add here.
-						 */
 						$value = $this->element->get_attribute_value( $matches[2] );
+
+						$classes = explode( ' ', trim( $value ) );
+						foreach( array_keys( $classes ) as $index ) {
+							$classes[ $index ] .= "-{$matches[1]}";
+						}
+						$value = implode( ' ', $classes );
+
 
 					} else /** if ( 'class' != $matches[2] ) */{
 
@@ -317,21 +318,4 @@ class WP_View_Base extends WP_Metadata_Base {
 
 	}
 
-	private function _get_element_attribute_value( $element_name, $attribute_name ) {
-
-		$value = $this->get_attribute_value_of( $attribute_name, $element_name );
-
-		if ( empty( $value ) && method_exists( $this, $method_name = "{$element_name}_{$attribute_name}" ) ) {
-
-			if ( $value = call_user_func( array( $this, $method_name ) ) ) {
-
-				$this->set_attribute_value_of( $attribute_name, $value, $element_name );
-
-			}
-
-		}
-
-		return $value;
-
-	}
 }
