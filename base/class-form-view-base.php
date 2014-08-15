@@ -97,7 +97,7 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	/**
 	 * @return string
 	 */
-	function get_wrapper_value() {
+	function get_element_html() {
 
 		return $this->get_form_fields_html();
 	}
@@ -113,7 +113,9 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 		 * @var WP_Field_Base $field
 		 */
 		foreach ( $this->form->fields as $field_name => $field ) {
+
 			$fields_html[] = $field->view->get_field_html();
+
 		}
 
 //		$form_field = new WP_Hidden_Field( "wp_metadata_forms", array(
@@ -133,28 +135,29 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	/**
 	 * @return bool|string
 	 */
-	function element_id() {
+	function initial_element_id() {
 
-		return str_replace( '_', '-', $this->element_name() ) . '-' . $this->element_class();
+		return str_replace( '_', '-', "{$this->form->form_name}-metadata-form" );
 
 	}
 
 	/**
 	 * @return bool|string
 	 */
-	function element_class() {
+	function initial_element_class() {
 
 		return "metadata-form";
 
 	}
 
-	/**
-	 * @return bool|string
-	 */
-	function element_name() {
+//	/**
+//	 * @return bool|string
+//	 */
+//	function initial_element_id() {
+//
+//		return str_replace( '_', '-', $this->element->get_name() ) . '-' . $this->element->get_class();
+//
+//	}
 
-		return $this->form->form_name;
-
-	}
 
 }

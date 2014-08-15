@@ -9,7 +9,7 @@ class WP_Field_Message_Feature extends WP_Field_Feature_Base {
 	/**
 	 * @return string
 	 */
-	function element_value() {
+	function get_element_value() {
 
 		return $this->message_text;
 

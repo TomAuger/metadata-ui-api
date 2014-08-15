@@ -97,16 +97,16 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	/**
 	 * @return bool|string
 	 */
-	function element_id() {
+	function initial_element_id() {
 
-		return str_replace( '_', '-', $this->field->view->get_element_id() ) . "-field-{$this->feature_type}";
+		return str_replace( '_', '-', $this->field_name() ) . "-field-{$this->feature_type}";
 
 	}
 
 	/**
 	 * @return bool|string
 	 */
-	function element_class() {
+	function initial_element_class() {
 
 		return "field-feature field-{$this->feature_type}";
 
@@ -115,9 +115,18 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	/**
 	 * @return bool|string
 	 */
-	function element_name() {
+	function initial_element_name() {
 
-		return 'wp_metadata_forms[' . $this->field->form_element_name() . '][' . $this->field->view->get_element_name() . ']';
+		return 'wp_metadata_forms[' . $this->field->form_element_name() . '][' . $this->field_name() . ']';
+
+	}
+
+	/**
+	 *  Used in initial_*() functions above.
+	 */
+	function field_name() {
+
+		return $this->field->field_name;
 
 	}
 
@@ -135,9 +144,39 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	 */
 	function get_feature_html() {
 
-		$this->get_html();
+		return $this->get_html();
 
 	}
 
+	/**
+	 * @param string $property_name
+	 * @return mixed
+	 */
+	function __get( $property_name ) {
 
+		$view = $this->view;
+
+		if ( isset( $view->features[ $property_name ] ) ) {
+
+			$value = $view->features[ $property_name ];
+
+		} else {
+
+			$value = parent::__get( $property_name );
+
+		}
+
+		return $value;
+
+	}
+
+	/**
+	 * @param string $property_name
+	 * @param mixed $value
+	 */
+	function __set( $property_name, $value ) {
+
+		$this->view->features[ $property_name ] = $value;
+
+	}
 }

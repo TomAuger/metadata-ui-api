@@ -8,10 +8,11 @@ class WP_Hidden_Field_View extends WP_Field_View_Base {
 
 	/**
 	 * @param string $view_name
+	 * @param WP_Hidden_Field $field
 	 * @param array $view_args
 	 */
-	function __construct( $view_name, $view_args = array() ) {
-		parent::__construct( $view_name, $view_args );
+	function __construct( $view_name, $field, $view_args = array() ) {
+		parent::__construct( $view_name, $field, $view_args );
 	}
 
 
@@ -29,7 +30,7 @@ class WP_Hidden_Field_View extends WP_Field_View_Base {
 	/**
 	 * @return bool|string
 	 */
-	function element_id() {
+	function initial_element_id() {
 
 		if ( $this->field->shared_name ) {
 
@@ -37,11 +38,11 @@ class WP_Hidden_Field_View extends WP_Field_View_Base {
 			 * If $shared_name is true there will be '[]' contained in the html ID from $this->element_name().
 			 * Remove it.
 			 */
-			return preg_replace( '#\[\]#', '', parent::element_id() );
+			return preg_replace( '#\[\]#', '', parent::initial_element_id() );
 
 		}
 
-		return  parent::element_id();
+		return parent::initial_element_id();
 	}
 
 	/**
@@ -51,11 +52,11 @@ class WP_Hidden_Field_View extends WP_Field_View_Base {
 
 		if ( $this->field->shared_name ) {
 
-			return parent::element_name() . '[]';
+			return parent::initial_element_name() . '[]';
 
 		}
 
-		return parent::element_name();
+		return parent::initial_element_name();
 
 	}
 
@@ -73,7 +74,7 @@ class WP_Hidden_Field_View extends WP_Field_View_Base {
 		 */
 		$feature = $this->features[ 'input' ];
 
-		return $feature->get_element_html();
+		return $feature->element->get_html();
 
 	}
 }

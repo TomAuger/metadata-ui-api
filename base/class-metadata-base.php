@@ -117,6 +117,7 @@ abstract class WP_Metadata_Base {
 
     }
 
+	  $args = $this->apply_class_filters( 'pre_initialize', $args );
     $this->do_class_action( 'initialize', $args );
 
   }
@@ -738,13 +739,13 @@ abstract class WP_Metadata_Base {
   }
 
 	/**
-	 * @param string $property_name
 	 * @param string $annotation_name
+	 * @param string $property_name
 	 *
 	 * @return mixed
 	 */
-	function get_annotation_of( $property_name, $annotation_name ) {
-		return $this->get_annotated_property( $property_name )->get_annotation( $annotation_name );
+	function get_annotation_value( $annotation_name, $property_name ) {
+		return $this->get_annotated_property( $property_name )->get_annotation_value( $annotation_name );
 	}
 
 

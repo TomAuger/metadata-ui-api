@@ -125,7 +125,7 @@ class WP_Annotated_Property {
 	 *
 	 * @return null
 	 */
-	function get_annotation( $annotation_name ) {
+	function get_annotation_value( $annotation_name ) {
 
 	  if ( property_exists( $this, $annotation_name ) ) {
 

@@ -23,7 +23,7 @@ class WP_Field_Label_Feature extends WP_Field_Feature_Base {
 	/**
 	 * @return mixed|string
 	 */
-	function element_value() {
+	function get_element_value() {
 
 		return $this->label_text;
 

@@ -4,11 +4,6 @@
  *
  * @TODO Refactor so this class can handle an arbitrary list of properties, not just 'wrapper' and 'element'
  *
- * @method null|int element_id()
- * @method null|string element_name()
- * @method null|string element_class()
- * @method null|string wrapper_class()
- *
  */
 class WP_View_Base extends WP_Metadata_Base {
 
@@ -60,7 +55,7 @@ class WP_View_Base extends WP_Metadata_Base {
 
 		if ( is_object( $wrapper = $this->wrapper ) && method_exists( $wrapper, 'get_html' ) ) {
 
-			$wrapper->value = $this->get_wrapper_value();
+			$wrapper->value = $this->get_element_html();
 
 			$html = $wrapper->get_html();
 
@@ -75,15 +70,22 @@ class WP_View_Base extends WP_Metadata_Base {
 	}
 
 	/**
-	 * This typically gets overridden in a child class.
+	 * Get the value of the element.
+	 * @note: Typically this will be overridden in child classes.
 	 *
-	 * Wrapper Value =>  <div class="wrapper">{$value}</div>
-	 *
+	 * @return bool
+	 */
+	function get_element_value() {
+		return false;
+	}
+
+	/**
 	 * @return string
 	 */
-	function get_wrapper_value() {
+	function get_element_html() {
 
-		return null;
+		$this->element->value = $this->get_element_value();
+		return $this->element->get_html();
 	}
 
 
@@ -93,34 +95,7 @@ class WP_View_Base extends WP_Metadata_Base {
 	 */
 	function get_element_tag() {
 
-		return $this->owner->get_annotation_of( 'html_tag', 'element' );
-
-	}
-
-	/**
-	 * @return bool|string
-	 */
-	function get_element_id() {
-
-		return $this->get_attribute_value_of( 'id', 'element' );
-
-	}
-
-	/**
-	 * @return bool|string
-	 */
-	function get_element_class() {
-
-		return $this->get_attribute_value_of( 'class', 'element' );
-
-	}
-
-	/**
-	 * @return bool|string
-	 */
-	function get_element_name() {
-
-		return $this->get_attribute_value_of( 'name', 'element' );
+		return $this->owner->get_annotation_value( 'html_tag', 'element' );
 
 	}
 
@@ -130,43 +105,7 @@ class WP_View_Base extends WP_Metadata_Base {
 	 */
 	function get_wrapper_tag() {
 
-		return $this->owner->get_annotation_of( 'html_tag', 'wrapper' );
-
-	}
-
-//	/**
-//	 * @return array
-//	 */
-//	function wrapper_name() {
-//
-//		return false;
-//
-//	}
-
-	/**
-	 * @return bool|string
-	 */
-	function get_wrapper_id() {
-
-		return $this->get_attribute_value_of( 'id', 'wrapper' );
-
-	}
-
-	/**
-	 * @return bool|string
-	 */
-	function get_wrapper_class() {
-
-		return $this->get_attribute_value_of( 'class', 'wrapper' );
-
-	}
-
-	/**
-	 * @return bool|string
-	 */
-	function get_wrapper_name() {
-
-		return $this->get_attribute_value_of( 'name', 'wrapper' );
+		return $this->owner->get_annotation_value( 'html_tag', 'wrapper' );
 
 	}
 
@@ -177,145 +116,77 @@ class WP_View_Base extends WP_Metadata_Base {
 	 */
 	function initialize( $feature_args ) {
 
-		$this->get_attribute_value_of( 'name', 'element', true );
-		$this->get_attribute_value_of( 'id', 'element', true );
+		$this->element->append_class( $this->initialize_attribute( 'class', 'element' ) );
+		$this->element->set_id( $this->initialize_attribute( 'id', 'element' ) );
 
-		$class = $this->get_attribute_value_of( 'class', 'element' );
-		if ( $class != ( $more_class = $this->element_class() ) ) {
-			$class = "{$class} {$more_class}";
-		}
-		$this->set_attribute_value_of( 'class', $class, 'element' );
+		$this->wrapper->append_class( $this->initialize_attribute( 'class', 'wrapper' ) );
+		$this->wrapper->set_id( $this->initialize_attribute( 'id', 'wrapper' ) );
 
-
-		$this->get_attribute_value_of( 'name', 'wrapper', true );
-		$this->get_attribute_value_of( 'id', 'wrapper', true );
-
-		$class = $this->get_attribute_value_of( 'class', 'wrapper' );
-		if ( $class != ( $more_class = $this->wrapper_class() ) ) {
-			$class = "{$class} {$more_class}";
-		}
-		$this->set_attribute_value_of( 'class', $class, 'wrapper' );
-
+		return '';
 	}
 
+
 	/**
-	 * Get an attributes of a WP_Html_Element property (and of any object with a 'get_attribute()' method.
-	 *
 	 * @param string $attribute_name
-	 * @param string $property_name
-	 * @param bool $set_value
-	 *
+	 * @param string $html_element_name
 	 * @return mixed
 	 */
-	function get_attribute_value_of( $attribute_name, $property_name, $set_value = false ) {
-
-		$attribute_value = null;
-
-		/**
-		 * @var WP_Html_Element $element
-		 */
-		if ( isset( $this->{$property_name} ) && is_object( $element = $this->{$property_name} ) ) {
-
-			if ( method_exists( $element, 'get_attribute_value' ) ) {
-
-				if ( false === ( $attribute_value = $element->get_attribute_value( $attribute_name ) && $set_value ) ) {
-
-					if ( ! is_null( $attribute_value = $this->get_defined_attribute_value_of( $attribute_name, $property_name ) ) ) {
-
-						$this->set_attribute_value_of( $attribute_name, $attribute_value, $property_name );
-
-					}
-
-				}
-
-			}
-
-		}
-
-		return $attribute_value;
-
-	}
-
-
-	/**
-	 *
-	 * A "defined" attribute value is gotten from a method named "{$property_name}_{$attribute_name}()"
-	 *
-	 * This will be handled in __call() if there is no defined method.
-	 *
-	 * @param $attribute_name
-	 * @param $property_name
-	 *
-	 * @return mixed|null
-	 */
-	function get_defined_attribute_value_of( $attribute_name, $property_name ) {
-
-		return call_user_func( array( $this, "{$property_name}_{$attribute_name}" ) );
-
-	}
-
-	/**
-	 * Set an attributes of a WP_Html_Element property (and of any object with a 'set_attribute_value()' method.
-	 *
-	 * @param string $attribute_name
-	 * @param string $property_name
-	 * @param string $attribute_value
-	 */
-	function set_attribute_value_of( $attribute_name, $attribute_value, $property_name ) {
-
-		if ( isset( $this->{$property_name} ) && is_object( $object = $this->{$property_name} ) ) {
-
-			if ( method_exists( $object, 'set_attribute_value' ) ) {
-
-				$object->set_attribute_value( $attribute_name, $attribute_value );
-
-			}
-
-		}
-
-	}
-
-	function __call( $method_name, $args ) {
-
+	function initialize_attribute( $attribute_name, $html_element_name ) {
 		$value = null;
+		switch ( $element_attribute = "{$html_element_name}_{$attribute_name}" ) {
 
-		if ( preg_match( "#^get_(element|wrapper)_(id|name|class)$#", $method_name, $matches ) ) {
+			case 'element_name':
+			case 'element_id':
+			case 'element_class':
 
-			$value = $this->get_attribute_value_of( $matches[2], $matches[1], true );
+				if ( method_exists( $this, $method_name = "initial_{$element_attribute}" ) ) {
 
-		} else if ( preg_match( "#^(wrapper)_(id|name|class)$#", $method_name, $matches ) ) {
+					$value = $this->{$method_name}();
 
-				if ( ! method_exists( $this, $method_name = "{$matches[1]}_{$matches[2]}" ) ) {
+				} else {
 
-					if ( 'class' == $matches[2] ) {
+					switch ( $element_attribute ) {
+						case 'element_name':
+							$value = 'element_name_not_set_in_child_class';
+							break;
 
-						$value = $this->element->get_attribute_value( $matches[2] );
+						case 'element_id':
+							$value = str_replace( '_', '-', $this->element->get_name() );
+							break;
 
-						$classes = explode( ' ', trim( $value ) );
-						foreach( array_keys( $classes ) as $index ) {
-							$classes[ $index ] .= "-{$matches[1]}";
-						}
-						$value = implode( ' ', $classes );
-
-
-					} else /** if ( 'class' != $matches[2] ) */{
-
-						$separator = 'name' == $matches[2] ? '_' : '-';
-
-						$value = $this->element->get_attribute_value( $matches[2] ) . $separator . $matches[1];
-
+						case 'element_class':
+							$value = '';
+							break;
 					}
 
 				}
+				break;
 
-		} else {
+			case 'wrapper_id':
 
-			$value = parent::__call( $method_name, $args );
+				$value = $this->element->get_id() . '-wrapper';
+				break;
+
+			case 'wrapper_class':
+
+				if ( $classes = $this->element->get_class() ) {
+
+					$classes = explode( ' ', $classes );
+
+					foreach ( $classes as &$class ) {
+
+						$class = trim( $class ) . '-wrapper';
+
+					}
+
+					$value = implode( ' ', $classes );
+
+				}
+
+				break;
 
 		}
-
 		return $value;
-
 	}
 
 }

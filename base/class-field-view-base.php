@@ -7,6 +7,7 @@
  * @property WP_Field_Help_Feature $help
  * @property WP_Field_Message_Feature $message
  * @property WP_Field_Infobox_Feature $infobox
+ *
  */
 abstract class WP_Field_View_Base extends WP_View_Base {
 
@@ -156,35 +157,23 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 		 * @var WP_Field_Label_Feature $label
 		 */
 		if ( is_object( $label = $this->features['label'] ) ) {
-			$label->element->set_attribute_value( 'for', $this->input->get_element_id() );
+			$label->element->set_attribute_value( 'for', $this->features['input']->element->get_id() );
 		}
 
 	}
 
-	/**
-	 * @return bool|string
-	 */
-	function wrapper_id() {
+	function initial_element_id() {
 
-		return $this->element_id() . '-wrapper';
+		return $this->field->field_name . '-metadata-field';
 
 	}
 
 	/**
 	 * @return bool|string
 	 */
-	function wrapper_class() {
+	function initial_element_class() {
 
-		return "metadata-field-wrapper";
-
-	}
-
-	/**
-	 * @return bool|string
-	 */
-	function wrapper_name() {
-
-		return "{$this->field->field_name}-wrapper";
+		return "metadata-field";
 
 	}
 
@@ -275,7 +264,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	/**
 	 * @return string
 	 */
-	function get_wrapper_value() {
+	function get_element_html() {
 
 		return $this->get_features_html();
 
@@ -361,7 +350,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 		return method_exists( $this->field, $method_name ) ? call_user_func_array( array(
 			$this->field,
 			$method_name
-		), $args ) : null;
+		), $args ) : parent::__call( $method_name, $args );
 
 	}
 

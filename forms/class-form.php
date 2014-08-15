@@ -33,7 +33,7 @@ class WP_Form extends WP_Metadata_Base {
 	var $form_index;
 
 	/**
-	 * @var array
+	 * @var WP_Form_View_Base
 	 */
 	var $view;
 
@@ -304,37 +304,11 @@ class WP_Form extends WP_Metadata_Base {
 			/*
 			 * Delegate call to view and return it's result to caller.
 			 */
-			$result = $this->view->$method_name( $args );
+			$result = $this->view->{$method_name}( $args );
 		}
 
 		return $result;
 
 	}
-
-//	/**
-//	 * @param array $form_args
-//	 *
-//	 * @return array
-//	 */
-//	function pre_assign_args( $form_args ) {
-//
-//		if ( isset( $form_args[ 'view' ] ) ) {
-//
-//			if ( false !== $form_args[ 'view' ] ) {
-//
-//				$this->view = $form_args['view'];
-//
-//			}
-//
-//		} else {
-//
-//		 	$this->view = 'default';
-//		}
-//
-//		return $form_args;
-//
-//	}
-//
-
 
 }
