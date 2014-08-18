@@ -5,8 +5,15 @@ An API for building form UI for WordPress content types (post types, users, comm
 
 This is a project of the [WordPress core Options/Metadata team](http://make.wordpress.org/core/components/options-meta/).
 
+##TODO; _"colons-in-args"_ Branch:
 
+This is the list of TODOs currently planned:
 
+- Change `TRANSFORMS()` usage from annotation to class filter method.
+- Change `PARAMETERS()` annotation to use a `'parameters'` argument in `PROPERTIES()` annotation. 
+- Review `default_args()` to see if there is not a better way to set default `$args` for a class.  Consider a `CLASS_PROPERTIES()`  annotation.
+- Look into how `make_new()` methods could instantiate objects with different signatures _(or decide that we don't need this.)_
+- Review code in for other concerns.
 
 ## Documentation
 

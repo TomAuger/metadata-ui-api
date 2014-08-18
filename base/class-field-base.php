@@ -196,9 +196,10 @@ class WP_Field_Base extends WP_Metadata_Base {
 		if ( is_string( $field_type_args ) && class_exists( $field_type_args ) ) {
 
 			/**
-			 * Field type is a Class name
+			 * @todo VERIFY THAT WE DO or DO NOT NEED TO ALLOW MULTIPLE SIGNATURES FOR FIELDS.
+			 * @todo UPDATE ALL OTHER make_new() METHODS TOO IF WE NEED TO ALLOW.
 			 *
-			 * @todo Convert this to use make_object()
+			 * Field type is a Class name
 			 */
 			$field = new $field_type_args( $field_name, $field_args );
 
@@ -392,15 +393,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 		$this->_value = $value;
 
 	}
-
-//	/**
-//	 * @return WP_Field_Input_Feature
-//	 */
-//	function get_input_feature() {
-//
-//		return $this->view->features['input'];
-//
-//	}
 
 	/**
 	 * @param null|mixed $value
