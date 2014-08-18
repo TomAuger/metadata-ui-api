@@ -13,11 +13,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 	/**
 	 *
 	 */
-	const HTML_TYPE = 'text';
-
-	/**
-	 *
-	 */
 	const PREFIX = 'field';
 
 	/**
@@ -113,9 +108,10 @@ class WP_Field_Base extends WP_Metadata_Base {
 			$transforms = array(
 				'^label$'                           => 'view:label:label_text',
 				'^label:([^_]+)$'                   => 'view:label:$1',
-				"^({$attributes})$"                 => 'view:input:$1',
-				'^(input|html):([^_]+)$'            => 'view:input:$2',
+				"^({$attributes})$"                 => 'view:input:element:$1',
+				'^(input|html|element):([^_]+)$'    => 'view:input:element:$2',
 				'^(input:)?wrapper:([^_]+)$'        => 'view:input:wrapper:$2',
+				'^view_type$'                       => 'view:view_type',
 			);
 		}
 
@@ -133,8 +129,11 @@ class WP_Field_Base extends WP_Metadata_Base {
     return array(
       'value'   => array( 'type' => 'mixed' ),
       'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
-      'view'    => array( 'type' => 'WP_Field_View', 'parameters' => array( '$object_type' => 'object_type' ) ),
       'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
+      'view'    => array( 'type' => 'WP_Field_View_Base', 'parameters' => array(
+          '$object_type' => 'object_type'
+        )
+      ),
     );
 
 	}
@@ -153,6 +152,7 @@ class WP_Field_Base extends WP_Metadata_Base {
    );
 
  }
+
 
   /**
 	 * Make a New Field object
@@ -189,44 +189,47 @@ class WP_Field_Base extends WP_Metadata_Base {
 		}
 
 		/**
-		 * @var string|object $field_type If string, a class. If object a filepath to load a class and $args
+		 * @var string|object $field_type_args If string, a class. If an array, call recursively.
 		 */
-		$field_type = WP_Metadata::get_field_type( $field_args[ 'field_type' ] );
+ 		$field_type_args = WP_Metadata::get_field_type_args( $field_args[ 'field_type' ] );
 
-		if ( is_object( $field_type ) ) {
-			/**
-			 * Field type is Class name with external filepath
-			 */
-
-			if ( $field_type->filepath ) {
-
-				require_once( $field_type->filepath );
-
-			}
-
-			$field_type = $field_type->field_args;
-		}
-
-		if ( is_string( $field_type ) && class_exists( $field_type ) ) {
+		if ( is_string( $field_type_args ) && class_exists( $field_type_args ) ) {
 
 			/**
 			 * Field type is a Class name
+			 *
+			 * @todo Convert this to use make_object()
 			 */
-			$field = new $field_type( $field_name, $field_args );
+			$field = new $field_type_args( $field_name, $field_args );
 
-		} else if ( is_array( $field_type ) ) {
+		} else if ( is_array( $field_type_args ) ) {
 
 			/**
-			 * Field type is a 'Prototype'
+			 * Field Type passed to make_new() is a 'Prototype'
 			 */
-			$field_args = wp_parse_args( $field_args, $field_type );
+			$field_args = wp_parse_args( $field_args, $field_type_args );
 
 			$field = self::make_new( $field_name, $object_type, $field_args );
+
+		} else {
+
+			$field = null;
 
 		}
 
 		return $field;
 
+	}
+
+	/**
+	 * @todo VERIFY THIS IS THE RIGHT APPROACH FOR SETTING DEFAULTS
+	 *
+	 * @param array $args
+	 * @return array
+	 */
+	function default_args( $args ) {
+	 	$args[ 'view:view_type' ] ='text';
+		return $args;
 	}
 
 	/**
@@ -270,117 +273,18 @@ class WP_Field_Base extends WP_Metadata_Base {
 		return str_replace( '_', '-', $this->element->get_name() ) . '-field';
 	}
 
-
-//
-//	/**
-//	 * @param array $field_args
-//	 *
-//	 * @return array
-//	 */
-//	function reject_args( $field_args ) {
-//
-//		unset( $field_args[ 'view' ] );
-//
-//		unset( $field_args[ 'form' ] );
-//
-//		return $field_args;
-//
-//	}
-
-//	/**
-//	 * @param array $field_args
-//	 *
-//	 * @return array
-//	 */
-//	function pre_assign_args( $field_args ) {
-//
-//		if ( ! empty( $field_args[ 'form' ] ) ) {
-//
-//			$this->form = $field_args[ 'form' ];
-//
-//		}
-//
-//		if ( $this->form && empty( $this->form->view ) ) {
-//
-//			$this->view = null;
-//
-//		} else if ( isset( $field_args[ 'view' ] ) ) {
-//
-//			if ( false !== $field_args[ 'view' ] ) {
-//
-//				$this->view = $field_args['view'];
-//
-//			}
-//
-//		} else {
-//
-//		 	$this->view = 'default';
-//
-//		}
-//
-//		return $field_args;
-//
-//	}
-
 	/**
-	 * Register the default view for this class.
-	 */
-	function initialize_class() {
-
-		WP_Metadata::register_field_view( 'default', 'WP_Field_View' );
-
-	}
-
-//	function initialize( $field_args ) {
-//
-////		$this->initialize_field_view( $this->view, $this->get_view_args() );
-////
-////		$this->initialize_storage( $this->storage, $this->get_storage_args() );
-//
-//	}
-
-	/**
-	 * @return array
-	 */
-	function get_storage_args() {
-		trigger_error( 'Need to fix ' . __CLASS__ . '::' . __METHOD__ );
-		return $this->delegated_args[ 'storage' ];
-
-	}
-
-	/**
-	 * @return array
-	 */
-	function get_view_args() {
-
-		return array_merge(
-			$this->view,
-			WP_Metadata::collect_args( $this->args, $this->get_view_contained() )
-		);
-
-	}
-
-	/**
-	 * @return array
-	 */
-	function get_view_contained() {
-
-		return array();
-
-	}
-
-	/**
-	 * @param string $view_name
+	 * @param string $view_type
 	 * @param array $view_args
 	 */
-	function initialize_field_view( $view_name, $view_args = array() ) {
+	function initialize_field_view( $view_type, $view_args = array() ) {
 
-		if ( ! WP_Metadata::field_view_exists( $view_name ) ) {
+		if ( ! WP_Metadata::field_view_exists( $view_type ) ) {
 			$this->view = false;
 		} else {
-			$view_args[ 'view_name' ] = $view_name;
+			$view_args[ 'view_type' ] = $view_type;
 			$view_args[ 'field' ] = $this; // This is redundant, but that's okay
-			$this->view = $this->make_field_view( $view_name, $view_args );
+			$this->view = $this->make_field_view( $view_type, $view_args );
 		}
 
 	}
@@ -435,36 +339,17 @@ class WP_Field_Base extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @param string $view_name
+	 * @param string $view_type
 	 * @param array $view_args
 	 *
-	 * @return WP_Field_View
+	 * @return WP_Field_View_Base
 	 */
-	function make_field_view( $view_name, $view_args = array() ) {
+	function make_field_view( $view_type, $view_args = array() ) {
 
-    return WP_Metadata::make_field_view( $this, $view_name, $view_args );
+		return WP_Field_View_Base::make_new( $view_type, $this, $view_args );
 
 	}
 
-
-	/**
-	 * Retrieve the class name for a named view.
-	 *
-	 * @param bool|string $view_name The name of the view that is unique for this class.
-	 *
-	 * @return string
-	 */
-	function get_view_class( $view_name = false ) {
-
-		if ( !$view_name ) {
-			$view_name = $this->view;
-		}
-
-		return is_object( $this->view )
-		  ? get_class( $this->view )
-		  : WP_Metadata::get_view_class( 'field', $view_name, get_class( $this ) );
-
-	}
 
 	/**
 	 *
@@ -472,7 +357,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 	function value() {
 
 		if ( is_null( $this->_value ) && $this->field->has_storage() ) {
+
 			$this->_value = $this->get_value();
+
 		}
 
 		return $this->_value;

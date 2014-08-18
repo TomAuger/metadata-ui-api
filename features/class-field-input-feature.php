@@ -5,17 +5,27 @@
 class WP_Field_Input_Feature extends WP_Field_Feature_Base {
 
 	/**
-	 *
-	 */
-	const HTML_TAG = 'input';
-
-	/**
 	 * @return array
 	 */
-	function default_args() {
-		return array(
-			'input:html:type' => $this->element_type()
-		);
+ static function PROPERTIES() {
+
+   return array(
+     'element' => array( 'html_tag' => 'input' ),
+   );
+
+ }
+
+	/**
+	 * @todo VERIFY THIS IS THE RIGHT APPROACH FOR SETTING DEFAULTS
+	 *
+	 * @param array $args
+	 * @return array
+	 */
+	function default_args( $args ) {
+
+	 	$args[ 'input:element:html_type' ] = $this->element_type();
+		return $args;
+
 	}
 
 	/**

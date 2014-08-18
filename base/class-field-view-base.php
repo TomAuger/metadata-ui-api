@@ -14,7 +14,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	/**
 	 * @var string
 	 */
-	var $view_name;
+	var $view_type;
 
 	/**
 	 * @var WP_Field_Base
@@ -79,7 +79,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 		return array(
 			'field' => array( 'type' => 'WP_Field_Base', 'auto_create' => false ),
-			'wrapper' => array( 'type' => 'WP_Html_Element', 'html_tag' => 'div' ),
+			'wrapper' => array( 'type' => 'WP_Html_Element' ),
 	    'features' => array(
 	      'type' => 'WP_Field_Feature_Base[]',
 	      'default' => '$key_name',
@@ -103,37 +103,92 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	 static function PARAMETERS() {
 
 	   return array(
-	     '$value',
+	     'view_type',
 	     '$parent',
-	     '$args',
+	     '$value',
 	   );
 
 	 }
 
 	/**
-	 * @param string $view_name
+	 * @param string $view_type
 	 * @param WP_Field_Base|null $field
 	 * @param array $view_args
 	 *
-	 * @return WP_Field_View
+	 * @return WP_Field_View_Base
 	 *
 	 */
-	static function make_new( $view_name, $field, $view_args = array() ) {
+	static function make_new( $view_type, $field, $view_args = array() ) {
 
-		$form = new WP_Field_View( $view_name, $field, $view_args );
+		$view = false;
 
-		return $form;
+		if ( ! isset( $view_args[ 'view_type' ] ) ) {
+			/*
+			 * We have to do this normalization of the 'type' $arg prior to
+			 * the Field classes __construct() because it drives the class used
+			 * to instantiate the View. All other $args can be normalized
+			 * in the Field class constructor.
+			 */
+			if ( ! isset( $view_args[ 'type' ] ) ) {
+
+				$view_args[ 'view_type' ] = 'text';
+
+			} else {
+
+				$view_args[ 'view_type' ] = $view_args[ 'type' ];
+
+				unset( $view_args[ 'type' ] );
+
+			}
+
+		}
+
+		$view_type_args = WP_Metadata::get_view_type_args( 'fields', $view_args[ 'view_type' ] );
+
+		if ( is_string( $view_type_args ) && class_exists( $view_type_args ) ) {
+
+			/**
+			 * View Type is a Class name
+			 */
+			$view = new $view_type_args( $view_type, $field, $view_args );
+
+		} else if ( is_array( $view_type_args ) ) {
+
+			/**
+			 * View Type passed to make_new() is a 'Prototype'
+			 */
+			$view_args = wp_parse_args( $view_args, $view_type_args );
+
+			$view = self::make_new( $view_name, $object_type, $view_args );
+
+		}
+
+		if ( $view ) {
+
+			if ( property_exists( $field, 'field' ) ) {
+
+				$view->field = $field;
+
+			}
+
+		} else {
+
+      $view = null;
+
+    }
+
+		return $view;
 
 	}
 
 	/**
-	 * @param string $view_name
+	 * @param string $view_type
 	 * @param WP_Field_Base|null $field
 	 * @param array $view_args
 	 */
-	function __construct( $view_name, $field, $view_args = array() ) {
+	function __construct( $view_type, $field, $view_args = array() ) {
 
-		$this->view_name = $view_name;
+		$this->view_type = $view_type;
 
 		if ( is_object( $field ) ) {
 
@@ -296,17 +351,6 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 		}
 
 		return implode( "\n", $features_html );
-
-	}
-
-	function set_element_attribute( $attribute_name, $value ) {
-
-		/**
-		 * @var WP_Field_Label_Feature $input
-		 */
-		$input = $this->features[ 'input' ];
-
-		$input->set_element_attribute( $attribute_name, $value );
 
 	}
 

@@ -42,8 +42,8 @@ class WP_View_Base extends WP_Metadata_Base {
 	static function PROPERTIES() {
 
 		return array(
-		  'wrapper' => array( 'type' => 'WP_Html_Element', 'html_tag' => 'div' ),
-		  'element' => array( 'type' => 'WP_Html_Element', 'html_tag' => 'div' ),
+		  'wrapper' => array( 'type' => 'WP_Html_Element' ),
+		  'element' => array( 'type' => 'WP_Html_Element' ),
 		);
 
 	}
@@ -95,7 +95,13 @@ class WP_View_Base extends WP_Metadata_Base {
 	 */
 	function get_element_tag() {
 
-		return $this->owner->get_annotation_value( 'html_tag', 'element' );
+		if ( ! ( $html_tag = $this->get_annotation_value( 'html_tag', 'element' ) ) ) {
+
+			$html_tag = 'div';
+
+		}
+
+		return $html_tag;
 
 	}
 
@@ -105,7 +111,13 @@ class WP_View_Base extends WP_Metadata_Base {
 	 */
 	function get_wrapper_tag() {
 
-		return $this->owner->get_annotation_value( 'html_tag', 'wrapper' );
+		if ( ! ( $html_tag = $this->get_annotation_value( 'html_tag', 'wrapper' ) ) ) {
+
+			$html_tag = 'div';
+
+		}
+
+		return $html_tag;
 
 	}
 
@@ -190,3 +202,6 @@ class WP_View_Base extends WP_Metadata_Base {
 	}
 
 }
+
+
+

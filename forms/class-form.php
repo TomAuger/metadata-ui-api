@@ -156,17 +156,17 @@ class WP_Form extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @param string $view_name
+	 * @param string $view_type
 	 */
-	function set_form_view( $view_name ) {
+	function set_form_view( $view_type ) {
 
-		if ( !$this->form_view_exists( $view_name ) ) {
+		if ( !$this->form_view_exists( $view_type ) ) {
 			$this->view = false;
 		}
 		else {
-			$form_view_class = $this->get_view_class( $view_name );
+			$form_view_class = $this->get_view_class( $view_type );
 
-			$this->view = new $form_view_class( $view_name, $this );
+			$this->view = new $form_view_class( $view_type, $this );
 		}
 
 	}
@@ -192,51 +192,54 @@ class WP_Form extends WP_Metadata_Base {
 	 *
 	 * $wp_form->register_view( 'post_admin', 'WP_Post_Adminview' );
 	 *
-	 * @param string $view_name The name of the view that is unique for this class.
+	 * @param string $view_type The name of the view that is unique for this class.
 	 * @param string $class_name The class name for the View object.
 	 */
-	function register_view( $view_name, $class_name ) {
+	function register_view( $view_type, $class_name ) {
 
-		WP_Metadata::register_view( 'form', $view_name, $class_name, get_class( $this ) );
+		WP_Metadata::register_view( 'form', $view_type, $class_name, get_class( $this ) );
 
 	}
 
 	/**
 	 * Does the named form view exist
 	 *
-	 * @param string $view_name The name of the view that is unique for this class.
+	 * @param string $view_type The name of the view that is unique for this class.
 	 *
 	 * @return bool
 	 */
-	function form_view_exists( $view_name ) {
+	function form_view_exists( $view_type ) {
 
-		return WP_Metadata::view_exists( 'form', $view_name, get_class( $this ) );
+		return WP_Metadata::view_exists( 'form', $view_type, get_class( $this ) );
 
 	}
 
 	/**
 	 * Retrieve the class name for a named view.
 	 *
-	 * @param string $view_name The name of the view that is unique for this class.
+	 * @param string $view_type The name of the view that is unique for this class.
 	 *
 	 * @return string
 	 */
-	function get_view_class( $view_name ) {
+	function get_view_class( $view_type ) {
 
-		return WP_Metadata::get_view_class( 'form', $view_name, get_class( $this ) );
+		return WP_Metadata::get_view_class( 'form', $view_type, get_class( $this ) );
 
 	}
 
 	/**
-	 * @return mixed
+	 * @todo VERIFY THIS IS THE RIGHT APPROACH FOR SETTING DEFAULTS
+	 *
+	 * @param array $args
+	 * @return array
 	 */
-	function default_args() {
+	function default_args( $args ) {
 
-		return array(
-			'element_name' => str_replace( '-', '_', $this->form_name ),
-		);
+	 	$args[ 'element_name' ] = str_replace( '-', '_', $this->form_name );
+		return $args;
 
 	}
+
 
 	/**
 	 * @param WP_Field_Base $field

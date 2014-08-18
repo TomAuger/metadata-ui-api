@@ -95,7 +95,9 @@ class WP_Metadata {
 		'WP_Field_Message_Feature' => 'features/class-field-message-feature.php',
 		'WP_Field_Infobox_Feature' => 'features/class-field-infobox-feature.php',
 		'WP_Form_View'             => 'views/class-form-view.php',
-		'WP_Field_View'            => 'views/class-field-view.php',
+		'WP_Text_Field_View'       => 'views/class-text-field-view.php',
+		'WP_Textarea_Field_View'   => 'views/class-textarea-field-view.php',
+		'WP_Select_Field_View'     => 'views/class-select-view.php',
 		'WP_Hidden_Field_View'     => 'views/class-hidden-field-view.php',
 	);
 
@@ -109,6 +111,10 @@ class WP_Metadata {
 
     self::initialize_registries();
 
+		self::register_default_annotations( 'WP_Html_Element', array(
+			'html_tag' => 'div'
+		));
+
 		/*
 		 * Register field classes
 		 */
@@ -119,6 +125,9 @@ class WP_Metadata {
 		self::register_field_type( 'date', 'WP_Date_Field' );
 		self::register_field_type( 'hidden', 'WP_Hidden_Field' );
 
+		self::register_field_view( 'text', 'WP_Text_Field_View' );
+		self::register_field_view( 'textarea', 'WP_Textarea_Field_View' );
+		self::register_field_view( 'select', 'WP_Select_Field_View' );
 		self::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
 
 		self::register_feature_type( 'input', 'WP_Field_Input_Feature' );
@@ -126,6 +135,7 @@ class WP_Metadata {
 		self::register_feature_type( 'message', 'WP_Field_Message_Feature' );
 		self::register_feature_type( 'help', 'WP_Field_Help_Feature' );
 		self::register_feature_type( 'infobox', 'WP_Field_Infobox_Feature' );
+
 
 		/*
 		 * Register "storage" classes
@@ -628,6 +638,25 @@ class WP_Metadata {
  	}
 
 	/**
+	 * Retrieve the $args for a named Field Type.
+	 *
+	 * Could be either an array of $args to create a field with make_new(), or a class name to instantiate it.
+	 *
+	 * @param string $field_type The name of the Field
+	 *
+	 * @return array
+	 */
+	static function get_field_type_args( $field_type ) {
+
+		$field_type_args = self::$_registries['field_types']->$field_type;
+
+		return $field_type_args;
+
+	}
+
+
+
+	/**
 	 * @param string $tag_name
 	 * @param array $attributes
 	 * @param mixed $value
@@ -802,17 +831,17 @@ class WP_Metadata {
 	 *
 	 * @example
 	 *
-	 *      WP_Metadata::register_view( 'field', 'default', 'WP_Field_View' );
+	 *      WP_Metadata::register_view( 'field', 'text', 'WP_Text_Field_View' );
 	 *      WP_Metadata::register_view( 'field', 'hidden', 'WP_Hidden_Field_View' );
 	 *
-	 * @param string $view_type Type of view
-	 * @param string $view_name The name of the view that is unique for this class.
+	 * @param string $view_group Grouping of Views
+	 * @param string $view_type The name of the view that is unique for this class.
 	 * @param string $class_name The class name for the View object.
 	 */
-	static function register_view( $view_type, $view_name, $class_name ) {
+	static function register_view( $view_group, $view_type, $class_name ) {
 
-		if ( !self::view_exists( $view_name, $view_type ) ) {
-			self::$_views[ $view_type ][ $view_name ] = $class_name;
+		if ( !self::view_exists( $view_type, $view_group ) ) {
+			self::$_views[ $view_group ][ $view_type ] = $class_name;
 		}
 
 	}
@@ -820,73 +849,61 @@ class WP_Metadata {
 	/**
 	 * Does the named field view exist
 	 *
-	 * @param string $view_name The name of the view that is unique for this class.
-	 * @param string $view_type Type of view
+	 * @param string $view_type The name of the view that is unique for this class.
+	 * @param string $view_group Grouping of Views
 	 *
 	 * @return bool
 	 */
-	static function view_exists( $view_type, $view_name ) {
+	static function view_exists( $view_group, $view_type ) {
 
-		return isset( self::$_views[ $view_type ][ $view_name ] );
+		return isset( self::$_views[ $view_group ][ $view_type ] );
 
 	}
 
 	/**
-	 * Retrieve the class name for a named view.
+	 * Retrieve the class name for a named View.
 	 *
-	 * @param string $view_type Type of view
-	 * @param string $view_name The name of the view that is unique for this class.
+	 * @param string $view_group Grouping of Views
+	 * @param string $view_type The name of the view that is unique for this class.
 	 *
 	 * @return string
 	 */
-	static function get_view_class( $view_type, $view_name ) {
+	static function get_view_type_args( $view_group, $view_type ) {
 
-		return self::view_exists( $view_type, $view_name ) ? self::$_views[ $view_type ][ $view_name ] : false;
+		return self::view_exists( $view_group, $view_type ) ? self::$_views[ $view_group ][ $view_type ] : false;
 
 	}
 
 	/**
-	 * Register a class to be used as a view for the current class.
+	 * Register a class or array of View Type args.
 	 *
 	 * @example
 	 *
-	 *      WP_Metadata::register_field_view( 'default', 'WP_Field_View' );
+	 *      WP_Metadata::register_field_view( 'text', 'WP_Text_Field_View' );
 	 *      WP_Metadata::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
 	 *
-	 * @param string $view_name The name of the view that is unique for this class.
-	 * @param string $class_name The class name for the View object.
+	 * @param string $view_type The name of the view that is unique for this class.
+	 * @param string|array $view_type_args The class name for the View object or an 'Prototype' array to pass to make_new().
 	 */
-	static function register_field_view( $view_name, $class_name ) {
+	static function register_field_view( $view_type, $view_type_args ) {
 
-		self::register_view( 'field', $view_name, $class_name );
+		self::register_view( 'fields', $view_type, $view_type_args );
 
 	}
 
 	/**
 	 * Does the named field view exist?
 	 *
-	 * @param string $view_name The name of the view that is unique for this class.
+	 * @param string $view_type The name of the view that is unique for this class.
 	 *
 	 * @return bool
 	 */
-	static function field_view_exists( $view_name ) {
+	static function field_view_exists( $view_type ) {
 
-		return self::view_exists( 'field', $view_name );
-
-	}
-
-	/**
-	 * Retrieve the class name for a named view.
-	 *
-	 * @param string $view_name The name of the view that is unique for this class.
-	 *
-	 * @return string
-	 */
-	static function get_field_view_class( $view_name ) {
-
-		return self::get_view_class( 'field', $view_name );
+		return self::view_exists( 'field', $view_type );
 
 	}
+
 	/*********************************************/
 	/***  Field Feature Type Registry Methods  ***/
 	/*********************************************/
@@ -1244,20 +1261,20 @@ class WP_Metadata {
    * Call a named method starting with the most distant anscestor down to the current class filtering $value.
    *
    * @param object $object
-   * @param string $class_name
    * @param string $method_name
    * @param mixed $value
    *
    * @return mixed
    */
-  static function apply_class_filters( $object, $class_name, $method_name, $value ) {
+  static function apply_class_filters( $object, $method_name, $value ) {
 
-    $args = func_get_args() ? array_slice( func_get_args(), 3 ) : array();
-    $parents = self::get_class_parents( $class_name, true );
+    $args = func_get_args() ? array_slice( func_get_args(), 2 ) : array( null );
+    $parents = self::get_class_parents( get_class( $object ), true );
 
     foreach ( $parents as $parent ) {
       if ( self::has_own_method( $parent, $method_name ) ) {
-        $value = self::invoke_instance_method( $object, $parent, $method_name, array( $value, $args ) );
+	      $args[ 0 ] = $value;
+        $value = self::invoke_instance_method( $object, $parent, $method_name, $args );
       }
     }
 
@@ -1330,31 +1347,15 @@ class WP_Metadata {
  	}
 
   /**
+   * @param string $view_type
    * @param WP_Field_Base $field
-   * @param string $view_name
  	 * @param array $view_args
  	 *
- 	 * @return WP_Field_View
+ 	 * @return WP_Field_View_Base
  	 */
- 	static function make_field_view( $field, $view_name, $view_args = array() ) {
+ 	static function make_field_view( $view_type, $field, $view_args = array() ) {
 
- 		$field_view_class = $field->get_view_class( $view_name );
-
- 		if ( $view = new $field_view_class( $view_name, $view_args ) ) {
-
-      if ( property_exists( $field, 'field' ) ) {
-
-        $view->field = $field;
-
-      }
-
-    } else {
-
-      $view = null;
-
-    }
-
- 		return $view;
+		return WP_Field_View_Base::make_new( $view_type, $field, $view_args );
 
   }
 
@@ -1414,6 +1415,9 @@ class WP_Metadata {
 	 */
 	static function get_make_new_parameters( $class_name ) {
 
+		/**
+		 * This should not be specified in PARAMETERS but instead as PROPERTIES[$name]->parameters
+		 */
 		return call_user_func( array( $class_name, 'PARAMETERS' ) );
 
 	}
@@ -1432,6 +1436,16 @@ class WP_Metadata {
 
 	 }
 
+	/**
+	 *
+	 * @param string $class_name
+	 * @param array $default_values
+	 */
+	static function register_default_annotations( $class_name, $default_values ) {
+
+		WP_Annotated_Property::register_default_annotations( $class_name, $default_values );
+
+	}
 
 }
 

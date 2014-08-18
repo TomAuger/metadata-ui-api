@@ -7,11 +7,20 @@ class WP_Textarea_Field extends WP_Field_Base {
 	/**
 	 *
 	 */
-	const HTML_TAG = 'textarea';
+	const FIELD_TYPE = 'textarea';
+
 
 	/**
+	 * @todo VERIFY THIS IS THE RIGHT APPROACH FOR SETTING DEFAULTS
 	 *
+	 * @param array $args
+	 * @return array
 	 */
-	const FIELD_TYPE = 'textarea';
+	function default_args( $args ) {
+
+	 	$args[ 'view:view_type' ] = 'textarea';
+		return $args;
+
+	}
 
 }

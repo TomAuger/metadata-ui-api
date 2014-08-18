@@ -15,7 +15,9 @@ class WP_Field_Label_Feature extends WP_Field_Feature_Base {
  static function PROPERTIES() {
 
    return array(
-     'element' => array( 'html_tag' => 'label'  ),
+
+     'element' => array( 'html_tag' => 'label' ),
+
    );
 
  }

@@ -7,7 +7,7 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	/**
 	 * @var string
 	 */
-	var $view_name;
+	var $view_type;
 
 	/**
 	 * @var WP_Form
@@ -50,30 +50,30 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	 }
 
 	/**
-	 * @param string $view_name
+	 * @param string $view_type
 	 * @param string $form
 	 * @param array $view_args
 	 *
 	 * @return WP_Form_View
    *
 	 */
-	static function make_new( $view_name, $form, $view_args = array() ) {
+	static function make_new( $view_type, $form, $view_args = array() ) {
 
-		$form_view = new WP_Form_View( $view_name, $form, $view_args );
+		$form_view = new WP_Form_View( $view_type, $form, $view_args );
 
 		return $form_view;
 
 	}
 
 	/**
-	 * @param string $view_name
+	 * @param string $view_type
 	 * @param string $form
 	 * @param array $view_args
 	 *
 	 */
-	function __construct( $view_name, $form, $view_args = array() ) {
+	function __construct( $view_type, $form, $view_args = array() ) {
 
-		$view_args['view_name'] = $view_name;
+		$view_args['view_type'] = $view_type;
 
 		$this->form = $form;
 
