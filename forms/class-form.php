@@ -228,8 +228,6 @@ class WP_Form extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @todo VERIFY THIS IS THE RIGHT APPROACH FOR SETTING DEFAULTS
-	 *
 	 * @param array $args
 	 * @return array
 	 */

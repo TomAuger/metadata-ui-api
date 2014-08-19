@@ -44,6 +44,21 @@ abstract class WP_Metadata_Base {
 	 */
 	private static $_defaulted_property_values;
 
+	/**
+	 * @var array
+	 */
+	static $default_args = array();
+
+	/**
+	 * @return array
+	 */
+	static function CLASS_PROPERTIES() {
+
+		return array(
+			'default_args' => array( 'default' => array( 'type' => 'mixed[]' ) ),
+		);
+
+	}
 
 	/**
 	 * @return array
@@ -126,19 +141,66 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
+	 *
+	 */
+	function initialize_class() {
+		/**
+		 * Initialize Class Property Annotations for the class of '$this.'
+		 */
+		$this->get_annotated_properties( '::' );
+
+	}
+
+	/**
 	 * @return array
 	 */
-	function default_args() {
+	function get_class_default_args() {
+
+		if ( ! isset( self::$default_args[ $class_name = get_class( $this ) ] ) ) {
+
+			$property = $this->get_annotated_property( 'default_args', '::' );
+
+			self::$default_args[ $class_name ] = is_array( $property->default ) ? $property->default : array();
+
+		}
+
+		return self::$default_args[ $class_name ];
+
+	}
+
+	/**
+	 * @param $args array
+	 * @return array
+	 */
+	function default_args( $args ) {
+
 		if ( ! isset( $this->_default_args ) ) {
-			$properties = $this->get_annotated_properties();
-			foreach ( $properties as $property_name => $property ) {
+			$args = array_merge( $this->get_annotated_properties(), $args );
+			foreach ( $args as $property_name => $property ) {
 				if ( is_null( $property->default ) || ! $property->auto_create ) {
-					unset( $properties[ $property_name ] );
+					unset( $args[ $property_name ] );
 				} else {
-					$properties[ $property_name ] = $property->default;
+					$args[ $property_name ] = $property->default;
 				}
 			}
-			$this->_default_args = $properties;
+			if ( count( $class_default_args = $this->get_class_default_args() ) ) {
+
+				/*
+				 * Copy class default elements that don't exist to end of $args array.
+				 *
+				 * Don't use array_merge() here.  We need the class elements at the
+				 * end of the array but only $args[$name] does not already exist.
+				 */
+				foreach( $class_default_args as $name => $value ) {
+					if ( ! isset( $args[ $name ] ) ) {
+						$args[ $name ] = $value;
+					}
+				}
+
+			}
+
+			$this->_default_args = $args;
+
 		}
 
 		return $this->_default_args;
@@ -613,12 +675,13 @@ abstract class WP_Metadata_Base {
 	 * Gets array of properties field names that should not get a prefix.
 	 *
 	 * @param string $property_name
+	 * @param string $operator '->' => PROPERTIES(), '::' => CLASS_PROPERTIES()
 	 *
 	 * @return WP_Annotated_Property|bool
 	 */
-	function get_annotated_property( $property_name ) {
+	function get_annotated_property( $property_name, $operator = '->' ) {
 
-		$annotated_properties = $this->get_annotated_properties();
+		$annotated_properties = $this->get_annotated_properties( $operator );
 
 		return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : false;
 
@@ -626,26 +689,31 @@ abstract class WP_Metadata_Base {
 
 	/**
 	 * @param string $property_name
+	 * @param string $operator '->' => PROPERTIES(), '::' => CLASS_PROPERTIES()
 	 *
 	 * @return bool
 	 */
-	function has_annotated_property( $property_name ) {
+	function has_annotated_property( $property_name, $operator = '->' ) {
 
-		return isset( self::$_annotated_properties[ get_class( $this ) ][ $property_name ] );
+		return isset( self::$_annotated_properties[ get_class( $this ) ][ $operator ][ $property_name ] );
 
 	}
 
 	/**
+	 * @param string $operator '->' => PROPERTIES(), '::' => CLASS_PROPERTIES()
+	 *
 	 * @return WP_Annotated_Property[]
 	 */
-	function get_annotated_properties() {
+	function get_annotated_properties( $operator = '->' ) {
 
-		if ( ! isset( self::$_annotated_properties[ $class_name = get_class( $this ) ] ) ) {
+		if ( ! isset( self::$_annotated_properties[ $class_name = get_class( $this ) ][ $operator ] ) ) {
+
+			$annotation = '::' == $operator ? 'CLASS_PROPERTIES' : 'PROPERTIES';
 
 			/**
 			 * @var array[] $annotated_properties
 			 */
-			$annotated_properties = $this->get_annotations( 'PROPERTIES' );
+			$annotated_properties = $this->get_annotations( $annotation );
 
 			foreach ( $annotated_properties as $property_name => $property_args ) {
 
@@ -653,22 +721,34 @@ abstract class WP_Metadata_Base {
 
 			}
 
-			self::$_annotated_properties[ $class_name ] = $annotated_properties;
+			self::$_annotated_properties[ $class_name ][ $operator ] = $annotated_properties;
 
 		}
 
-		return self::$_annotated_properties[ $class_name ];
+		return self::$_annotated_properties[ $class_name ][ $operator ];
 
 	}
 
 	/**
+	 * @param string $operator '->' => PROPERTIES(), '::' => CLASS_PROPERTIES()
 	 * @return array
 	 */
-	function get_properties() {
+	function get_properties( $operator = '->' ) {
 
-		$annotated_properties = $this->get_annotated_properties();
+		$annotated_properties = $this->get_annotated_properties( $operator );
 
-		$real_properties = get_class_vars( get_class( $this ) );
+		$object_vars = get_object_vars( $this );
+		if ( '::' == $operator ) {
+			$class_vars = get_class_vars( get_class( $this ) );
+			$real_properties = array_intersect( $class_vars, $object_vars );
+		} else if ( '<-' == $operator ) {
+			$real_properties = $object_vars;
+		} else {
+			/**
+			 * Anything else returns just annotated properties.
+			 */
+			$real_properties = array();
+		}
 
 		return array_merge( $annotated_properties, $real_properties );
 

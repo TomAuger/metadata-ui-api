@@ -16,19 +16,6 @@ class WP_Field_Input_Feature extends WP_Field_Feature_Base {
  }
 
 	/**
-	 * @todo VERIFY THIS IS THE RIGHT APPROACH FOR SETTING DEFAULTS
-	 *
-	 * @param array $args
-	 * @return array
-	 */
-	function default_args( $args ) {
-
-	 	$args[ 'input:element:html_type' ] = $this->element_type();
-		return $args;
-
-	}
-
-	/**
 	 * @return mixed
 	 */
 	function get_element_value() {

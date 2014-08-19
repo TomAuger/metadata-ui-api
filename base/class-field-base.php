@@ -71,6 +71,14 @@ class WP_Field_Base extends WP_Metadata_Base {
 	protected $_value = null;
 
 	/**
+	 */
+	static function CLASS_PROPERTIES() {
+		return array(
+			'default_args' => array( 'default' => array( 'view:view_type' => 'text' ) ),
+		);
+	}
+
+	/**
 	 * @return array
 	 */
 	static function TRANSFORMS() {
@@ -220,17 +228,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 		return $field;
 
-	}
-
-	/**
-	 * @todo VERIFY THIS IS THE RIGHT APPROACH FOR SETTING DEFAULTS
-	 *
-	 * @param array $args
-	 * @return array
-	 */
-	function default_args( $args ) {
-	 	$args[ 'view:view_type' ] ='text';
-		return $args;
 	}
 
 	/**

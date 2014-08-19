@@ -5,11 +5,6 @@
 abstract class WP_Field_Feature_Base extends WP_View_Base {
 
 	/**
-	 *
-	 */
-	const HTML_TYPE = false;
-
-	/**
 	 * @var string
 	 */
 	var $feature_type;
@@ -127,15 +122,6 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	function field_name() {
 
 		return $this->field->field_name;
-
-	}
-
-	/**
-	 * @return bool|string
-	 */
-	function element_type() {
-
-		return $this->field->constant( 'HTML_TYPE' );
 
 	}
 

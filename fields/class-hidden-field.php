@@ -7,11 +7,6 @@ class WP_Hidden_Field extends WP_Field_Base {
 	/**
 	 *
 	 */
-	const HTML_TYPE = 'hidden';
-
-	/**
-	 *
-	 */
 	const FIELD_TYPE = 'hidden';
 
 	/**
