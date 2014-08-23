@@ -72,7 +72,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	/**
 	 */
-	static function CLASS_VALUES() {
+	static function CLASS_VARS() {
 		return array(
 			'default_args' =>  array( 'view:view_type' => 'text' ),
 		);

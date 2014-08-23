@@ -52,7 +52,7 @@ abstract class WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
-	static function CLASS_VALUES() {
+	static function CLASS_VARS() {
 
 		return array(
 			'default_args' => array( 'type' => 'mixed[]' ),
@@ -156,7 +156,7 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_class_default_args() {
 
-		$class_values = $this->get_annotations( 'CLASS_VALUES' );
+		$class_values = $this->get_annotations( 'CLASS_VARS' );
 
 		return ! empty( $class_values[ 'default_args' ] ) && is_array( $class_values[ 'default_args' ] )
 			? $class_values[ 'default_args' ]
