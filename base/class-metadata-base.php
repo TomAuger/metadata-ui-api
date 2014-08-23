@@ -52,10 +52,10 @@ abstract class WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
-	static function CLASS_PROPERTIES() {
+	static function CLASS_VALUES() {
 
 		return array(
-			'default_args' => array( 'default' => array( 'type' => 'mixed[]' ) ),
+			'default_args' => array( 'type' => 'mixed[]' ),
 		);
 
 	}
@@ -156,15 +156,11 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_class_default_args() {
 
-		if ( ! isset( self::$default_args[ $class_name = get_class( $this ) ] ) ) {
+		$class_values = $this->get_annotations( 'CLASS_VALUES' );
 
-			$property = $this->get_annotated_property( 'default_args', '::' );
-
-			self::$default_args[ $class_name ] = is_array( $property->default ) ? $property->default : array();
-
-		}
-
-		return self::$default_args[ $class_name ];
+		return ! empty( $class_values[ 'default_args' ] ) && is_array( $class_values[ 'default_args' ] )
+			? $class_values[ 'default_args' ]
+			: array();
 
 	}
 
@@ -675,13 +671,12 @@ abstract class WP_Metadata_Base {
 	 * Gets array of properties field names that should not get a prefix.
 	 *
 	 * @param string $property_name
-	 * @param string $operator '->' => PROPERTIES(), '::' => CLASS_PROPERTIES()
 	 *
 	 * @return WP_Annotated_Property|bool
 	 */
-	function get_annotated_property( $property_name, $operator = '->' ) {
+	function get_annotated_property( $property_name ) {
 
-		$annotated_properties = $this->get_annotated_properties( $operator );
+		$annotated_properties = $this->get_annotated_properties();
 
 		return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : false;
 
@@ -689,31 +684,27 @@ abstract class WP_Metadata_Base {
 
 	/**
 	 * @param string $property_name
-	 * @param string $operator '->' => PROPERTIES(), '::' => CLASS_PROPERTIES()
 	 *
 	 * @return bool
 	 */
-	function has_annotated_property( $property_name, $operator = '->' ) {
+	function has_annotated_property( $property_name ) {
 
-		return isset( self::$_annotated_properties[ get_class( $this ) ][ $operator ][ $property_name ] );
+		return isset( self::$_annotated_properties[ get_class( $this ) ][ $property_name ] );
 
 	}
 
 	/**
-	 * @param string $operator '->' => PROPERTIES(), '::' => CLASS_PROPERTIES()
 	 *
 	 * @return WP_Annotated_Property[]
 	 */
-	function get_annotated_properties( $operator = '->' ) {
+	function get_annotated_properties() {
 
-		if ( ! isset( self::$_annotated_properties[ $class_name = get_class( $this ) ][ $operator ] ) ) {
-
-			$annotation = '::' == $operator ? 'CLASS_PROPERTIES' : 'PROPERTIES';
+		if ( ! isset( self::$_annotated_properties[ $class_name = get_class( $this ) ] ) ) {
 
 			/**
 			 * @var array[] $annotated_properties
 			 */
-			$annotated_properties = $this->get_annotations( $annotation );
+			$annotated_properties = $this->get_annotations( 'PROPERTIES' );
 
 			foreach ( $annotated_properties as $property_name => $property_args ) {
 
@@ -721,36 +712,20 @@ abstract class WP_Metadata_Base {
 
 			}
 
-			self::$_annotated_properties[ $class_name ][ $operator ] = $annotated_properties;
+			self::$_annotated_properties[ $class_name ] = $annotated_properties;
 
 		}
 
-		return self::$_annotated_properties[ $class_name ][ $operator ];
+		return self::$_annotated_properties[ $class_name ];
 
 	}
 
 	/**
-	 * @param string $operator '->' => PROPERTIES(), '::' => CLASS_PROPERTIES()
 	 * @return array
 	 */
-	function get_properties( $operator = '->' ) {
+	function get_properties() {
 
-		$annotated_properties = $this->get_annotated_properties( $operator );
-
-		$object_vars = get_object_vars( $this );
-		if ( '::' == $operator ) {
-			$class_vars = get_class_vars( get_class( $this ) );
-			$real_properties = array_intersect( $class_vars, $object_vars );
-		} else if ( '<-' == $operator ) {
-			$real_properties = $object_vars;
-		} else {
-			/**
-			 * Anything else returns just annotated properties.
-			 */
-			$real_properties = array();
-		}
-
-		return array_merge( $annotated_properties, $real_properties );
+		return array_merge( $this->get_annotated_properties(), get_object_vars( $this ) );
 
 	}
 

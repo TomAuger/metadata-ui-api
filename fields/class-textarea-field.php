@@ -12,10 +12,10 @@ class WP_Textarea_Field extends WP_Field_Base {
 	/**
 	 * @return array
 	 */
-	static function CLASS_PROPERTIES() {
+	static function CLASS_VALUES() {
 
 		return array(
-			'default_args' => array( 'default' => array( 'view:view_type' => 'textarea' ) ),
+			'default_args' => array( 'view:view_type' => 'textarea' ),
 		);
 
 	}

@@ -654,22 +654,21 @@ class WP_Metadata {
 
 	}
 
-
-
-	/**
-	 * @param string $tag_name
-	 * @param array $attributes
-	 * @param mixed $value
-	 *
-	 * @return WP_Html_Element
-	 */
-	static function get_element_html( $tag_name, $attributes, $value ) {
-
-		$html_element = self::get_html_element( $tag_name, $attributes, $value, true );
-
-		return $html_element->get_element_html();
-
-	}
+//
+//	/**
+//	 * @param string $tag_name
+//	 * @param array $attributes
+//	 * @param mixed $value
+//	 *
+//	 * @return WP_Html_Element
+//	 */
+//	static function get_element_html( $tag_name, $attributes, $value ) {
+//
+//		$html_element = self::get_html_element( $tag_name, $attributes, $value, true );
+//
+//		return $html_element->get_element_html();
+//
+//	}
 
 	/**
 	 * @param string $tag_name

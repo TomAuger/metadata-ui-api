@@ -6,9 +6,9 @@ class WP_Textarea_Field_View extends WP_Field_View_Base {
 
 	/**
 	 */
-	static function CLASS_PROPERTIES() {
+	static function CLASS_VALUES() {
 		return array(
-			'default_args' => array( 'default' => array( 'features[input]:element:html_tag' => 'textarea' ) ),
+			'default_args' => array( 'features[input]:element:html_tag' => 'textarea' ),
 		);
 	}
 

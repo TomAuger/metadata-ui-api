@@ -211,7 +211,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 		/**
 		 * @var WP_Field_Label_Feature $label
 		 */
-		if ( is_object( $label = $this->features['label'] ) ) {
+		if ( ! empty( $this->features['label'] ) && is_object( $label = $this->features['label'] ) ) {
 			$label->element->set_attribute_value( 'for', $this->features['input']->element->get_id() );
 		}
 
