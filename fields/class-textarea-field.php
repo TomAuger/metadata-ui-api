@@ -15,7 +15,7 @@ class WP_Textarea_Field extends WP_Field_Base {
 	static function CLASS_VARS() {
 
 		return array(
-			'default_args' => array( 'view:view_type' => 'textarea' ),
+			'defaults' => array( 'view:view_type' => 'textarea' ),
 		);
 
 	}

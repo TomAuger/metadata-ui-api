@@ -231,7 +231,7 @@ class WP_Form extends WP_Metadata_Base {
 	 * @param array $args
 	 * @return array
 	 */
-	function default_args( $args ) {
+	function defaults( $args ) {
 
 	 	$args[ 'element_name' ] = str_replace( '-', '_', $this->form_name );
 		return $args;

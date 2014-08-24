@@ -74,10 +74,10 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	static function CLASS_VARS() {
 		return array(
-			'default_args'    =>  array(
+			'defaults'    =>  array(
 				'view:view_type' => 'text'
 			),
-			'arg_shortnames'  =>  array(
+			'shortnames'  =>  array(
 				'^label$'                     => 'view:label:label_text',
 				'^label:([^_]+)$'             => 'view:label:$1',
 				'^(input|element):([^_]+)$'   => 'view:input:element:$2',
@@ -90,9 +90,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
-	function get_arg_shortnames() {
+	function get_shortnames() {
 
-		$arg_shortnames = parent::get_arg_shortnames();
+		$shortnames = parent::get_shortnames();
 
 		$attributes = WP_Metadata::get_html_attributes( 'input' );
 
@@ -100,9 +100,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 		$attributes = implode( '|', array_keys( $attributes ) );
 
-		$arg_shortnames[ "^({$attributes})$" ] = 'view:input:element:$1';
+		$shortnames[ "^({$attributes})$" ] = 'view:input:element:$1';
 
-		return $arg_shortnames;
+		return $shortnames;
 
 	}
 

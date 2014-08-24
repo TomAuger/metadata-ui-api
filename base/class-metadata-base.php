@@ -32,7 +32,7 @@ abstract class WP_Metadata_Base {
 	/**
 	 * @var array
 	 */
-	private $_default_args;
+	private $_defaults;
 
 	/**
 	 * @var array
@@ -50,7 +50,7 @@ abstract class WP_Metadata_Base {
 	static function CLASS_VARS() {
 
 		return array(
-			'default_args' => array( 'type' => 'mixed[]' ),
+			'defaults' => array( 'type' => 'mixed[]' ),
 		);
 
 	}
@@ -109,8 +109,8 @@ abstract class WP_Metadata_Base {
 			$args = $this->apply_class_filters( 'pre_expand_args', $args );
 			$args = $this->expand_args( $args );
 
-			$default_args = $this->apply_class_filters( 'default_args', array() );
-			$args         = array_merge( $default_args, $args );
+			$defaults = $this->apply_class_filters( 'defaults', array() );
+			$args         = array_merge( $defaults, $args );
 
 			$args = $this->apply_class_filters( 'pre_collect_args', $args );
 			$args = $this->collect_args( $args );
@@ -140,12 +140,12 @@ abstract class WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
-	function get_class_default_args() {
+	function get_class_defaults() {
 
 		$class_values = $this->get_annotations( 'CLASS_VARS' );
 
-		return ! empty( $class_values[ 'default_args' ] ) && is_array( $class_values[ 'default_args' ] )
-			? $class_values[ 'default_args' ]
+		return ! empty( $class_values[ 'defaults' ] ) && is_array( $class_values[ 'defaults' ] )
+			? $class_values[ 'defaults' ]
 			: array();
 
 	}
@@ -154,9 +154,9 @@ abstract class WP_Metadata_Base {
 	 * @param $args array
 	 * @return array
 	 */
-	function default_args( $args ) {
+	function defaults( $args ) {
 
-		if ( ! isset( $this->_default_args ) ) {
+		if ( ! isset( $this->_defaults ) ) {
 			$args = array_merge( $this->get_annotated_properties(), $args );
 			foreach ( $args as $property_name => $property ) {
 				if ( is_null( $property->default ) || ! $property->auto_create ) {
@@ -165,7 +165,7 @@ abstract class WP_Metadata_Base {
 					$args[ $property_name ] = $property->default;
 				}
 			}
-			if ( count( $class_default_args = $this->get_class_default_args() ) ) {
+			if ( count( $class_defaults = $this->get_class_defaults() ) ) {
 
 				/*
 				 * Copy class default elements that don't exist to end of $args array.
@@ -173,7 +173,7 @@ abstract class WP_Metadata_Base {
 				 * Don't use array_merge() here.  We need the class elements at the
 				 * end of the array but only $args[$name] does not already exist.
 				 */
-				foreach( $class_default_args as $name => $value ) {
+				foreach( $class_defaults as $name => $value ) {
 					if ( ! isset( $args[ $name ] ) ) {
 						$args[ $name ] = $value;
 					}
@@ -181,11 +181,11 @@ abstract class WP_Metadata_Base {
 
 			}
 
-			$this->_default_args = $args;
+			$this->_defaults = $args;
 
 		}
 
-		return $this->_default_args;
+		return $this->_defaults;
 	}
 
 	/**
@@ -206,7 +206,7 @@ abstract class WP_Metadata_Base {
 	/**
 	 * Returns an array of shortname regexes as array key and expansion as key value.
 	 *
-	 * Subclasses should define 'arg_shortnames' element in CLASS_VARS() function array return value:
+	 * Subclasses should define 'shortnames' element in CLASS_VARS() function array return value:
 	 *
 	 *    return array(
 	 *      $regex1 => $shortname1,
@@ -218,7 +218,7 @@ abstract class WP_Metadata_Base {
 	 * @example:
 	 *
 	 *  return array(
-	 * 	  'arg_shortnames'  =>  array(
+	 * 	  'shortnames'  =>  array(
 	 * 		  '^label$'                     => 'view:label:label_text',
 	 * 		  '^label:([^_]+)$'             => 'view:label:$1',
 	 * 		  '^(input|element):([^_]+)$'   => 'view:input:element:$2',
@@ -231,12 +231,12 @@ abstract class WP_Metadata_Base {
 	 *
 	 * @return array
 	 */
-	function get_arg_shortnames() {
+	function get_shortnames() {
 
 		$class_vars = $this->get_annotations( 'CLASS_VARS' );
 
-		$shortnames = ! empty( $class_vars['arg_shortnames'] ) && is_array( $class_vars['arg_shortnames'] )
-			? $class_vars['arg_shortnames']
+		$shortnames = ! empty( $class_vars['shortnames'] ) && is_array( $class_vars['shortnames'] )
+			? $class_vars['shortnames']
 			: array();
 
 		return $shortnames;
@@ -268,7 +268,7 @@ abstract class WP_Metadata_Base {
 	 */
 	function expand_args( $args ) {
 
-		if ( count( $shortnames = $this->get_arg_shortnames() ) ) {
+		if ( count( $shortnames = $this->get_shortnames() ) ) {
 
 			foreach ( $shortnames as $regex => $result ) {
 				foreach ( $args as $name => $value ) {

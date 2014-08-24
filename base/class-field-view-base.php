@@ -26,35 +26,35 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	 */
 	var $features = false;
 
-	private static $_arg_shortnames = array();
+	private static $_shortnames = array();
 
 	/**
 	 * @return array
 	 */
-	function get_arg_shortnames() {
+	function get_shortnames() {
 
-		if ( ! isset( self::$_arg_shortnames[ $class_name = get_class( $this ) ] ) ) {
+		if ( ! isset( self::$_shortnames[ $class_name = get_class( $this ) ] ) ) {
 
-			$arg_shortnames = parent::get_arg_shortnames();
+			$shortnames = parent::get_shortnames();
 
 			$properties = self::PROPERTIES();
 
 			if ( ! empty( $properties['features']['keys'] ) && is_array( $feature_keys = $properties['features']['keys'] ) ) {
 
 				$features = implode( '|', $feature_keys );
-				$arg_shortnames["^({$features}):(.+)$"] = 'features[$1]:$2';
+				$shortnames["^({$features}):(.+)$"] = 'features[$1]:$2';
 
 			}
 
 			$attributes = implode( '|', array_keys( WP_Metadata::get_html_attributes( 'input' ) ) );
-			$arg_shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
-			$arg_shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
+			$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
+			$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
 
-			self::$_arg_shortnames[ $class_name ] = $arg_shortnames;
+			self::$_shortnames[ $class_name ] = $shortnames;
 
 		}
 
-		return self::$_arg_shortnames[ $class_name ];
+		return self::$_shortnames[ $class_name ];
 
 	}
 
