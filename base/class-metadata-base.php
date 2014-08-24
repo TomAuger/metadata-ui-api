@@ -45,11 +45,6 @@ abstract class WP_Metadata_Base {
 	private static $_defaulted_property_values;
 
 	/**
-	 * @var array
-	 */
-	static $default_args = array();
-
-	/**
 	 * @return array
 	 */
 	static function CLASS_VARS() {
@@ -92,15 +87,6 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
-	 * @return array
-	 */
-	static function TRANSFORMS() {
-
-		return array();
-
-	}
-
-	/**
 	 * @param array $args
 	 *
 	 */
@@ -120,8 +106,8 @@ abstract class WP_Metadata_Base {
 			$args = $this->apply_class_filters( 'pre_prefix_args', $args );
 			$args = $this->prefix_args( $args );
 
-			$args = $this->apply_class_filters( 'pre_transform_args', $args );
-			$args = $this->transform_args( $args );
+			$args = $this->apply_class_filters( 'pre_expand_args', $args );
+			$args = $this->expand_args( $args );
 
 			$default_args = $this->apply_class_filters( 'default_args', array() );
 			$args         = array_merge( $default_args, $args );
@@ -218,24 +204,42 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
-	 * Returns an array of property transform regex as array key and expansion as key value.
+	 * Returns an array of shortname regexes as array key and expansion as key value.
 	 *
-	 * Subclasses should define TRANSFORMS() function:
+	 * Subclasses should define 'arg_shortnames' element in CLASS_VARS() function array return value:
 	 *
 	 *    return array(
-	 *      $regex1 => $transform1,
-	 *      $regex2 => $transform2,
+	 *      $regex1 => $shortname1,
+	 *      $regex2 => $shortname2,
 	 *      ...,
-	 *      $regexN => $transformN,
+	 *      $regexN => $shortnameN,
 	 *    );
 	 *
-	 * @note Multiple transforms can be applied so order is important.
+	 * @example:
+	 *
+	 *  return array(
+	 * 	  'arg_shortnames'  =>  array(
+	 * 		  '^label$'                     => 'view:label:label_text',
+	 * 		  '^label:([^_]+)$'             => 'view:label:$1',
+	 * 		  '^(input|element):([^_]+)$'   => 'view:input:element:$2',
+	 * 		  '^(input:)?wrapper:([^_]+)$'  => 'view:input:wrapper:$2',
+	 * 		  '^view_type$'                 => 'view:view_type',
+	 *     ),
+	 *  );
+	 *
+	 * @note Multiple shortnames can be applied so order is important.
 	 *
 	 * @return array
 	 */
-	function get_transforms() {
+	function get_arg_shortnames() {
 
-		return $this->get_annotations( 'TRANSFORMS' );
+		$class_vars = $this->get_annotations( 'CLASS_VARS' );
+
+		$shortnames = ! empty( $class_vars['arg_shortnames'] ) && is_array( $class_vars['arg_shortnames'] )
+			? $class_vars['arg_shortnames']
+			: array();
+
+		return $shortnames;
 
 	}
 
@@ -262,15 +266,15 @@ abstract class WP_Metadata_Base {
 	 *
 	 * @return array
 	 */
-	function transform_args( $args ) {
+	function expand_args( $args ) {
 
-		if ( count( $transforms = $this->get_transforms() ) ) {
+		if ( count( $shortnames = $this->get_arg_shortnames() ) ) {
 
-			foreach ( $transforms as $regex => $result ) {
+			foreach ( $shortnames as $regex => $result ) {
 				foreach ( $args as $name => $value ) {
 					if ( preg_match( "#{$regex}#", $name, $matches ) ) {
 
-						$args['_transformed_args'][ $name ] = $value;
+						$args['_expanded_args'][ $name ] = $value;
 
 						unset( $args[ $name ] );
 
@@ -333,7 +337,7 @@ abstract class WP_Metadata_Base {
 	 *  $input = array(
 	 *    'field_name' => 'Foo',
 	 *    'html:size' => 50,     // Will be split and "collect" like
-	 *    'wrapper:size' => 25,  // Assumes a TRANSFORMS() value that add's 'element' between 'wrapper' and 'size'
+	 *    'wrapper:size' => 25,
 	 *  );
 	 *  print_r( self::collect_args( $input ) );
 	 *  // Outputs:
@@ -504,7 +508,7 @@ abstract class WP_Metadata_Base {
 			/**
 			 * @var WP_Annotated_Property $property
 			 */
-			if ( '$' == $name[0] || preg_match( '#^_(transformed|collected)_args$#', $name ) ) {
+			if ( '$' == $name[0] || preg_match( '#^_(expanded|collected)_args$#', $name ) ) {
 
 				continue;
 

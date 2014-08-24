@@ -74,56 +74,35 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	static function CLASS_VARS() {
 		return array(
-			'default_args' =>  array( 'view:view_type' => 'text' ),
+			'default_args'    =>  array(
+				'view:view_type' => 'text'
+			),
+			'arg_shortnames'  =>  array(
+				'^label$'                     => 'view:label:label_text',
+				'^label:([^_]+)$'             => 'view:label:$1',
+				'^(input|element):([^_]+)$'   => 'view:input:element:$2',
+				'^(input:)?wrapper:([^_]+)$'  => 'view:input:wrapper:$2',
+				'^view_type$'                 => 'view:view_type',
+			),
 		);
 	}
 
 	/**
 	 * @return array
 	 */
-	static function TRANSFORMS() {
+	function get_arg_shortnames() {
 
-		static $transforms;
-		if ( ! isset( $transforms ) ) {
-			/**
-			 * Create a regex to insure delegated and no_prefix $args are not matched
-			 * nor are $args that contain underscores.
-			 *
-			 * @see     http://stackoverflow.com/a/5334825/102699 for 'not' regex logic
-			 * @see     http://www.rexegg.com/regex-lookarounds.html for negative lookaheads
-			 * @see     http://ocpsoft.org/tutorials/regular-expressions/and-in-regex/ for logical 'and'
-			 * @see     http://www.regular-expressions.info/refadv.html for "Keep text out of the regex match"
-			 *
-			 * @example Regex if 'foo' and 'bar' are no_prefix or contained:
-			 *
-			 *  '^(?!(?|foo|bar)$)(?!.*_)(.*)'
-			 *
-			 * @note    Other similar regex that might work the same
-			 *
-			 *  '^(?!foo$)(?!bar$)(?!.*_)(.*)';
-			 *  '^(?!(?>(foo|bar))$)(?!.*_)(.*)'
-			 *  '^(?!\K(foo|bar)$)(?!.*_)(.*)'
-			 *
-			 * Example matches any string except 'foo', 'bar' or one containing an underscore ('_').
-			 */
+		$arg_shortnames = parent::get_arg_shortnames();
 
-			$attributes = array_merge( WP_Metadata::get_html_attributes( 'input' ) );
+		$attributes = WP_Metadata::get_html_attributes( 'input' );
 
-			unset( $attributes['form'] ); // Reserve 'form' for instances of WP_Form.
+		unset( $attributes['form'] ); // Reserve 'form' for instances of WP_Form.
 
-			$attributes = implode( '|', array_keys( $attributes ) );
+		$attributes = implode( '|', array_keys( $attributes ) );
 
-			$transforms = array(
-				'^label$'                           => 'view:label:label_text',
-				'^label:([^_]+)$'                   => 'view:label:$1',
-				"^({$attributes})$"                 => 'view:input:element:$1',
-				'^(input|html|element):([^_]+)$'    => 'view:input:element:$2',
-				'^(input:)?wrapper:([^_]+)$'        => 'view:input:wrapper:$2',
-				'^view_type$'                       => 'view:view_type',
-			);
-		}
+		$arg_shortnames[ "^({$attributes})$" ] = 'view:input:element:$1';
 
-		return $transforms;
+		return $arg_shortnames;
 
 	}
 

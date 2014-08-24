@@ -23,20 +23,6 @@ class WP_View_Base extends WP_Metadata_Base {
 	var $owner;
 
 	/**
-	 * @return array
-	 */
-	static function TRANSFORMS() {
-
-		return array(
-      /**
-       * @example Allow "wrapper:{$property}" as shortcut to "wrapper:html:class".
-       */
-			'^wrapper:html:(.+)$' => 'wrapper:$1',
-			'^element:html:(.+)$' => 'element:$1',
-		);
-	}
-
-	/**
 	* @return array
 	*/
 	static function PROPERTIES() {

@@ -26,49 +26,35 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	 */
 	var $features = false;
 
+	private static $_arg_shortnames = array();
+
 	/**
 	 * @return array
 	 */
-	static function TRANSFORMS() {
+	function get_arg_shortnames() {
 
-		static $transforms;
-		if ( ! isset( $transforms ) ) {
-			/**
-			 * Create a regex to insure delegated and no_prefix $args are not matched
-			 * nor are $args that contain underscores.
-			 *
-			 * @see     http://stackoverflow.com/a/5334825/102699 for 'not' regex logic
-			 * @see     http://www.rexegg.com/regex-lookarounds.html for negative lookaheads
-			 * @see     http://ocpsoft.org/tutorials/regular-expressions/and-in-regex/ for logical 'and'
-			 * @see     http://www.regular-expressions.info/refadv.html for "Keep text out of the regex match"
-			 *
-			 * @example Regex if 'foo' and 'bar' are no_prefix or contained:
-			 *
-			 *  '^(?!(?|foo|bar)$)(?!.*_)(.*)'
-			 *
-			 * @note    Other similar regex that might work the same
-			 *
-			 *  '^(?!foo$)(?!bar$)(?!.*_)(.*)';
-			 *  '^(?!(?>(foo|bar))$)(?!.*_)(.*)'
-			 *  '^(?!\K(foo|bar)$)(?!.*_)(.*)'
-			 *
-			 * Example matches any string except 'foo', 'bar' or one containing an underscore ('_').
-			 */
+		if ( ! isset( self::$_arg_shortnames[ $class_name = get_class( $this ) ] ) ) {
+
+			$arg_shortnames = parent::get_arg_shortnames();
 
 			$properties = self::PROPERTIES();
 
-			$features = implode( '|', $properties['features']['keys'] );
+			if ( ! empty( $properties['features']['keys'] ) && is_array( $feature_keys = $properties['features']['keys'] ) ) {
 
-			$attributes = implode( '|', array_keys( array_merge( WP_Metadata::get_html_attributes( 'input' ) ) ) );
+				$features = implode( '|', $feature_keys );
+				$arg_shortnames["^({$features}):(.+)$"] = 'features[$1]:$2';
 
-			$transforms = array(
-				"^({$features}):(.+)$"                           => 'features[$1]:$2',
-				"^features\[([^]]+)\]:({$attributes})$"          => 'features[$1]:html:$2',
-				"^features\[([^]]+)\]:wrapper:({$attributes})$"  => 'features[$1]:wrapper:html:$2',
-			);
+			}
+
+			$attributes = implode( '|', array_keys( WP_Metadata::get_html_attributes( 'input' ) ) );
+			$arg_shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
+			$arg_shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
+
+			self::$_arg_shortnames[ $class_name ] = $arg_shortnames;
+
 		}
 
-		return $transforms;
+		return self::$_arg_shortnames[ $class_name ];
 
 	}
 
