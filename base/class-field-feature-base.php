@@ -19,6 +19,18 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	 */
 	var $view;
 
+	/**
+	 * @return array
+	 */
+	static function CLASS_VARS() {
+		return array(
+			'parameters' => array(
+		     '$value',
+		     '$parent',
+		     '$args',
+			)
+    );
+	}
 
   /**
  	 * @return array
@@ -30,22 +42,6 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
     );
 
   }
-
-	/**
-  * Defines the PARAMETERS for the static class factory method 'make_new'.
-  *
-  * @return array
-  */
- static function PARAMETERS() {
-
-   return array(
-     '$value',
-     '$parent',
-     '$args',
-   );
-
- }
-
 
  /**
   * Returns a new instance of a Field Feature object.

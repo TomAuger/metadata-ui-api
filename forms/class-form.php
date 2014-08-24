@@ -47,6 +47,19 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	private $_initialized = false;
 
+	/**
+	 * @return array
+	 */
+	static function CLASS_VARS() {
+		return array(
+			'parameters' => array(
+				'$value',
+				'object_type',
+				'$args',
+			)
+    );
+	}
+
   /**
  	 * @return array
  	 */
@@ -56,21 +69,6 @@ class WP_Form extends WP_Metadata_Base {
 	    'view'    => array( 'type' => 'WP_Form_View', 'default' => 'default' ),
       'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
       'fields'  => array( 'type' => 'WP_Field_Base[]' ),
-    );
-
-  }
-
-  /**
-   * Defines the PARAMETERS for the static class factory method 'make_new'.
-   *
-   * @return array
-   */
-  static function PARAMETERS() {
-
-    return array(
-      '$value',
-      'object_type',
-      '$args',
     );
 
   }

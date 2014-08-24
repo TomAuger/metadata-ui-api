@@ -24,6 +24,20 @@ class WP_Html_Element extends WP_Metadata_Base {
 	 */
 	protected $_attributes;
 
+
+	/**
+	 * @return array
+	 */
+	static function CLASS_VARS() {
+		return array(
+			'parameters' => array(
+				'$html_tag',
+				'$value',
+				null,
+			)
+    );
+	}
+
   /**
  	 * @return array
  	 */
@@ -34,21 +48,6 @@ class WP_Html_Element extends WP_Metadata_Base {
     );
 
   }
-
-	/**
-	 * Defines the PARAMETERS for the static class factory method 'make_new'.
-	 *
-	 * @return array
-	 */
-	static function PARAMETERS() {
-
-	 return array(
-	   '$html_tag',
-		 '$value',
-	    null,
-	 );
-
-	}
 
 	/**
 	 * Factory method for WP_Html_Element

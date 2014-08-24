@@ -22,6 +22,7 @@ class WP_View_Base extends WP_Metadata_Base {
 	 */
 	var $owner;
 
+
 	/**
 	* @return array
 	*/

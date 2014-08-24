@@ -27,6 +27,19 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	/**
 	 * @return array
 	 */
+	static function CLASS_VARS() {
+		return array(
+			'parameters' => array(
+		     '$value',
+		     '$parent',
+		     '$args',
+			)
+    );
+	}
+
+	/**
+	 * @return array
+	 */
  static function PROPERTIES() {
 
    return array(
@@ -34,20 +47,6 @@ abstract class WP_Form_View_Base extends WP_View_Base {
    );
 
  }
-	/**
-	  * Defines the PARAMETERS for the static class factory method 'make_new'.
-	  *
-	  * @return array
-	  */
-	 static function PARAMETERS() {
-
-	   return array(
-	     '$value',
-		   '$parent',
-	     '$args',
-	   );
-
-	 }
 
 	/**
 	 * @param string $view_type

@@ -25,6 +25,19 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 	var $owner;
 
 	/**
+	 * @return array
+	 */
+	static function CLASS_VARS() {
+		return array(
+			'parameters' => array(
+		     '$value',
+		     '$parent',
+		     '$args',
+			)
+    );
+	}
+
+	/**
 	 * $storage_arg names that should not get a prefix.
 	 *
 	 * Intended to be used by subclasses.
@@ -39,21 +52,6 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 		);
 
 	}
-
-  /**
-   * Defines the PARAMETERS for the static class factory method 'make_new'.
-   *
-   * @return array
-   */
-  static function PARAMETERS() {
-
-    return array(
-      '$value',
-      '$parent',
-      '$args',
-    );
-
-  }
 
   /**
    * Returns a new instance of a storage object.

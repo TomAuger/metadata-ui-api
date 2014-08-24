@@ -1387,7 +1387,7 @@ class WP_Metadata {
  	 */
  	static function make_field_feature( $field, $feature_type, $feature_args ) {
 
- 		if ( $feature_class = self::get_feature_type( $feature_type ) ) {
+ 		if ( $feature_class = self::get_feature_type_class( $feature_type ) ) {
 
  			$feature = new $feature_class( $field, $feature_args );
 
@@ -1414,10 +1414,19 @@ class WP_Metadata {
 	 */
 	static function get_make_new_parameters( $class_name ) {
 
-		/**
-		 * This should not be specified in PARAMETERS but instead as PROPERTIES[$name]->parameters
-		 */
-		return call_user_func( array( $class_name, 'PARAMETERS' ) );
+		$class_vars = $class_name::CLASS_VARS();
+
+		if ( ! empty( $class_vars[ 'parameters' ] ) && is_array( $class_vars[ 'parameters' ] ) ) {
+
+			$parameters = $class_vars[ 'parameters' ];
+
+		} else {
+
+			$parameters = array();
+
+		}
+
+		return $parameters;
 
 	}
 

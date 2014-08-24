@@ -51,6 +51,7 @@ abstract class WP_Metadata_Base {
 
 		return array(
 			'defaults' => array( 'type' => 'mixed[]' ),
+			'parameters' => array( '$args' ),
 		);
 
 	}
@@ -61,19 +62,6 @@ abstract class WP_Metadata_Base {
 	static function PROPERTIES() {
 
 		return array();
-
-	}
-
-	/**
-	 * Defines the PARAMETERS for the static class factory method 'make_new'.
-	 *
-	 * @return array
-	 */
-	static function PARAMETERS() {
-
-		return array(
-				'$args',
-		);
 
 	}
 
@@ -110,7 +98,7 @@ abstract class WP_Metadata_Base {
 			$args = $this->expand_args( $args );
 
 			$defaults = $this->apply_class_filters( 'defaults', array() );
-			$args         = array_merge( $defaults, $args );
+			$args  = array_merge( $defaults, $args );
 
 			$args = $this->apply_class_filters( 'pre_collect_args', $args );
 			$args = $this->collect_args( $args );

@@ -26,36 +26,22 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	 */
 	var $features = false;
 
+	/**
+	 * @var array
+	 */
 	private static $_shortnames = array();
 
 	/**
 	 * @return array
 	 */
-	function get_shortnames() {
-
-		if ( ! isset( self::$_shortnames[ $class_name = get_class( $this ) ] ) ) {
-
-			$shortnames = parent::get_shortnames();
-
-			$properties = self::PROPERTIES();
-
-			if ( ! empty( $properties['features']['keys'] ) && is_array( $feature_keys = $properties['features']['keys'] ) ) {
-
-				$features = implode( '|', $feature_keys );
-				$shortnames["^({$features}):(.+)$"] = 'features[$1]:$2';
-
-			}
-
-			$attributes = implode( '|', array_keys( WP_Metadata::get_html_attributes( 'input' ) ) );
-			$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
-			$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
-
-			self::$_shortnames[ $class_name ] = $shortnames;
-
-		}
-
-		return self::$_shortnames[ $class_name ];
-
+	static function CLASS_VARS() {
+		return array(
+			'parameters' => array(
+				'view_type',
+				'$parent',
+				'$value',
+			)
+    );
 	}
 
 	/**
@@ -80,21 +66,6 @@ abstract class WP_Field_View_Base extends WP_View_Base {
     ));
 
  }
-
-	/**
-	  * Defines the PARAMETERS for the static class factory method 'make_new'.
-	  *
-	  * @return array
-	  */
-	 static function PARAMETERS() {
-
-	   return array(
-	     'view_type',
-	     '$parent',
-	     '$value',
-	   );
-
-	 }
 
 	/**
 	 * @param string $view_type
@@ -215,6 +186,36 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	function initial_element_class() {
 
 		return "metadata-field";
+
+	}
+
+	/**
+	 * @return array
+	 */
+	function get_shortnames() {
+
+		if ( ! isset( self::$_shortnames[ $class_name = get_class( $this ) ] ) ) {
+
+			$shortnames = parent::get_shortnames();
+
+			$properties = self::PROPERTIES();
+
+			if ( ! empty( $properties['features']['keys'] ) && is_array( $feature_keys = $properties['features']['keys'] ) ) {
+
+				$features = implode( '|', $feature_keys );
+				$shortnames["^({$features}):(.+)$"] = 'features[$1]:$2';
+
+			}
+
+			$attributes = implode( '|', array_keys( WP_Metadata::get_html_attributes( 'input' ) ) );
+			$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
+			$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
+
+			self::$_shortnames[ $class_name ] = $shortnames;
+
+		}
+
+		return self::$_shortnames[ $class_name ];
 
 	}
 

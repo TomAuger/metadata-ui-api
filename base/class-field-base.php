@@ -84,6 +84,11 @@ class WP_Field_Base extends WP_Metadata_Base {
 				'^(input:)?wrapper:([^_]+)$'  => 'view:input:wrapper:$2',
 				'^view_type$'                 => 'view:view_type',
 			),
+			'parameters' => array(
+				'$value',
+				'$object_type',
+				'$args',
+			)
 		);
 	}
 
@@ -124,22 +129,6 @@ class WP_Field_Base extends WP_Metadata_Base {
     );
 
 	}
-
-	/**
-  * Defines the make_new() PARAMETERS in order they need to be passed.
-  *
-  * @return array
-  */
- static function PARAMETERS() {
-
-   return array(
-     '$value',
-     '$object_type',
-     '$args',
-   );
-
- }
-
 
   /**
 	 * Make a New Field object
