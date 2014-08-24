@@ -13,7 +13,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'field';
+//	const PREFIX = 'field';
 
 	/**
 	 * @var bool|string
@@ -122,10 +122,7 @@ class WP_Field_Base extends WP_Metadata_Base {
       'value'   => array( 'type' => 'mixed' ),
       'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
       'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
-      'view'    => array( 'type' => 'WP_Field_View_Base', 'parameters' => array(
-          '$object_type' => 'object_type'
-        )
-      ),
+      'view'    => array( 'type' => 'WP_Field_View_Base' ),
     );
 
 	}

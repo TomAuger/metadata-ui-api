@@ -12,7 +12,7 @@ abstract class WP_Metadata_Base {
 	 *
 	 * Intended to be used by subclasses.
 	 */
-	const PREFIX = null;
+//	const PREFIX = null;
 
 	/**
 	 * @var array
@@ -65,14 +65,6 @@ abstract class WP_Metadata_Base {
 
 	}
 
-	/**
-	 * @return array
-	 */
-	static function METHODS() {
-
-		return array();
-
-	}
 
 	/**
 	 * @param array $args
@@ -91,8 +83,8 @@ abstract class WP_Metadata_Base {
 				$args = array();
 			}
 
-			$args = $this->apply_class_filters( 'pre_prefix_args', $args );
-			$args = $this->prefix_args( $args );
+//			$args = $this->apply_class_filters( 'pre_prefix_args', $args );
+//			$args = $this->prefix_args( $args );
 
 			$args = $this->apply_class_filters( 'pre_expand_args', $args );
 			$args = $this->expand_args( $args );
@@ -176,20 +168,20 @@ abstract class WP_Metadata_Base {
 		return $this->_defaults;
 	}
 
-	/**
-	 * Gets the property (var) prefix from a constant to be used for this current class.
-	 *
-	 * @example: const PREFIX = 'form';
-	 *
-	 * Intended to be used by subclasses.
-	 *
-	 * @return array
-	 */
-	function get_prefix() {
-
-		return $this->constant( 'PREFIX' );
-
-	}
+//	/**
+//	 * Gets the property (var) prefix from a constant to be used for this current class.
+//	 *
+//	 * @example: const PREFIX = 'form';
+//	 *
+//	 * Intended to be used by subclasses.
+//	 *
+//	 * @return array
+//	 */
+//	function get_prefix() {
+//
+//		return $this->constant( 'PREFIX' );
+//
+//	}
 
 	/**
 	 * Returns an array of shortname regexes as array key and expansion as key value.
@@ -283,39 +275,39 @@ abstract class WP_Metadata_Base {
 
 	}
 
-	/**
-	 * Ensure all $args have been prefixed that don't already have an underscore in their name.
-	 *
-	 * @param array $args
-	 *
-	 * @return array
-	 */
-	function prefix_args( $args ) {
-
-		if ( $prefix = $this->get_prefix() ) {
-
-			foreach ( $args as $arg_name => $arg_value ) {
-				/**
-				 * For every $arg passed-in that does not contain an underscore, is not already prefixed, and
-				 * for which there is a property on this object
-				 */
-				if ( false === strpos( $arg_name, '_' ) && ! preg_match( "#^{$prefix}_#", $arg_name ) &&
-				     (
-						     property_exists( $this, $property_name = "{$prefix}:{$arg_name}" ) ||
-						     method_exists( $this, $method_name = "set_{$property_name}" )
-				     )
-				) {
-
-					$args[ $property_name ] = $arg_value;
-					unset( $args[ $arg_name ] );
-
-				}
-			}
-		}
-
-		return $args;
-
-	}
+//	/**
+//	 * Ensure all $args have been prefixed that don't already have an underscore in their name.
+//	 *
+//	 * @param array $args
+//	 *
+//	 * @return array
+//	 */
+//	function prefix_args( $args ) {
+//
+//		if ( $prefix = $this->get_prefix() ) {
+//
+//			foreach ( $args as $arg_name => $arg_value ) {
+//				/**
+//				 * For every $arg passed-in that does not contain an underscore, is not already prefixed, and
+//				 * for which there is a property on this object
+//				 */
+//				if ( false === strpos( $arg_name, '_' ) && ! preg_match( "#^{$prefix}_#", $arg_name ) &&
+//				     (
+//						     property_exists( $this, $property_name = "{$prefix}:{$arg_name}" ) ||
+//						     method_exists( $this, $method_name = "set_{$property_name}" )
+//				     )
+//				) {
+//
+//					$args[ $property_name ] = $arg_value;
+//					unset( $args[ $arg_name ] );
+//
+//				}
+//			}
+//		}
+//
+//		return $args;
+//
+//	}
 
 	/**
 	 * collect $args from delegate properties. Also store in $this->delegated_args array.

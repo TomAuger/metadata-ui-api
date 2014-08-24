@@ -1414,7 +1414,7 @@ class WP_Metadata {
 	 */
 	static function get_make_new_parameters( $class_name ) {
 
-		$class_vars = $class_name::CLASS_VARS();
+		$class_vars = call_user_func( array( $class_name, 'CLASS_VARS' ) );
 
 		if ( ! empty( $class_vars[ 'parameters' ] ) && is_array( $class_vars[ 'parameters' ] ) ) {
 

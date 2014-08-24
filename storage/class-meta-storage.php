@@ -12,7 +12,7 @@ class WP_Meta_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'meta';
+//	const PREFIX = 'meta';
 
 	/**
 	 * @var bool|string - Meta type such as 'post', 'user' and 'comment' (in future, other.)

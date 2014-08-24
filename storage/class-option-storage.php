@@ -12,7 +12,7 @@ class WP_Option_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'option';
+//	const PREFIX = 'option';
 
 	/**
 	 * @var bool|string - Option type such as 'post', 'user' and 'comment' (in future, other.)

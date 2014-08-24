@@ -10,7 +10,7 @@ class WP_Form extends WP_Metadata_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'form';
+//	const PREFIX = 'form';
 
 	/**
 	 * @var string
