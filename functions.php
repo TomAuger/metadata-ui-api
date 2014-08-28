@@ -12,14 +12,14 @@ function wp_ensure_object_type( $args ) {
 
 	$args = wp_parse_args( $args );
 
-	if ( empty( $args[ 'object_type' ] ) ) {
+	if ( empty( $args['object_type'] ) ) {
 		global $post;
 
-		$args[ 'object_type' ] = isset( $post->post_type ) ? $post->post_type : false;
+		$args['object_type'] = isset( $post->post_type ) ? $post->post_type : false;
 	}
 
-	if ( !$args[ 'object_type' ] instanceof WP_Object_Type ) {
-		$args[ 'object_type' ] = new WP_Object_Type( $args[ 'object_type' ] );
+	if ( ! $args['object_type'] instanceof WP_Object_Type ) {
+		$args['object_type'] = new WP_Object_Type( $args['object_type'] );
 	}
 
 	return $args;
@@ -35,7 +35,7 @@ function wp_ensure_object_type( $args ) {
  * @return bool Whether the object type $class was registered
  */
 function register_object_type_class( $class, $class_args = array() ) {
- 	return WP_Object_Type::register_class( $class, $class_args );
+	return WP_Object_Type::register_class( $class, $class_args );
 }
 
 /**
@@ -47,16 +47,17 @@ function register_object_type_class( $class, $class_args = array() ) {
  * @return bool Whether the object type $type_name was registered
  */
 function register_field_type( $type_name, $type_def = array() ) {
- 	return WP_Metadata::register_field_type( $type_name, $type_def );
+	return WP_Metadata::register_field_type( $type_name, $type_def );
 }
 
 /**
  * @param string $class_name
  * @param string $class_filepath
+ *
  * @return bool Return true if it was registered, false if not.
  */
 function register_autoload_class( $class_name, $class_filepath ) {
- 	return WP_Metadata::register_autoload_class( $class_name, $class_filepath );
+	return WP_Metadata::register_autoload_class( $class_name, $class_filepath );
 }
 
 

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Option_Storage
  */
@@ -29,16 +30,6 @@ class WP_Option_Storage extends WP_Storage_Base {
 	}
 
 	/**
-	 * @param string $field_name
-	 * @param null|mixed $value
-	 */
-	function update_value( $value = null ) {
-
-		update_option( $this->storage_key(), esc_sql( $value ) );
-
-	}
-
-	/**
 	 * Get Option Key
 	 *
 	 * @TODO This is all wrong. This logic should go into get_value() and update_value() using real array vs. simulation.
@@ -47,17 +38,26 @@ class WP_Option_Storage extends WP_Storage_Base {
 	 */
 	function storage_key() {
 
-		$field = $this->field;
+		$field       = $this->field;
 		$object_type = $field->object_type;
 
 		if ( $group = $object_type->subtype ) {
 			$option_name = "_{WP_Metadata::$prefix}{$group}[{$field->field_name}]"; // @todo Variable not set
-		}
-		else {
+		} else {
 			$option_name = "_{WP_Metadata::$prefix}{$field->field_name}"; // @todo Variable not set
 		}
 
 		return $option_name;
+
+	}
+
+	/**
+	 * @param string $field_name
+	 * @param null|mixed $value
+	 */
+	function update_value( $value = null ) {
+
+		update_option( $this->storage_key(), esc_sql( $value ) );
 
 	}
 

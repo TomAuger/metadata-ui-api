@@ -1,6 +1,8 @@
 <?php
+
 /**
  * Class WP_Field_View_Base
+ *
  * @mixin WP_Field_Base
  * @property WP_Field_Input_Feature $input
  * @property WP_Field_Label_Feature $label
@@ -12,36 +14,56 @@
 abstract class WP_Field_View_Base extends WP_View_Base {
 
 	/**
+	 * @var array[]
+	 */
+	private static $_shortnames = array();
+	/**
 	 * @var string
 	 */
 	var $view_type;
-
 	/**
 	 * @var WP_Field_Base
 	 */
 	var $field;
-
 	/**
 	 * @var bool|array
 	 */
 	var $features = false;
 
 	/**
-	 * @var array[]
+	 * @param string $view_type
+	 * @param WP_Field_Base|null $field
+	 * @param array $view_args
 	 */
-	private static $_shortnames = array();
+	function __construct( $view_type, $field, $view_args = array() ) {
+
+		$this->view_type = $view_type;
+
+		if ( is_object( $field ) ) {
+
+			$field->view = $this;
+
+		}
+
+		$this->field = $field;
+
+		parent::__construct( $view_args );
+
+		$this->owner = $field;
+
+	}
 
 	/**
 	 * @return array
 	 */
 	static function CLASS_VARS() {
 		return array(
-			'parameters' => array(
-				'view_type',
-				'$parent',
-				'$value',
-			)
-    );
+				'parameters' => array(
+						'view_type',
+						'$parent',
+						'$value',
+				)
+		);
 	}
 
 	/**
@@ -50,22 +72,23 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	static function PROPERTIES() {
 
 		return array(
-			'field' => array( 'type' => 'WP_Field_Base', 'auto_create' => false ),
-			'wrapper' => array( 'type' => 'WP_Html_Element' ),
-	    'features' => array(
-	      'type' => 'WP_Field_Feature_Base[]',
-	      'default' => '$key_name',
-	      'registry' => 'field_feature_types',
-	      'keys' => array(
-				  'label',
-					'input',
-					'help',
-					'message',
-					'infobox',
-	      ),
-    ));
+				'field'    => array( 'type' => 'WP_Field_Base', 'auto_create' => false ),
+				'wrapper'  => array( 'type' => 'WP_Html_Element' ),
+				'features' => array(
+						'type'     => 'WP_Field_Feature_Base[]',
+						'default'  => '$key_name',
+						'registry' => 'field_feature_types',
+						'keys'     => array(
+								'label',
+								'input',
+								'help',
+								'message',
+								'infobox',
+						),
+				)
+		);
 
- }
+	}
 
 	/**
 	 * @param string $view_type
@@ -79,28 +102,28 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 		$view = false;
 
-		if ( ! isset( $view_args[ 'view_type' ] ) ) {
+		if ( ! isset( $view_args['view_type'] ) ) {
 			/*
 			 * We have to do this normalization of the 'type' $arg prior to
 			 * the Field classes __construct() because it drives the class used
 			 * to instantiate the View. All other $args can be normalized
 			 * in the Field class constructor.
 			 */
-			if ( ! isset( $view_args[ 'type' ] ) ) {
+			if ( ! isset( $view_args['type'] ) ) {
 
-				$view_args[ 'view_type' ] = 'text';
+				$view_args['view_type'] = 'text';
 
 			} else {
 
-				$view_args[ 'view_type' ] = $view_args[ 'type' ];
+				$view_args['view_type'] = $view_args['type'];
 
-				unset( $view_args[ 'type' ] );
+				unset( $view_args['type'] );
 
 			}
 
 		}
 
-		$view_type_args = WP_Metadata::get_field_view_type_args( $view_args[ 'view_type' ] );
+		$view_type_args = WP_Metadata::get_field_view_type_args( $view_args['view_type'] );
 
 		if ( is_string( $view_type_args ) && class_exists( $view_type_args ) ) {
 
@@ -130,34 +153,22 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 		} else {
 
-      $view = null;
+			$view = null;
 
-    }
+		}
 
 		return $view;
 
 	}
 
 	/**
-	 * @param string $view_type
-	 * @param WP_Field_Base|null $field
-	 * @param array $view_args
+	 * @param string $view_class
+	 *
+	 * @return string[]
 	 */
-	function __construct( $view_type, $field, $view_args = array() ) {
+	static function get_input_tag( $view_class ) {
 
-		$this->view_type = $view_type;
-
-		if ( is_object( $field ) ) {
-
-			$field->view = $this;
-
-		}
-
-		$this->field = $field;
-
-		parent::__construct( $view_args );
-
-		$this->owner = $field;
+		return WP_Metadata::get_view_input_tag( $view_class );
 
 	}
 
@@ -202,14 +213,14 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 			if ( ! empty( $properties['features']['keys'] ) && is_array( $feature_keys = $properties['features']['keys'] ) ) {
 
-				$features = implode( '|', $feature_keys );
+				$features                           = implode( '|', $feature_keys );
 				$shortnames["^({$features}):(.+)$"] = 'features[$1]:$2';
 
 			}
 
 			if ( $attributes = $this->get_view_input_attributes() ) {
 
-				$attributes = implode( '|', $attributes );
+				$attributes                                                    = implode( '|', $attributes );
 				$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
 				$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
 
@@ -224,6 +235,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 	/**
 	 * Delegate to $field explicitly since it is defined in base class.
+	 *
 	 * @return array
 	 */
 	function get_prefix() {
@@ -243,67 +255,6 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 		}
 
 		return $prefix;
-	}
-
-	/**
-	 * Gets array of field feature type names
-	 *
-	 * @return array
-	 */
-	function get_feature_types() {
-
-		$features = $this->get_annotated_property( 'features' );
-		return is_array( $features->keys ) ? $features->keys : array();
-
-	}
-
-	/**
-	 *  Allow Input HTML to be overridden in Field or Field View
-	 *
-	 *  To override in Field, implement get_input_html().
-	 *  To override in Field View, implement get_input_html().
-	 *
-	 */
-	function get_input_html() {
-
-		if ( method_exists( $this->field, 'get_input_html' ) ) {
-
-			$input_html = $this->field->get_input_html();
-
-		} else {
-
-			$input_html = $this->input_feature()->get_feature_html();
-
-		}
-
-		return $input_html;
-	}
-
-	/**
-	 * @return WP_Field_Feature_Base
-	 */
-	function input_feature() {
-
-		if ( ! isset( $this->features['input'] ) ) {
-
-			// Do this to ensure the return value of input_feature() can be dereferenced. Should never be needed.
-			$this->features['input'] = new WP_Field_Input_Feature( $this->field->view );
-
-		}
-
-		return $this->features['input'];
-
-	}
-
-	/**
-	 * @param string $view_class
-	 *
-	 * @return string[]
-	 */
-	static function get_input_tag( $view_class ) {
-
-		return WP_Metadata::get_view_input_tag( $view_class );
-
 	}
 
 	/**
@@ -356,6 +307,57 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	}
 
 	/**
+	 * Gets array of field feature type names
+	 *
+	 * @return array
+	 */
+	function get_feature_types() {
+
+		$features = $this->get_annotated_property( 'features' );
+
+		return is_array( $features->keys ) ? $features->keys : array();
+
+	}
+
+	/**
+	 *  Allow Input HTML to be overridden in Field or Field View
+	 *
+	 *  To override in Field, implement get_input_html().
+	 *  To override in Field View, implement get_input_html().
+	 *
+	 */
+	function get_input_html() {
+
+		if ( method_exists( $this->field, 'get_input_html' ) ) {
+
+			$input_html = $this->field->get_input_html();
+
+		} else {
+
+			$input_html = $this->input_feature()->get_feature_html();
+
+		}
+
+		return $input_html;
+	}
+
+	/**
+	 * @return WP_Field_Feature_Base
+	 */
+	function input_feature() {
+
+		if ( ! isset( $this->features['input'] ) ) {
+
+			// Do this to ensure the return value of input_feature() can be dereferenced. Should never be needed.
+			$this->features['input'] = new WP_Field_Input_Feature( $this->field->view );
+
+		}
+
+		return $this->features['input'];
+
+	}
+
+	/**
 	 * Delegate accesses for missing poperties to the $field property
 	 *
 	 * @param string $property_name
@@ -364,7 +366,8 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	 */
 	function __get( $property_name ) {
 
-		return isset( $this->features[ $property_name ] ) ? $this->features[ $property_name ] : ( property_exists( $this->field, $property_name ) ? $this->field[ $property_name ] : null );
+		return isset( $this->features[ $property_name ] ) ? $this->features[ $property_name ] : ( property_exists( $this->field,
+				$property_name ) ? $this->field[ $property_name ] : null );
 
 	}
 
@@ -378,7 +381,8 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	 */
 	function __set( $property_name, $value ) {
 
-		return isset( $this->features[ $property_name ] ) ? $this->features[ $property_name ] = $value : ( property_exists( $this->field, $property_name ) ? $this->field->$property_name = $value : null );
+		return isset( $this->features[ $property_name ] ) ? $this->features[ $property_name ] = $value : ( property_exists( $this->field,
+				$property_name ) ? $this->field->$property_name = $value : null );
 
 	}
 
@@ -393,8 +397,8 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	function __call( $method_name, $args = array() ) {
 
 		return method_exists( $this->field, $method_name ) ? call_user_func_array( array(
-			$this->field,
-			$method_name
+				$this->field,
+				$method_name
 		), $args ) : parent::__call( $method_name, $args );
 
 	}

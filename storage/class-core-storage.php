@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Core_Storage
  */
@@ -19,6 +20,17 @@ class WP_Core_Storage extends WP_Storage_Base {
 	}
 
 	/**
+	 * @return bool
+	 */
+	function has_field() {
+
+		$field_name = $this->field->field_name;
+
+		return property_exists( $this->object, $field_name ) && parent::has_field( $field_name );
+
+	}
+
+	/**
 	 * @param null|mixed $value
 	 */
 	function update_value( $value = null ) {
@@ -30,20 +42,9 @@ class WP_Core_Storage extends WP_Storage_Base {
 			global $wpdb;
 
 			$wpdb->update( $wpdb->posts, array( $field_name => $value ), array(
-				'ID' => $this->object_id()
+					'ID' => $this->object_id()
 			) );
 		}
-
-	}
-
-	/**
-	 * @return bool
-	 */
-	function has_field() {
-
-		$field_name = $this->field->field_name;
-
-		return property_exists( $this->object, $field_name ) && parent::has_field( $field_name );
 
 	}
 

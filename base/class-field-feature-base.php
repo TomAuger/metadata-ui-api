@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Field_Feature_Base
  */
@@ -20,68 +21,68 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	var $view;
 
 	/**
-	 * @return array
-	 */
-	static function CLASS_VARS() {
-		return array(
-			'parameters' => array(
-		     '$value',
-		     '$parent',
-		     '$args',
-			)
-    );
-	}
-
-  /**
- 	 * @return array
- 	 */
-  static function PROPERTIES() {
-
-    return array(
-      'field' => array( 'type' => 'WP_Field_Base', 'auto_create' => false ),
-    );
-
-  }
-
- /**
-  * Returns a new instance of a Field Feature object.
-  *
-  * @param string $feature_type
-  * @param WP_Field_View_Base $view
-  * @param array $feature_args
-	*
-	* @return null|WP_Field_Feature_Base
-	*/
- static function make_new( $feature_type, $view, $feature_args = array() ) {
-
-   if ( $feature_type_class = WP_Metadata::get_feature_type_class( $feature_type ) ) {
-
-	   $feature_args['feature_type'] = $feature_type;
-
-     $feature = new $feature_type_class( $view, $feature_args );
-
-   } else {
-
-     $feature = null;
-
-   }
-
-		return $feature;
-
-	}
-
-	/**
 	 * @param WP_Field_View_Base $view
 	 * @param array $feature_args
 	 */
 	function __construct( $view, $feature_args = array() ) {
 
 		$this->field = $view->field;
-		$this->view = $view;
+		$this->view  = $view;
 
 		parent::__construct( $feature_args );
 
 		$this->owner = $this->field;
+
+	}
+
+	/**
+	 * @return array
+	 */
+	static function CLASS_VARS() {
+		return array(
+				'parameters' => array(
+						'$value',
+						'$parent',
+						'$args',
+				)
+		);
+	}
+
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array(
+				'field' => array( 'type' => 'WP_Field_Base', 'auto_create' => false ),
+		);
+
+	}
+
+	/**
+	 * Returns a new instance of a Field Feature object.
+	 *
+	 * @param string $feature_type
+	 * @param WP_Field_View_Base $view
+	 * @param array $feature_args
+	 *
+	 * @return null|WP_Field_Feature_Base
+	 */
+	static function make_new( $feature_type, $view, $feature_args = array() ) {
+
+		if ( $feature_type_class = WP_Metadata::get_feature_type_class( $feature_type ) ) {
+
+			$feature_args['feature_type'] = $feature_type;
+
+			$feature = new $feature_type_class( $view, $feature_args );
+
+		} else {
+
+			$feature = null;
+
+		}
+
+		return $feature;
 
 	}
 
@@ -91,6 +92,15 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	function initial_element_id() {
 
 		return str_replace( '_', '-', $this->field_name() ) . "-field-{$this->feature_type}";
+
+	}
+
+	/**
+	 *  Used in initial_*() functions above.
+	 */
+	function field_name() {
+
+		return $this->field->field_name;
 
 	}
 
@@ -113,15 +123,6 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	}
 
 	/**
-	 *  Used in initial_*() functions above.
-	 */
-	function field_name() {
-
-		return $this->field->field_name;
-
-	}
-
-	/**
 	 * @return string
 	 */
 	function get_feature_html() {
@@ -132,6 +133,7 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 
 	/**
 	 * @param string $property_name
+	 *
 	 * @return mixed
 	 */
 	function __get( $property_name ) {

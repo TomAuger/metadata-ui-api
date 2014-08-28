@@ -98,8 +98,8 @@ class WP_Annotated_Property {
 			}
 
 			$annotations = array_merge(
-				 self::get_default_annotations( $this->property_type ),
-				 $annotations
+					self::get_default_annotations( $this->property_type ),
+					$annotations
 			);
 
 		}
@@ -124,11 +124,54 @@ class WP_Annotated_Property {
 	}
 
 	/**
-	 * @return bool
+	 * Get default annotations for a 'type?'
+	 *
+	 * @param string $type
+	 *
+	 * @return array
 	 */
-	function is_class() {
+	static function get_default_annotations( $type ) {
 
-		return class_exists( $this->property_type );
+		if ( ! isset( self::$_default_annotations[ $type ] ) ) {
+
+			self::$_default_annotations[ $type ] = (object) array(
+					'cached' => false,
+					'values' => array(),
+			);
+
+		}
+
+		if ( ! self::$_default_annotations[ $type ]->cached ) {
+
+			if ( $parent = get_parent_class( $type ) ) {
+
+				self::$_default_annotations[ $type ]->values = array_merge(
+						self::get_default_annotations( $parent ),
+						self::$_default_annotations[ $type ]->values
+				);
+
+			}
+
+			self::$_default_annotations[ $type ]->cached = true;
+
+		}
+
+		return self::$_default_annotations[ $type ]->values;
+
+	}
+
+	/**
+	 * Register the default annotations for a 'type'. In the case of type=class_name, also it's child classes.
+	 *
+	 * @param string $type
+	 * @param array $default_values
+	 */
+	static function register_default_annotations( $type, $default_values ) {
+
+		self::$_default_annotations[ $type ] = (object) array(
+				'cached' => false,
+				'values' => $default_values,
+		);
 
 	}
 
@@ -181,6 +224,15 @@ class WP_Annotated_Property {
 		}
 
 		return $object;
+
+	}
+
+	/**
+	 * @return bool
+	 */
+	function is_class() {
+
+		return class_exists( $this->property_type );
 
 	}
 
@@ -257,57 +309,6 @@ class WP_Annotated_Property {
 		}
 
 		return $parameters;
-
-	}
-
-	/**
-	 * Register the default annotations for a 'type'. In the case of type=class_name, also it's child classes.
-	 *
-	 * @param string $type
-	 * @param array $default_values
-	 */
-	static function register_default_annotations( $type, $default_values ) {
-
-		self::$_default_annotations[ $type ] = (object)array(
-		  'cached' => false,
-			'values' => $default_values,
-		);
-
-	}
-
-	/**
-	 * Get default annotations for a 'type?'
-	 *
-	 * @param string $type
-	 * @return array
-	 */
-	static function get_default_annotations( $type ) {
-
-		if ( ! isset( self::$_default_annotations[ $type ] ) ) {
-
-			self::$_default_annotations[ $type ] = (object)array(
-				'cached' => false,
-				'values' => array(),
-			);
-
-		}
-
-		if ( ! self::$_default_annotations[ $type ]->cached ) {
-
-			if ( $parent = get_parent_class( $type ) ) {
-
-				self::$_default_annotations[ $type ]->values = array_merge(
-						self::get_default_annotations( $parent ),
-						self::$_default_annotations[ $type ]->values
-				);
-
-			}
-
-			self::$_default_annotations[ $type ]->cached = true;
-
-		}
-
-		return self::$_default_annotations[ $type ]->values;
 
 	}
 

@@ -1,27 +1,28 @@
 <?php
+
 /**
  * Class WP_Registry
  */
 class WP_Registry {
 
-  /**
-   * @var string
-   */
-  var $registry_name;
+	/**
+	 * @var string
+	 */
+	var $registry_name;
 
 	/**
 	 * @var array
 	 */
 	private $_entries = array();
 
-  /**
-   * @param string $registry_name
-   */
-  function __construct( $registry_name ) {
+	/**
+	 * @param string $registry_name
+	 */
+	function __construct( $registry_name ) {
 
-    $this->registry_name = $registry_name;
+		$this->registry_name = $registry_name;
 
-  }
+	}
 
 	/**
 	 * @param string $name

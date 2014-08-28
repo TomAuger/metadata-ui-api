@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Form
  *
@@ -37,9 +38,9 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	var $view;
 
-  /**
- 	 * @var WP_Storage_Base
- 	 */
+	/**
+	 * @var WP_Storage_Base
+	 */
 	var $storage;
 
 	/**
@@ -48,30 +49,44 @@ class WP_Form extends WP_Metadata_Base {
 	private $_initialized = false;
 
 	/**
+	 * @param string $form_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $form_args
+	 */
+	function __construct( $form_name, $object_type, $form_args ) {
+
+		$form_args['form_name']   = $form_name;
+		$form_args['object_type'] = new WP_Object_Type( $object_type );
+
+		parent::__construct( $form_args );
+
+	}
+
+	/**
 	 * @return array
 	 */
 	static function CLASS_VARS() {
 		return array(
-			'parameters' => array(
-				'$value',
-				'object_type',
-				'$args',
-			)
-    );
+				'parameters' => array(
+						'$value',
+						'object_type',
+						'$args',
+				)
+		);
 	}
 
-  /**
- 	 * @return array
- 	 */
-  static function PROPERTIES() {
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
 
-    return array(
-	    'view'    => array( 'type' => 'WP_Form_View', 'default' => 'default' ),
-      'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
-      'fields'  => array( 'type' => 'WP_Field_Base[]' ),
-    );
+		return array(
+				'view'    => array( 'type' => 'WP_Form_View', 'default' => 'default' ),
+				'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
+				'fields'  => array( 'type' => 'WP_Field_Base[]' ),
+		);
 
-  }
+	}
 
 	/**
 	 * @param string $form_name
@@ -79,9 +94,9 @@ class WP_Form extends WP_Metadata_Base {
 	 * @param array $form_args
 	 *
 	 * @return WP_Form
-  *
-  * @todo Support more than one type of form. Maybe. If needed.
-  *
+	 *
+	 * @todo Support more than one type of form. Maybe. If needed.
+	 *
 	 */
 	static function make_new( $form_name, $object_type, $form_args = array() ) {
 
@@ -92,25 +107,25 @@ class WP_Form extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @param string $form_name
-	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
-	 */
-	function __construct( $form_name, $object_type, $form_args ) {
-
-		$form_args[ 'form_name' ] = $form_name;
-		$form_args[ 'object_type' ] = new WP_Object_Type( $object_type );
-
-		parent::__construct( $form_args );
-
-	}
-
-	/**
 	 *
 	 */
 	function initialize_class() {
 
-    $this->register_view( 'default', 'WP_Form_View' );
+		$this->register_view( 'default', 'WP_Form_View' );
+
+	}
+
+	/**
+	 * Register a class to be used as a form_view for the current class.
+	 *
+	 * $wp_form->register_view( 'post_admin', 'WP_Post_Adminview' );
+	 *
+	 * @param string $view_type  The name of the view that is unique for this class.
+	 * @param string $class_name The class name for the View object.
+	 */
+	function register_view( $view_type, $class_name ) {
+
+		WP_Metadata::register_view( 'form', $view_type, $class_name, get_class( $this ) );
 
 	}
 
@@ -125,31 +140,7 @@ class WP_Form extends WP_Metadata_Base {
 
 		}
 
-		$this->initialize_form_fields( $form_args[ 'object_type' ] );
-
-	}
-
-	/**
-	 * @param string $object_type
-	 * @param bool|array $field_names
-	 */
-	function initialize_form_fields( $object_type, $field_names = false ) {
-
-		$this->fields = array();
-
-		if ( !$field_names ) {
-			$field_names = WP_Metadata::get_field_names( $object_type );
-		}
-
-		foreach ( $field_names as $field_name ) {
-			$field = WP_Metadata::get_field( $field_name, $object_type, array(
-				'form' => $this,
-			));
-
-			if ( is_object( $field ) ) {
-				$this->add_field( $field );
-			}
-		}
+		$this->initialize_form_fields( $form_args['object_type'] );
 
 	}
 
@@ -158,44 +149,13 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	function set_form_view( $view_type ) {
 
-		if ( !$this->form_view_exists( $view_type ) ) {
+		if ( ! $this->form_view_exists( $view_type ) ) {
 			$this->view = false;
-		}
-		else {
+		} else {
 			$form_view_class = $this->get_view_class( $view_type );
 
 			$this->view = new $form_view_class( $view_type, $this );
 		}
-
-	}
-
-  /**
- 	 * @param WP_Post|object $object
- 	 */
- 	function set_storage_object( $object ) {
-
- 		/**
- 		 * @var WP_Field_Base $field
- 		 */
- 		foreach ( $this->fields as $field ) {
- 			if ( ! is_object( $field->storage->object ) ) {
- 				$field->storage->object = $object;
- 			}
- 		}
-
- 	}
-
-	/**
-	 * Register a class to be used as a form_view for the current class.
-	 *
-	 * $wp_form->register_view( 'post_admin', 'WP_Post_Adminview' );
-	 *
-	 * @param string $view_type The name of the view that is unique for this class.
-	 * @param string $class_name The class name for the View object.
-	 */
-	function register_view( $view_type, $class_name ) {
-
-		WP_Metadata::register_view( 'form', $view_type, $class_name, get_class( $this ) );
 
 	}
 
@@ -226,24 +186,65 @@ class WP_Form extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @param array $args
-	 * @return array
+	 * @param string $object_type
+	 * @param bool|array $field_names
 	 */
-	function get_defaults( $args ) {
-		$args = parent::get_defaults( $args );
-	 	$args[ 'element_name' ] = str_replace( '-', '_', $this->form_name );
-		return $args;
+	function initialize_form_fields( $object_type, $field_names = false ) {
+
+		$this->fields = array();
+
+		if ( ! $field_names ) {
+			$field_names = WP_Metadata::get_field_names( $object_type );
+		}
+
+		foreach ( $field_names as $field_name ) {
+			$field = WP_Metadata::get_field( $field_name, $object_type, array(
+					'form' => $this,
+			) );
+
+			if ( is_object( $field ) ) {
+				$this->add_field( $field );
+			}
+		}
 
 	}
-
 
 	/**
 	 * @param WP_Field_Base $field
 	 */
 	function add_field( $field ) {
 
-		$field->form = $this;
+		$field->form                        = $this;
 		$this->fields[ $field->field_name ] = $field;
+
+	}
+
+	/**
+	 * @param WP_Post|object $object
+	 */
+	function set_storage_object( $object ) {
+
+		/**
+		 * @var WP_Field_Base $field
+		 */
+		foreach ( $this->fields as $field ) {
+			if ( ! is_object( $field->storage->object ) ) {
+				$field->storage->object = $object;
+			}
+		}
+
+	}
+
+	/**
+	 * @param array $args
+	 *
+	 * @return array
+	 */
+	function get_defaults( $args ) {
+		$args                 = parent::get_defaults( $args );
+		$args['element_name'] = str_replace( '-', '_', $this->form_name );
+
+		return $args;
 
 	}
 
@@ -275,14 +276,14 @@ class WP_Form extends WP_Metadata_Base {
 			 * @var WP_Field_Base $field
 			 */
 			foreach ( $this->fields as $field_name => $field ) {
-				if ( isset( $values[$field_name] ) ) {
-					if ( is_null( $values[$field_name] ) ) {
+				if ( isset( $values[ $field_name ] ) ) {
+					if ( is_null( $values[ $field_name ] ) ) {
 						/*
 						 * $field->update_value( null ) updates using existing $field->value().
 						 */
-						$values[$field_name] = false;
+						$values[ $field_name ] = false;
 					}
-					$field->update_value( $values[$field_name] );
+					$field->update_value( $values[ $field_name ] );
 				}
 			}
 		}
@@ -299,7 +300,7 @@ class WP_Form extends WP_Metadata_Base {
 		/*
 		 * If method was the_*() method, parent __call() will fall through and return false.
 		 */
-		if ( !( $result = parent::__call( $method_name, $args ) ) ) {
+		if ( ! ( $result = parent::__call( $method_name, $args ) ) ) {
 			/*
 			 * Delegate call to view and return it's result to caller.
 			 */

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_View_Base
  *
@@ -8,33 +9,30 @@
 class WP_View_Base extends WP_Metadata_Base {
 
 	/**
+	 * @var array
+	 */
+	private static $_shortnames = array();
+	/**
 	 * @var WP_Html_Element
 	 */
 	var $wrapper = null;
-
 	/**
 	 * @var WP_Html_Element
 	 */
 	var $element = null;
-
 	/**
 	 * @var WP_Metadata_Base
 	 */
 	var $owner;
 
 	/**
-	 * @var array
+	 * @return array
 	 */
-	private static $_shortnames = array();
-
-	/**
-	* @return array
-	*/
 	static function PROPERTIES() {
 
 		return array(
-		  'wrapper' => array( 'type' => 'WP_Html_Element' ),
-		  'element' => array( 'type' => 'WP_Html_Element' ),
+				'wrapper' => array( 'type' => 'WP_Html_Element' ),
+				'element' => array( 'type' => 'WP_Html_Element' ),
 		);
 
 	}
@@ -61,7 +59,19 @@ class WP_View_Base extends WP_Metadata_Base {
 	}
 
 	/**
+	 * @return string
+	 */
+	function get_element_html() {
+
+		$this->element->value = $this->get_element_value();
+
+		return $this->element->get_html();
+
+	}
+
+	/**
 	 * Get the value of the element.
+	 *
 	 * @note: Typically this will be overridden in child classes.
 	 *
 	 * @return bool
@@ -71,17 +81,8 @@ class WP_View_Base extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @return string
-	 */
-	function get_element_html() {
-
-		$this->element->value = $this->get_element_value();
-		return $this->element->get_html();
-
-	}
-
-	/**
 	 * Return the HTML tag to be used by this class.
+	 *
 	 * @return array
 	 */
 	function get_wrapper_tag() {
@@ -116,6 +117,7 @@ class WP_View_Base extends WP_Metadata_Base {
 	/**
 	 * @param string $attribute_name
 	 * @param string $html_element_name
+	 *
 	 * @return mixed
 	 */
 	function initialize_attribute( $attribute_name, $html_element_name ) {
@@ -173,6 +175,7 @@ class WP_View_Base extends WP_Metadata_Base {
 				break;
 
 		}
+
 		return $value;
 	}
 

@@ -17,49 +17,23 @@ abstract class WP_Metadata_Base {
 	/**
 	 * @var array
 	 */
+	private static $_defaulted_property_values;
+	/**
+	 * @var array
+	 */
 	var $args = array();
-
 	/**
 	 * @var array
 	 */
 	var $extra_args = array();
-
 	/**
 	 * @var bool
 	 */
 	private $_initialized = array();
-
 	/**
 	 * @var array
 	 */
 	private $_defaults;
-
-	/**
-	 * @var array
-	 */
-	private static $_defaulted_property_values;
-
-	/**
-	 * @return array
-	 */
-	static function CLASS_VARS() {
-
-		return array(
-			'defaults' => array( 'type' => 'mixed[]' ),
-			'parameters' => array( '$args' ),
-		);
-
-	}
-
-	/**
-	 * @return array
-	 */
-	static function PROPERTIES() {
-
-		return array();
-
-	}
-
 
 	/**
 	 * @param array $args
@@ -78,7 +52,7 @@ abstract class WP_Metadata_Base {
 
 		if ( $this->do_assign_args( true, $args ) ) {
 
-			$args  = $this->get_defaults( $args );
+			$args = $this->get_defaults( $args );
 
 			$args = $this->expand_args( $args );
 
@@ -95,6 +69,23 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
+	 * @param string $filter
+	 *
+	 */
+	function do_class_action( $filter ) {
+
+		$args = func_get_args();
+
+		$call_args = array_merge(
+				array( $this, get_class( $this ), $filter ),
+				array_slice( $args, 1 )
+		);
+
+		call_user_func_array( array( 'WP_Metadata', 'do_class_action' ), $call_args );
+
+	}
+
+	/**
 	 * @param bool $continue
 	 * @param array $args
 	 *
@@ -105,29 +96,8 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
-	 *
-	 */
-	function initialize_class() {
-		/**
-		 * Initialize Class Property Annotations for the class of '$this.'
-		 */
-		$this->get_annotated_properties();
-
-	}
-
-	/**
-	 * @return array
-	 */
-	function get_class_defaults() {
-
-		$defaults = WP_Metadata::get_class_var( get_class( $this ), 'defaults' );
-
-		return is_array( $defaults ) ? $defaults : array();
-
-	}
-
-	/**
 	 * @param $args array
+	 *
 	 * @return array
 	 */
 	function get_defaults( $args = array() ) {
@@ -157,76 +127,24 @@ abstract class WP_Metadata_Base {
 		return array_merge( $this->_defaults, $args );
 	}
 
-//	/**
-//	 * Gets the property (var) prefix from a constant to be used for this current class.
-//	 *
-//	 * @example: const PREFIX = 'form';
-//	 *
-//	 * Intended to be used by subclasses.
-//	 *
-//	 * @return array
-//	 */
-//	function get_prefix() {
-//
-//		return $this->constant( 'PREFIX' );
-//
-//	}
-
 	/**
-	 * Returns an array of shortname regexes as array key and expansion as key value.
 	 *
-	 * Subclasses should define 'shortnames' element in CLASS_VARS() function array return value:
-	 *
-	 *    return array(
-	 *      $regex1 => $shortname1,
-	 *      $regex2 => $shortname2,
-	 *      ...,
-	 *      $regexN => $shortnameN,
-	 *    );
-	 *
-	 * @example:
-	 *
-	 *  return array(
-	 * 	  'shortnames'  =>  array(
-	 * 		  '^label$'                     => 'view:label:label_text',
-	 * 		  '^label:([^_]+)$'             => 'view:label:$1',
-	 * 		  '^(input|element):([^_]+)$'   => 'view:input:element:$2',
-	 * 		  '^(input:)?wrapper:([^_]+)$'  => 'view:input:wrapper:$2',
-	 * 		  '^view_type$'                 => 'view:view_type',
-	 *     ),
-	 *  );
-	 *
-	 * @note Multiple shortnames can be applied so order is important.
-	 *
-	 * @return array
+	 * @return WP_Annotated_Property[]
 	 */
-	function get_shortnames() {
+	function get_annotated_properties() {
 
-		$class_vars = $this->get_annotations( 'CLASS_VARS' );
-
-		$shortnames = ! empty( $class_vars['shortnames'] ) && is_array( $class_vars['shortnames'] )
-			? $class_vars['shortnames']
-			: array();
-
-		return $shortnames;
+		return WP_Metadata::get_annotated_properties( get_class( $this ) );
 
 	}
 
 	/**
-	 * @param string $const_name
-	 * @param bool|string $class_name
-	 *
-	 * @return mixed
+	 * @return array
 	 */
-	function constant( $const_name, $class_name = false ) {
+	function get_class_defaults() {
 
-		if ( ! $class_name ) {
+		$defaults = WP_Metadata::get_class_var( get_class( $this ), 'defaults' );
 
-			$class_name = get_class( $this );
-
-		}
-
-		return WP_Metadata::constant( $class_name, $const_name );
+		return is_array( $defaults ) ? $defaults : array();
 
 	}
 
@@ -261,6 +179,73 @@ abstract class WP_Metadata_Base {
 		}
 
 		return $args;
+
+	}
+
+//	/**
+//	 * Gets the property (var) prefix from a constant to be used for this current class.
+//	 *
+//	 * @example: const PREFIX = 'form';
+//	 *
+//	 * Intended to be used by subclasses.
+//	 *
+//	 * @return array
+//	 */
+//	function get_prefix() {
+//
+//		return $this->constant( 'PREFIX' );
+//
+//	}
+
+	/**
+	 * Returns an array of shortname regexes as array key and expansion as key value.
+	 *
+	 * Subclasses should define 'shortnames' element in CLASS_VARS() function array return value:
+	 *
+	 *    return array(
+	 *      $regex1 => $shortname1,
+	 *      $regex2 => $shortname2,
+	 *      ...,
+	 *      $regexN => $shortnameN,
+	 *    );
+	 *
+	 * @example:
+	 *
+	 *  return array(
+	 *    'shortnames'  =>  array(
+	 *      '^label$'                     => 'view:label:label_text',
+	 *      '^label:([^_]+)$'             => 'view:label:$1',
+	 *      '^(input|element):([^_]+)$'   => 'view:input:element:$2',
+	 *      '^(input:)?wrapper:([^_]+)$'  => 'view:input:wrapper:$2',
+	 *      '^view_type$'                 => 'view:view_type',
+	 *     ),
+	 *  );
+	 *
+	 * @note   Multiple shortnames can be applied so order is important.
+	 *
+	 * @return array
+	 */
+	function get_shortnames() {
+
+		$class_vars = $this->get_annotations( 'CLASS_VARS' );
+
+		$shortnames = ! empty( $class_vars['shortnames'] ) && is_array( $class_vars['shortnames'] )
+				? $class_vars['shortnames']
+				: array();
+
+		return $shortnames;
+
+	}
+
+	/**
+	 * @param string $annotation_name
+	 * @param array $annotations
+	 *
+	 * @return array
+	 */
+	function get_annotations( $annotation_name, $annotations = array() ) {
+
+		return WP_Metadata::get_annotations( get_class( $this ), $annotation_name, $annotations );
 
 	}
 
@@ -327,99 +312,6 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
-	 * Return an array of annotated property names and their default values.
-	 *
-	 * @return array
-	 */
-	function get_defaulted_property_values() {
-
-		if ( ! isset( self::$_defaulted_property_values[ $class_name = get_class( $this ) ] ) ) {
-
-			$property_values = array();
-
-			foreach ( $this->get_annotated_properties() as $class_name => $property ) {
-
-				if ( ! $property->auto_create ) {
-					continue;
-				}
-
-				$property_name = $property->property_name;
-
-				if ( is_null( $property->default ) && isset( $this->{$property_name} ) ) {
-
-					$default_value = $this->{$property_name};
-
-				} else {
-
-					if ( 'array' == $property->property_type && isset( $property->keys ) ) {
-
-						$default_value = array_fill_keys( $property->keys, $property->default );
-
-					} else {
-
-						$default_value = $property->default;
-
-					}
-
-				}
-
-				$property_values[ $property_name ] = $default_value;
-
-			}
-
-			self::$_defaulted_property_values = $property_values;
-
-		}
-
-		return self::$_defaulted_property_values;
-	}
-
-
-	/**
-	 * @param array $args
-	 *
-	 * @return array
-	 */
-	private function _sort_args_scaler_types_first( $args ) {
-
-		uksort( $args, array( $this, '_scaler_types_first' ) );
-
-		return $args;
-
-	}
-
-	private function _scaler_types_first( $field1, $field2 ) {
-
-		$sort       = 0;
-		$has_field1 = $this->has_annotated_property( $field1 );
-		$has_field2 = $this->has_annotated_property( $field2 );
-
-		if ( $has_field1 && $has_field2 ) {
-
-			$field1 = $this->get_annotated_property( $field1 );
-			$field2 = $this->get_annotated_property( $field2 );
-
-			if ( $field1->is_array() && $field2->is_class() ) {
-				$sort = - 1;
-
-			} else if ( $field1->is_class() && $field2->is_array() ) {
-				$sort = + 1;
-
-			}
-
-		} else if ( $has_field1 ) {
-			$sort = + 1;
-
-		} else if ( $has_field2 ) {
-			$sort = - 1;
-
-		}
-
-		return $sort;
-
-	}
-
-	/**
 	 * Assign the element values in the $args array to the properties of this object.
 	 *
 	 * @param array $args An array of name/value pairs that can be used to initialize an object's properties.
@@ -482,8 +374,8 @@ abstract class WP_Metadata_Base {
 
 									$object_args = isset( $value[ $key_name ] ) ? $value[ $key_name ] : array();
 
-									$object_args['$value']  = $key_name;
-									$object_args['$parent'] = $this;
+									$object_args['$value']    = $key_name;
+									$object_args['$parent']   = $this;
 									$object_args['$property'] = $annotated_property;
 
 									$class_name = WP_Metadata::get_registry_item( $annotated_property->registry, $key_name );
@@ -532,6 +424,182 @@ abstract class WP_Metadata_Base {
 			}
 
 		}
+
+	}
+
+	/**
+	 * Return an array of annotated property names and their default values.
+	 *
+	 * @return array
+	 */
+	function get_defaulted_property_values() {
+
+		if ( ! isset( self::$_defaulted_property_values[ $class_name = get_class( $this ) ] ) ) {
+
+			$property_values = array();
+
+			foreach ( $this->get_annotated_properties() as $class_name => $property ) {
+
+				if ( ! $property->auto_create ) {
+					continue;
+				}
+
+				$property_name = $property->property_name;
+
+				if ( is_null( $property->default ) && isset( $this->{$property_name} ) ) {
+
+					$default_value = $this->{$property_name};
+
+				} else {
+
+					if ( 'array' == $property->property_type && isset( $property->keys ) ) {
+
+						$default_value = array_fill_keys( $property->keys, $property->default );
+
+					} else {
+
+						$default_value = $property->default;
+
+					}
+
+				}
+
+				$property_values[ $property_name ] = $default_value;
+
+			}
+
+			self::$_defaulted_property_values = $property_values;
+
+		}
+
+		return self::$_defaulted_property_values;
+	}
+
+
+	/**
+	 * @param array $args
+	 *
+	 * @return array
+	 */
+	private function _sort_args_scaler_types_first( $args ) {
+
+		uksort( $args, array( $this, '_scaler_types_first' ) );
+
+		return $args;
+
+	}
+
+	/**
+	 * @param string $property_name
+	 *
+	 * @return bool
+	 */
+	function has_annotated_property( $property_name ) {
+
+		return WP_Metadata::has_annotated_property( get_class( $this ), $property_name );
+
+	}
+
+	/**
+	 * Gets array of properties field names that should not get a prefix.
+	 *
+	 * @param string $property_name
+	 *
+	 * @return WP_Annotated_Property|bool
+	 */
+	function get_annotated_property( $property_name ) {
+
+		return WP_Metadata::get_annotated_property( get_class( $this ), $property_name );
+
+	}
+
+	/**
+	 * @param string $prefix
+	 * @param array $args
+	 *
+	 * @return mixed|array;
+	 */
+	function extract_prefixed_args( $prefix, $args ) {
+
+		if ( ! $prefix || empty( $args[ $prefix ] ) || ! is_array( $prefixed_args = $args[ $prefix ] ) ) {
+
+			$prefixed_args = array();
+
+		}
+
+		return $prefixed_args;
+
+	}
+
+	/**
+	 * @param string $filter
+	 * @param mixed $value
+	 *
+	 * @return mixed
+	 */
+	function apply_class_filters( $filter, $value ) {
+
+		if ( is_null( $args = func_get_args() ) ) {
+
+			$args = array( $this );
+
+		} else {
+
+			array_unshift( $args, $this );
+
+		}
+
+		return call_user_func_array( array( 'WP_Metadata', 'apply_class_filters' ), $args );
+
+	}
+
+	/**
+	 * @return array
+	 */
+	static function CLASS_VARS() {
+
+		return array(
+				'defaults'   => array( 'type' => 'mixed[]' ),
+				'parameters' => array( '$args' ),
+		);
+
+	}
+
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array();
+
+	}
+
+	/**
+	 *
+	 */
+	function initialize_class() {
+		/**
+		 * Initialize Class Property Annotations for the class of '$this.'
+		 */
+		$this->get_annotated_properties();
+
+	}
+
+	/**
+	 * @param string $const_name
+	 * @param bool|string $class_name
+	 *
+	 * @return mixed
+	 */
+	function constant( $const_name, $class_name = false ) {
+
+		if ( ! $class_name ) {
+
+			$class_name = get_class( $this );
+
+		}
+
+		return WP_Metadata::constant( $class_name, $const_name );
 
 	}
 
@@ -617,57 +685,11 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
-	 * Gets array of properties field names that should not get a prefix.
-	 *
-	 * @param string $property_name
-	 *
-	 * @return WP_Annotated_Property|bool
-	 */
-	function get_annotated_property( $property_name ) {
-
-		return WP_Metadata::get_annotated_property( get_class( $this ), $property_name );
-
-	}
-
-	/**
-	 * @param string $property_name
-	 *
-	 * @return bool
-	 */
-	function has_annotated_property( $property_name ) {
-
-		return WP_Metadata::has_annotated_property( get_class( $this ), $property_name );
-
-	}
-
-	/**
-	 *
-	 * @return WP_Annotated_Property[]
-	 */
-	function get_annotated_properties() {
-
-		return WP_Metadata::get_annotated_properties( get_class( $this ) );
-
-	}
-
-	/**
 	 * @return array
 	 */
 	function get_annotated_property_names() {
 
 		return WP_Metadata::get_annotated_property_names( get_class( $this ) );
-
-	}
-
-	/**
-	 * @param string $annotation_name
-	 * @param array $annotations
-	 *
-	 * @return array
-	 */
-	function get_annotations( $annotation_name, $annotations = array() ) {
-
-		return WP_Metadata::get_annotations( get_class( $this ), $annotation_name, $annotations );
 
 	}
 
@@ -683,60 +705,34 @@ abstract class WP_Metadata_Base {
 
 	}
 
-	/**
-	 * @param string $filter
-	 * @param mixed $value
-	 *
-	 * @return mixed
-	 */
-	function apply_class_filters( $filter, $value ) {
+	private function _scaler_types_first( $field1, $field2 ) {
 
-		if ( is_null( $args = func_get_args() ) ) {
+		$sort       = 0;
+		$has_field1 = $this->has_annotated_property( $field1 );
+		$has_field2 = $this->has_annotated_property( $field2 );
 
-			$args = array( $this );
+		if ( $has_field1 && $has_field2 ) {
 
-		} else {
+			$field1 = $this->get_annotated_property( $field1 );
+			$field2 = $this->get_annotated_property( $field2 );
 
-			array_unshift( $args, $this );
+			if ( $field1->is_array() && $field2->is_class() ) {
+				$sort = - 1;
 
-		}
+			} else if ( $field1->is_class() && $field2->is_array() ) {
+				$sort = + 1;
 
-		return call_user_func_array( array( 'WP_Metadata', 'apply_class_filters' ), $args );
+			}
 
-	}
+		} else if ( $has_field1 ) {
+			$sort = + 1;
 
-	/**
-	 * @param string $filter
-	 *
-	 */
-	function do_class_action( $filter ) {
-
-		$args = func_get_args();
-
-		$call_args = array_merge(
-				array( $this, get_class( $this ), $filter ),
-				array_slice( $args, 1 )
-		);
-
-		call_user_func_array( array( 'WP_Metadata', 'do_class_action' ), $call_args );
-
-	}
-
-	/**
-	 * @param string $prefix
-	 * @param array $args
-	 *
-	 * @return mixed|array;
-	 */
-	function extract_prefixed_args( $prefix, $args ) {
-
-		if ( ! $prefix || empty( $args[ $prefix ] ) || ! is_array( $prefixed_args = $args[ $prefix ] ) ) {
-
-			$prefixed_args = array();
+		} else if ( $has_field2 ) {
+			$sort = - 1;
 
 		}
 
-		return $prefixed_args;
+		return $sort;
 
 	}
 

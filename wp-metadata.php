@@ -50,60 +50,60 @@ class WP_Metadata {
 	 */
 	private static $_views = array();
 
-  /**
-   * @var WP_Annotated_Property[]
-   */
-  private static $_class_annotations;
+	/**
+	 * @var WP_Annotated_Property[]
+	 */
+	private static $_class_annotations;
 
 	/**
 	 * @var array
 	 */
 	private static $_annotated_properties;
 
-  /**
- 	 * @var WP_Registry[]
- 	 */
- 	private static $_registries = array(
-    'storage_types'  => null,
-    'field_types'    => null,
-    'field_feature_types'  => null,
- 	);
+	/**
+	 * @var WP_Registry[]
+	 */
+	private static $_registries = array(
+			'storage_types'       => null,
+			'field_types'         => null,
+			'field_feature_types' => null,
+	);
 
-  /**
+	/**
 	 * @var array
 	 */
 	private static $_autoload_classes = array(
-    'WP_Object_Type'           => 'core/class-object-type.php',
-		'WP_Html_Element'          => 'core/class-html-element.php',
-		'WP_Registry'              => 'core/class-registry.php',
-		'WP_Annotated_Property'    => 'core/class-annotated-property.php',
-		'WP_Metadata_Base'         => 'base/class-metadata-base.php',
-		'WP_Storage_Base'          => 'base/class-storage-base.php',
-		'WP_Field_Base'            => 'base/class-field-base.php',
-		'WP_Field_Feature_Base'    => 'base/class-field-feature-base.php',
-		'WP_View_Base'             => 'base/class-view-base.php',
-		'WP_Form_View_Base'        => 'base/class-form-view-base.php',
-		'WP_Field_View_Base'       => 'base/class-field-view-base.php',
-		'WP_Core_Storage'          => 'storage/class-core-storage.php',
-		'WP_Meta_Storage'          => 'storage/class-meta-storage.php',
-		'WP_Option_Storage'        => 'storage/class-option-storage.php',
-		'WP_Memory_Storage'        => 'storage/class-memory-storage.php',
-		'WP_Form'                  => 'forms/class-form.php',
-		'WP_Text_Field'            => 'fields/class-text-field.php',
-		'WP_Textarea_Field'        => 'fields/class-textarea-field.php',
-		'WP_Url_Field'             => 'fields/class-url-field.php',
-		'WP_Date_Field'            => 'fields/class-date-field.php',
-		'WP_Hidden_Field'          => 'fields/class-hidden-field.php',
-		'WP_Field_Input_Feature'   => 'features/class-field-input-feature.php',
-		'WP_Field_Label_Feature'   => 'features/class-field-label-feature.php',
-		'WP_Field_Help_Feature'    => 'features/class-field-help-feature.php',
-		'WP_Field_Message_Feature' => 'features/class-field-message-feature.php',
-		'WP_Field_Infobox_Feature' => 'features/class-field-infobox-feature.php',
-		'WP_Form_View'             => 'views/class-form-view.php',
-		'WP_Text_Field_View'       => 'views/class-text-field-view.php',
-		'WP_Textarea_Field_View'   => 'views/class-textarea-field-view.php',
-		'WP_Select_Field_View'     => 'views/class-select-view.php',
-		'WP_Hidden_Field_View'     => 'views/class-hidden-field-view.php',
+			'WP_Object_Type'           => 'core/class-object-type.php',
+			'WP_Html_Element'          => 'core/class-html-element.php',
+			'WP_Registry'              => 'core/class-registry.php',
+			'WP_Annotated_Property'    => 'core/class-annotated-property.php',
+			'WP_Metadata_Base'         => 'base/class-metadata-base.php',
+			'WP_Storage_Base'          => 'base/class-storage-base.php',
+			'WP_Field_Base'            => 'base/class-field-base.php',
+			'WP_Field_Feature_Base'    => 'base/class-field-feature-base.php',
+			'WP_View_Base'             => 'base/class-view-base.php',
+			'WP_Form_View_Base'        => 'base/class-form-view-base.php',
+			'WP_Field_View_Base'       => 'base/class-field-view-base.php',
+			'WP_Core_Storage'          => 'storage/class-core-storage.php',
+			'WP_Meta_Storage'          => 'storage/class-meta-storage.php',
+			'WP_Option_Storage'        => 'storage/class-option-storage.php',
+			'WP_Memory_Storage'        => 'storage/class-memory-storage.php',
+			'WP_Form'                  => 'forms/class-form.php',
+			'WP_Text_Field'            => 'fields/class-text-field.php',
+			'WP_Textarea_Field'        => 'fields/class-textarea-field.php',
+			'WP_Url_Field'             => 'fields/class-url-field.php',
+			'WP_Date_Field'            => 'fields/class-date-field.php',
+			'WP_Hidden_Field'          => 'fields/class-hidden-field.php',
+			'WP_Field_Input_Feature'   => 'features/class-field-input-feature.php',
+			'WP_Field_Label_Feature'   => 'features/class-field-label-feature.php',
+			'WP_Field_Help_Feature'    => 'features/class-field-help-feature.php',
+			'WP_Field_Message_Feature' => 'features/class-field-message-feature.php',
+			'WP_Field_Infobox_Feature' => 'features/class-field-infobox-feature.php',
+			'WP_Form_View'             => 'views/class-form-view.php',
+			'WP_Text_Field_View'       => 'views/class-text-field-view.php',
+			'WP_Textarea_Field_View'   => 'views/class-textarea-field-view.php',
+			'WP_Select_Field_View'     => 'views/class-select-view.php',
+			'WP_Hidden_Field_View'     => 'views/class-hidden-field-view.php',
 	);
 
 
@@ -114,11 +114,11 @@ class WP_Metadata {
 
 		spl_autoload_register( array( __CLASS__, '_autoloader' ) );
 
-    self::initialize_registries();
+		self::initialize_registries();
 
 		self::register_default_annotations( 'WP_Html_Element', array(
-			'html_tag' => 'div'
-		));
+				'html_tag' => 'div'
+		) );
 
 		/*
 		 * Register field classes
@@ -141,7 +141,6 @@ class WP_Metadata {
 		self::register_feature_type( 'help', 'WP_Field_Help_Feature' );
 		self::register_feature_type( 'infobox', 'WP_Field_Infobox_Feature' );
 
-
 		/*
 		 * Register "storage" classes
 		 */
@@ -150,7 +149,6 @@ class WP_Metadata {
 		self::register_storage_type( 'option', 'WP_Option_Storage' );
 		self::register_storage_type( 'taxonomy', 'WP_Taxonomy_Storage' );
 		self::register_storage_type( 'memory', 'WP_Memory_Storage' );
-
 
 		//    /**
 		//     * Hook a different hook differently based on how the page is loaded to initialize the fields.
@@ -171,30 +169,132 @@ class WP_Metadata {
 
 	}
 
-  /**
-   * Initialize the generic registries.
-   *
-   */
-  static function initialize_registries() {
+	/**
+	 * Initialize the generic registries.
+	 *
+	 */
+	static function initialize_registries() {
 
-    foreach( array_keys( self::$_registries ) as $registry_name ) {
+		foreach ( array_keys( self::$_registries ) as $registry_name ) {
 
-      self::$_registries[$registry_name] = new WP_Registry( $registry_name );
+			self::$_registries[ $registry_name ] = new WP_Registry( $registry_name );
 
-    }
+		}
 
-  }
+	}
+
+	/**
+	 *
+	 * @param string $class_name
+	 * @param array $default_values
+	 */
+	static function register_default_annotations( $class_name, $default_values ) {
+
+		WP_Annotated_Property::register_default_annotations( $class_name, $default_values );
+
+	}
+
+	/**
+	 * @param string $type_name      - Name of type
+	 * @param string|array $type_def - Classname, or array of $args
+	 *
+	 * @return bool Whether the object type $type_name was registered
+	 */
+	static function register_field_type( $type_name, $type_def = array() ) {
+
+		if ( ! isset( self::$_registries['field_types']->$type_name ) ) {
+
+			self::$_registries['field_types']->$type_name = $type_def;
+
+			return true;
+
+		}
+
+		return false;
+	}
+
+	/**
+	 * Register a class or array of View Type args.
+	 *
+	 * @example
+	 *
+	 *      WP_Metadata::register_field_view( 'text', 'WP_Text_Field_View' );
+	 *      WP_Metadata::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
+	 *
+	 * @param string $field_view
+	 * @param string|array $field_view_args
+	 */
+	static function register_field_view( $field_view, $field_view_args ) {
+
+		self::register_view( 'field_views', $field_view, $field_view_args );
+
+	}
+
+	/**
+	 * Register a class to be used as a view for the current class.
+	 *
+	 * @example
+	 *
+	 *      WP_Metadata::register_view( 'field', 'text', 'WP_Text_Field_View' );
+	 *      WP_Metadata::register_view( 'field', 'hidden', 'WP_Hidden_Field_View' );
+	 *
+	 * @param string $view_group Grouping of Views
+	 * @param string $view_type  The name of the view that is unique for this class.
+	 * @param string $class_name The class name for the View object.
+	 */
+	static function register_view( $view_group, $view_type, $class_name ) {
+
+		if ( ! self::view_exists( $view_type, $view_group ) ) {
+			self::$_views[ $view_group ][ $view_type ] = $class_name;
+		}
+
+	}
+
+	/**
+	 * Does the named field view exist
+	 *
+	 * @param string $view_type  The name of the view that is unique for this class.
+	 * @param string $view_group Grouping of Views
+	 *
+	 * @return bool
+	 */
+	static function view_exists( $view_group, $view_type ) {
+
+		return isset( self::$_views[ $view_group ][ $view_type ] );
+
+	}
+
+	/**
+	 * @param string $feature_type  Name of Feature
+	 * @param string $feature_class Classname
+	 */
+	static function register_feature_type( $feature_type, $feature_class ) {
+
+		self::$_registries['field_feature_types']->register_entry( $feature_type, $feature_class );
+
+	}
+
+	/**
+	 * @param string $storage_type_name       - Name of storage
+	 * @param bool|string $storage_type_class - Classname
+	 */
+	static function register_storage_type( $storage_type_name, $storage_type_class = false ) {
+
+		self::$_registries['storage_types']->register_entry( $storage_type_name, $storage_type_class );
+
+	}
 
 	/**
 	 * @param string $class_name
 	 * @param string $class_filepath
+	 *
 	 * @return bool Return true if it was registered, false if not.
 	 */
 	static function register_autoload_class( $class_name, $class_filepath ) {
 
 		if ( ! isset( self::$_autoload_classes[ $class_name ] ) ) {
 
-			self::$_autoload_classes[$class_name] = $class_filepath;
+			self::$_autoload_classes[ $class_name ] = $class_filepath;
 
 			return true;
 
@@ -211,7 +311,7 @@ class WP_Metadata {
 
 		if ( isset( self::$_autoload_classes[ $class_name ] ) ) {
 
-			$filepath = self::$_autoload_classes[$class_name];
+			$filepath = self::$_autoload_classes[ $class_name ];
 
 			/**
 			 * @todo This needs to be made to work for Windows...
@@ -250,16 +350,6 @@ class WP_Metadata {
 	}
 
 	/**
-     * Load css required for the metadata api.
-     *
-     */
-	static function _enqueue_admin_styles( $hook ) {
-
-		wp_enqueue_style( 'metadata', plugin_dir_url( __FILE__ ) . 'css/metadata.css', array() );
-
-	}
-
-	/**
 	 * @return bool
 	 *
 	 * @todo For Core dev review. Better way?
@@ -267,6 +357,7 @@ class WP_Metadata {
 	static function is_post_edit_screen() {
 
 		global $pagenow;
+
 		return 'post.php' == $pagenow || 'post-new.php' == $pagenow;
 
 	}
@@ -308,6 +399,16 @@ class WP_Metadata {
 	}
 
 	/**
+	 * Load css required for the metadata api.
+	 *
+	 */
+	static function _enqueue_admin_styles( $hook ) {
+
+		wp_enqueue_style( 'metadata', plugin_dir_url( __FILE__ ) . 'css/metadata.css', array() );
+
+	}
+
+	/**
 	 * @param string|WP_Object_Type $object_type
 	 * @param bool|array $form_names
 	 *
@@ -316,7 +417,7 @@ class WP_Metadata {
 	static function get_forms( $object_type, $form_names = false ) {
 		$forms = array();
 
-		if ( isset( self::$_object_type_forms[$object_type] ) ) {
+		if ( isset( self::$_object_type_forms[ $object_type ] ) ) {
 			$forms = self::$_object_type_forms[ $object_type ];
 		}
 
@@ -329,37 +430,24 @@ class WP_Metadata {
 			$forms = array_intersect_key( $forms, $form_names );
 		}
 
-		foreach( $forms as $form_name => $form_args ) {
-			$forms[$form_name] = self::make_form( $form_name, $object_type, $form_args );
+		foreach ( $forms as $form_name => $form_args ) {
+			$forms[ $form_name ] = self::make_form( $form_name, $object_type, $form_args );
 		}
 
 		return $forms;
 	}
 
 	/**
-	 * @param string $post_type
-	 * @return array
+	 * @param string $form_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $form_args
+	 *
+	 * @return WP_Form
 	 */
-	static function get_forms_from_POST( $post_type ) {
-		$forms = array();
-		if ( ! isset( $_POST['wp_metadata_forms'] ) || ! is_array( $_POST['wp_metadata_forms'] ) ) {
-			$forms = array();
-		} else {
-			$forms = $_POST['wp_metadata_forms'];
-			foreach( $forms as $form_name => $form_data ) {
-				$form = self::make_form( $form_name, wp_get_post_object_type( $post_type ), array( 'view' => false ) );
-				/**
-				 * @var WP_Field_Base $field
-				 */
-				foreach( $form->fields as $field_name => $field ) {
-					if ( isset( $form_data[$field_name] ) ) {
-						$field->set_value( $form_data[$field_name] );
-					}
-				}
-				$forms[$form_name] = $form;
-			}
-		}
-		return $forms;
+	static function make_form( $form_name, $object_type, $form_args = array() ) {
+
+		return WP_Form::make_new( $form_name, $object_type, $form_args );
+
 	}
 
 	/**
@@ -381,6 +469,34 @@ class WP_Metadata {
 
 	/**
 	 * @param string $post_type
+	 *
+	 * @return array
+	 */
+	static function get_forms_from_POST( $post_type ) {
+		$forms = array();
+		if ( ! isset( $_POST['wp_metadata_forms'] ) || ! is_array( $_POST['wp_metadata_forms'] ) ) {
+			$forms = array();
+		} else {
+			$forms = $_POST['wp_metadata_forms'];
+			foreach ( $forms as $form_name => $form_data ) {
+				$form = self::make_form( $form_name, wp_get_post_object_type( $post_type ), array( 'view' => false ) );
+				/**
+				 * @var WP_Field_Base $field
+				 */
+				foreach ( $form->fields as $field_name => $field ) {
+					if ( isset( $form_data[ $field_name ] ) ) {
+						$field->set_value( $form_data[ $field_name ] );
+					}
+				}
+				$forms[ $form_name ] = $form;
+			}
+		}
+
+		return $forms;
+	}
+
+	/**
+	 * @param string $post_type
 	 * @param array $args
 	 */
 	static function _registered_post_type( $post_type, $args ) {
@@ -391,7 +507,7 @@ class WP_Metadata {
 			return;
 		}
 
-		$wp_post_types[ $post_type ]->default_form = !empty( $args->default_form ) ? $args->default_form : 'after_title';
+		$wp_post_types[ $post_type ]->default_form = ! empty( $args->default_form ) ? $args->default_form : 'after_title';
 
 	}
 
@@ -412,12 +528,12 @@ class WP_Metadata {
 	 */
 	static function _edit_post_form( $post ) {
 
-		$post_type = $post->post_type;
-		$object_type = wp_get_post_object_type( $post_type );
+		$post_type    = $post->post_type;
+		$object_type  = wp_get_post_object_type( $post_type );
 		$current_form = preg_replace( '#^edit_form_(.*)$#', '$1', current_action() );
 
 		if ( $current_form == get_post_type_object( $post_type )->default_form ) {
-			if ( !self::form_registered( $current_form, $object_type ) ) {
+			if ( ! self::form_registered( $current_form, $object_type ) ) {
 				self::register_form( $current_form, $object_type );
 			}
 
@@ -426,6 +542,82 @@ class WP_Metadata {
 			$form->set_storage_object( $post );
 			$form->the_form();
 		}
+
+	}
+
+	/**
+	 * @param string $form_name
+	 * @param string|WP_Object_Type $object_type
+	 *
+	 * @return bool
+	 */
+	static function form_registered( $form_name, $object_type ) {
+
+		return false !== self::get_form_index( $form_name, $object_type );
+
+	}
+
+	/**
+	 * Retrieve a form
+	 *
+	 * @param string $form_name
+	 * @param string|WP_Object_Type $object_type
+	 *
+	 * @return int
+	 */
+	static function get_form_index( $form_name, $object_type ) {
+
+		return isset( self::$_object_type_forms[ $object_type ][ $form_name ] ) ? self::$_object_type_forms[ $object_type ][ $form_name ] : false;
+
+	}
+
+	/**
+	 * @param string $form_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $form_args
+	 *
+	 * @return int Form Index
+	 */
+	static function register_form( $form_name, $object_type, $form_args = array() ) {
+
+		$form_args['form_name']   = $form_name;
+		$form_args['object_type'] = $object_type;
+		$form_args['form_index']  = count( self::$_form_args );
+
+		self::$_object_type_forms[ $object_type ][ $form_name ] = $form_args['form_index'];
+		self::$_form_args[]                                     = $form_args;
+
+		return $form_args['form_index'];
+
+	}
+
+	/**
+	 * Retrieve a form
+	 *
+	 * @param string $form_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $form_args
+	 *
+	 * @return WP_Form
+	 */
+	static function get_form( $form_name, $object_type, $form_args = array() ) {
+
+		$form_index = self::get_form_index( $form_name, $object_type );
+		$form_args  = wp_parse_args( $form_args, self::get_form_args( $form_index ) );
+		$form       = self::make_form( $form_name, $object_type, $form_args );
+
+		return $form;
+
+	}
+
+	/**
+	 * @param int $form_index
+	 *
+	 * @return bool|array
+	 */
+	static function get_form_args( $form_index ) {
+
+		return isset( self::$_form_args[ $form_index ] ) ? self::$_form_args[ $form_index ] : false;
 
 	}
 
@@ -454,208 +646,10 @@ class WP_Metadata {
 	static function get_field( $field_name, $object_type, $field_args = array() ) {
 
 		$field_index = self::get_field_index( $field_name, $object_type );
-		$field_args = wp_parse_args( $field_args, self::get_field_args( $field_index ) );
-		$field = self::make_field( $field_name, $object_type, $field_args );
+		$field_args  = wp_parse_args( $field_args, self::get_field_args( $field_index ) );
+		$field       = self::make_field( $field_name, $object_type, $field_args );
 
 		return $field;
-
-	}
-
-	/**
-	 * @param int $field_index
-	 *
-	 * @return bool|array
-	 */
-	static function get_field_args( $field_index ) {
-
-		return isset( self::$_field_args[ $field_index ] ) ? self::$_field_args[ $field_index ] : false;
-
-	}
-
-	/**
-	 * Retrieve a field
-	 *
-	 * @param string $field_name
-	 * @param string|WP_Object_Type $object_type
-	 *
-	 * @return int
-	 */
-	static function get_field_index( $field_name, $object_type ) {
-
-		$object_type = (string) $object_type;
-
-		return isset( self::$_object_type_fields[ $object_type ][ $field_name ] ) ? self::$_object_type_fields[ $object_type ][ $field_name ] : false;
-
-	}
-
-	/**
-	 * Make a New Field object
-	 *
-	 * @param string $field_name
-	 * @param string|WP_Object_Type $object_type
-	 * @param array $field_args
-	 *
-	 * @return WP_Field_Base
-	 *
-	 */
-	static function make_field( $field_name, $object_type, $field_args = array() ) {
-
-		return WP_Field_Base::make_new( $field_name, $object_type, $field_args );
-
-	}
-
-	/**
-	 * @param string $form_name
-	 * @param string|WP_Object_Type $object_type
-	 *
-	 * @return bool
-	 */
-	static function form_registered( $form_name, $object_type ) {
-
-		return false !== self::get_form_index( $form_name, $object_type );
-
-	}
-
-	/**
-	 * Retrieve a form
-	 *
-	 * @param string $form_name
-	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
-	 *
-	 * @return WP_Form
-	 */
-	static function get_form( $form_name, $object_type, $form_args = array() ) {
-
-		$form_index = self::get_form_index( $form_name, $object_type );
-		$form_args = wp_parse_args( $form_args, self::get_form_args( $form_index ) );
-		$form = self::make_form( $form_name, $object_type, $form_args );
-
-		return $form;
-
-	}
-
-	/**
-	 * @param int $form_index
-	 *
-	 * @return bool|array
-	 */
-	static function get_form_args( $form_index ) {
-
-		return isset( self::$_form_args[ $form_index ] ) ? self::$_form_args[ $form_index ] : false;
-
-	}
-
-	/**
-	 * Retrieve a form
-	 *
-	 * @param string $form_name
-	 * @param string|WP_Object_Type $object_type
-	 *
-	 * @return int
-	 */
-	static function get_form_index( $form_name, $object_type ) {
-
-		return isset( self::$_object_type_forms[ $object_type ][ $form_name ] ) ? self::$_object_type_forms[ $object_type ][ $form_name ] : false;
-
-	}
-
-	/**
-	 * @param string $form_name
-	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
-	 *
-	 * @return WP_Form
-	 */
-	static function make_form( $form_name, $object_type, $form_args = array() ) {
-
-	  return WP_Form::make_new( $form_name, $object_type, $form_args );
-
-	}
-
-	/**
-	 * @param string $field_name
-	 * @param string|WP_Object_Type $object_type
-	 * @param array $field_args
-	 *
-	 * @return int Field Index
-	 */
-	static function register_field( $field_name, $object_type, $field_args = array() ) {
-
-		$field_args[ 'field_name' ] = $field_name;
-		$field_args[ 'object_type' ] = $object_type;
-		$field_args[ 'field_index' ] = count( self::$_field_args );
-
-		self::$_object_type_fields[ $object_type ][ $field_name ] = $field_args[ 'field_index' ];
-		self::$_field_args[] = $field_args;
-
-		return $field_args[ 'field_index' ];
-
-	}
-
-	/**
-	 * @param string $form_name
-	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
-	 *
-	 * @return int Form Index
-	 */
-	static function register_form( $form_name, $object_type, $form_args = array() ) {
-
-		$form_args[ 'form_name' ] = $form_name;
-		$form_args[ 'object_type' ] = $object_type;
-		$form_args[ 'form_index' ] = count( self::$_form_args );
-
-		self::$_object_type_forms[ $object_type ][ $form_name ] = $form_args[ 'form_index' ];
-		self::$_form_args[] = $form_args;
-
-		return $form_args[ 'form_index' ];
-
-	}
-
-	/**
-	 * @param string $type_name - Name of type
-	 * @param string|array $type_def - Classname, or array of $args
-	 * @return bool Whether the object type $type_name was registered
-	 */
-	static function register_field_type( $type_name, $type_def = array() ) {
-
-		if ( ! isset( self::$_registries['field_types']->$type_name ) ) {
-
-      self::$_registries['field_types']->$type_name = $type_def;
-
-			return true;
-
-		}
-
-		return false;
-	}
-
-  /**
- 	 * @param string $field_type
- 	 *
- 	 * @return string|array|object
- 	 */
- 	static function get_field_type( $field_type ) {
-
- 		return self::$_registries['field_types']->$field_type;
-
- 	}
-
-	/**
-	 * Retrieve the $args for a named Field Type.
-	 *
-	 * Could be either an array of $args to create a field with make_new(), or a class name to instantiate it.
-	 *
-	 * @param string $field_type The name of the Field
-	 *
-	 * @return array
-	 */
-	static function get_field_type_args( $field_type ) {
-
-		$field_type_args = self::$_registries['field_types']->$field_type;
-
-		return $field_type_args;
 
 	}
 
@@ -676,6 +670,101 @@ class WP_Metadata {
 //	}
 
 	/**
+	 * Retrieve a field
+	 *
+	 * @param string $field_name
+	 * @param string|WP_Object_Type $object_type
+	 *
+	 * @return int
+	 */
+	static function get_field_index( $field_name, $object_type ) {
+
+		$object_type = (string) $object_type;
+
+		return isset( self::$_object_type_fields[ $object_type ][ $field_name ] ) ? self::$_object_type_fields[ $object_type ][ $field_name ] : false;
+
+	}
+
+	/**
+	 * @param int $field_index
+	 *
+	 * @return bool|array
+	 */
+	static function get_field_args( $field_index ) {
+
+		return isset( self::$_field_args[ $field_index ] ) ? self::$_field_args[ $field_index ] : false;
+
+	}
+
+	/**
+	 * Make a New Field object
+	 *
+	 * @param string $field_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $field_args
+	 *
+	 * @return WP_Field_Base
+	 *
+	 */
+	static function make_field( $field_name, $object_type, $field_args = array() ) {
+
+		return WP_Field_Base::make_new( $field_name, $object_type, $field_args );
+
+	}
+
+	/**
+	 * @param string $field_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $field_args
+	 *
+	 * @return int Field Index
+	 */
+	static function register_field( $field_name, $object_type, $field_args = array() ) {
+
+		$field_args['field_name']  = $field_name;
+		$field_args['object_type'] = $object_type;
+		$field_args['field_index'] = count( self::$_field_args );
+
+		self::$_object_type_fields[ $object_type ][ $field_name ] = $field_args['field_index'];
+		self::$_field_args[]                                      = $field_args;
+
+		return $field_args['field_index'];
+
+	}
+
+	/**
+	 * @param string $field_type
+	 *
+	 * @return string|array|object
+	 */
+	static function get_field_type( $field_type ) {
+
+		return self::$_registries['field_types']->$field_type;
+
+	}
+
+	/**
+	 *
+	 */
+
+	/**
+	 * Retrieve the $args for a named Field Type.
+	 *
+	 * Could be either an array of $args to create a field with make_new(), or a class name to instantiate it.
+	 *
+	 * @param string $field_type The name of the Field
+	 *
+	 * @return array
+	 */
+	static function get_field_type_args( $field_type ) {
+
+		$field_type_args = self::$_registries['field_types']->$field_type;
+
+		return $field_type_args;
+
+	}
+
+	/**
 	 * @param string $tag_name
 	 * @param array $attributes
 	 * @param null ,mixed $value
@@ -685,18 +774,16 @@ class WP_Metadata {
 	 */
 	static function get_html_element( $tag_name, $attributes = array(), $value = null, $reuse = false ) {
 
-		if ( !$reuse ) {
+		if ( ! $reuse ) {
 			$element = new WP_Html_Element( $tag_name, $attributes, $value );
-		}
-		else {
+		} else {
 			/**
 			 * @var WP_Html_Element $reusable_element
 			 */
 			static $reusable_element = false;
-			if ( !$reusable_element ) {
+			if ( ! $reusable_element ) {
 				$reusable_element = new WP_Html_Element( $tag_name, $attributes, $value );
-			}
-			else {
+			} else {
 				$reusable_element->reset_element( $tag_name, $attributes, $value );
 			}
 			$element = $reusable_element;
@@ -707,168 +794,10 @@ class WP_Metadata {
 	}
 
 	/**
-	 * @param $html_element
-	 *
-	 * @return array
-	 */
-	static function get_html_attributes( $html_element ) {
-
-		if ( !isset( self::$_element_attributes[ $html_element ] ) ) {
-
-			/**
-			 * @see http://www.w3.org/TR/html5/dom.html#global-attributes
-			 */
-			$attributes = array(
-				'accesskey',
-				'class',
-				'contenteditable',
-				'dir',
-				'draggable',
-				'dropzone',
-				'hidden',
-				'id',
-				'lang',
-				'spellcheck',
-				'style',
-				'tabindex',
-				'title',
-				'translate'
-			);
-
-			switch ( $html_element ) {
-
-				case 'input':
-					$more_attributes = array(
-						'accept',
-						'alt',
-						'autocomplete',
-						'autofocus',
-						'autosave',
-						'checked',
-						'dirname',
-						'disabled',
-						'form',
-						'formaction',
-						'formenctype',
-						'formmethod',
-						'formnovalidate',
-						'formtarget',
-						'height',
-						'inputmode',
-						'list',
-						'max',
-						'maxlength',
-						'min',
-						'minlength',
-						'multiple',
-						'name',
-						'pattern',
-						'placeholder',
-						'readonly',
-						'required',
-						'selectionDirection',
-						'size',
-						'src',
-						'step',
-						'type',
-						'value',
-						'width'
-					);
-					break;
-
-				case 'textarea':
-					$more_attributes = array( 'cols', 'name', 'rows', 'tabindex', 'wrap' );
-					break;
-
-				case 'label':
-					$more_attributes = array( 'for', 'form' );
-					break;
-
-				case 'ul':
-					$more_attributes = array( 'compact', 'type' );
-					break;
-
-				case 'ol':
-					$more_attributes = array( 'compact', 'reversed', 'start', 'type' );
-					break;
-
-				case 'li':
-					$more_attributes = array( 'type', 'value' );
-					break;
-
-				case 'a':
-					$more_attributes = array(
-						'charset',
-						'coords',
-						'download',
-						'href',
-						'hreflang',
-						'media',
-						'rel',
-						'target',
-						'type'
-					);
-					break;
-
-				case 'section':
-				case 'div':
-				case 'span':
-				default:
-					$more_attributes = false;
-					break;
-			}
-
-			if ( $more_attributes ) {
-				$attributes = array_merge( $attributes, $more_attributes );
-			}
-
-			self::$_element_attributes[ $html_element ] = array_fill_keys( $attributes, false );
-
-		}
-
-		return self::$_element_attributes[ $html_element ];
-
-	}
-
-	/**
-	 * Register a class to be used as a view for the current class.
-	 *
-	 * @example
-	 *
-	 *      WP_Metadata::register_view( 'field', 'text', 'WP_Text_Field_View' );
-	 *      WP_Metadata::register_view( 'field', 'hidden', 'WP_Hidden_Field_View' );
-	 *
-	 * @param string $view_group Grouping of Views
-	 * @param string $view_type The name of the view that is unique for this class.
-	 * @param string $class_name The class name for the View object.
-	 */
-	static function register_view( $view_group, $view_type, $class_name ) {
-
-		if ( !self::view_exists( $view_type, $view_group ) ) {
-			self::$_views[ $view_group ][ $view_type ] = $class_name;
-		}
-
-	}
-
-	/**
-	 * Does the named field view exist
-	 *
-	 * @param string $view_type The name of the view that is unique for this class.
-	 * @param string $view_group Grouping of Views
-	 *
-	 * @return bool
-	 */
-	static function view_exists( $view_group, $view_type ) {
-
-		return isset( self::$_views[ $view_group ][ $view_type ] );
-
-	}
-
-	/**
 	 * Retrieve the class name for a named View.
 	 *
 	 * @param string $view_group Grouping of Views
-	 * @param string $view_type The name of the view that is unique for this class.
+	 * @param string $view_type  The name of the view that is unique for this class.
 	 *
 	 * @return string
 	 */
@@ -878,25 +807,9 @@ class WP_Metadata {
 
 	}
 
-	/**
-	 *
-	 */
-	/**
-	 * Register a class or array of View Type args.
-	 *
-	 * @example
-	 *
-	 *      WP_Metadata::register_field_view( 'text', 'WP_Text_Field_View' );
-	 *      WP_Metadata::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
-	 *
-	 * @param string $field_view
-	 * @param string|array $field_view_args
-	 */
-	static function register_field_view( $field_view, $field_view_args ) {
-
-		self::register_view( 'field_views', $field_view, $field_view_args );
-
-	}
+	/*********************************************/
+	/***  Field Feature Type Registry Methods  ***/
+	/*********************************************/
 
 	/**
 	 * Retrieve the class name for a named field view.
@@ -908,8 +821,8 @@ class WP_Metadata {
 	static function get_field_view_type_args( $field_view_type ) {
 
 		return self::field_view_exists( $field_view_type )
-			? self::$_views[ 'field_views' ][ $field_view_type ]
-			: false;
+				? self::$_views['field_views'][ $field_view_type ]
+				: false;
 
 	}
 
@@ -926,71 +839,36 @@ class WP_Metadata {
 
 	}
 
-	/*********************************************/
-	/***  Field Feature Type Registry Methods  ***/
-	/*********************************************/
-
 	/**
-	 * @param string $feature_type Name of Feature
-	 * @param string $feature_class Classname
+	 * Does the named feature type exist?
+	 *
+	 * @param string $feature_type_name The name of the view that is unique for this class.
+	 *
+	 * @return bool
 	 */
-	static function register_feature_type( $feature_type, $feature_class ) {
+	static function feature_type_exists( $feature_type_name ) {
 
-    self::$_registries['field_feature_types']->register_entry( $feature_type, $feature_class );
-
-	}
-
-  /**
-   * @param $feature_type
-   *
-   * @return string
-   */
-  static function get_feature_type_class( $feature_type ) {
-
-		return self::$_registries['field_feature_types']->get_entry( $feature_type );
+		return self::$_registries['field_feature_types']->entry_exists( $feature_type_name );
 
 	}
 
-  /**
- 	 * Does the named feature type exist?
- 	 *
- 	 * @param string $feature_type_name The name of the view that is unique for this class.
- 	 *
- 	 * @return bool
- 	 */
- 	static function feature_type_exists( $feature_type_name ) {
-
-     return self::$_registries['field_feature_types']->entry_exists( $feature_type_name );
-
- 	}
-
- 	/*********************************************/
+	/*********************************************/
 	/***  Field Storage Type Registry Methods  ***/
 	/*********************************************/
 
 	/**
-	 * @param string $storage_type_name - Name of storage
-	 * @param bool|string $storage_type_class - Classname
+	 * @param string $storage_type
+	 *
+	 * @return string
 	 */
-	static function register_storage_type( $storage_type_name, $storage_type_class = false ) {
+	static function get_storage_type_class( $storage_type ) {
 
-    self::$_registries['storage_types']->register_entry( $storage_type_name, $storage_type_class );
-
-	}
-
-  /**
-   * @param string $storage_type
-   *
-   * @return string
-   */
-  static function get_storage_type_class( $storage_type ) {
-
-    return self::$_registries['storage_types']->get_entry( $storage_type );
+		return self::$_registries['storage_types']->get_entry( $storage_type );
 
 	}
 
 	/**
-   * Does the named storage type exist?
+	 * Does the named storage type exist?
 	 *
 	 * @param string $storage_type_name The name of the view that is unique for this class.
 	 *
@@ -998,42 +876,42 @@ class WP_Metadata {
 	 */
 	static function storage_type_exists( $storage_type_name ) {
 
-    return self::$_registries['storage_types']->entry_exists( $storage_type_name );
+		return self::$_registries['storage_types']->entry_exists( $storage_type_name );
 
 	}
 
- 	/*********************************************/
+	/**
+	 * @param string $registry_name  - Name of Registry
+	 * @param string $item_name      - Name of item in registry
+	 * @param null|mixed $item_value - Value of item in registry
+	 */
+	static function register_registry_item( $registry_name, $item_name, $item_value = null ) {
+
+		self::$_registries[ $registry_name ]->register_entry( $item_name, $item_value );
+
+	}
+
+	/*********************************************/
 	/***    Generic Registry Item Methods      ***/
 	/*********************************************/
 
 	/**
 	 * @param string $registry_name - Name of Registry
-	 * @param string $item_name - Name of item in registry
-	 * @param null|mixed $item_value - Value of item in registry
+	 * @param string $item_name     - Name of item in registry
+	 *
+	 * @return null|mixed
 	 */
-	static function register_registry_item( $registry_name, $item_name, $item_value = null ) {
+	static function get_registry_item( $registry_name, $item_name ) {
 
-    self::$_registries[ $registry_name ]->register_entry( $item_name, $item_value );
-
-	}
-
-  /**
-   * @param string $registry_name - Name of Registry
- 	 * @param string $item_name - Name of item in registry
-   *
-   * @return null|mixed
-   */
-  static function get_registry_item( $registry_name, $item_name ) {
-
-    return self::$_registries[ $registry_name ]->get_entry( $item_name );
+		return self::$_registries[ $registry_name ]->get_entry( $item_name );
 
 	}
 
 	/**
-   * Does the named registry item exist?
+	 * Does the named registry item exist?
 	 *
 	 * @param string $registry_name - Name of Registry
-	 * @param string $item_name - Name of item in registry
+	 * @param string $item_name     - Name of item in registry
 	 *
 	 * @return bool
 	 */
@@ -1044,7 +922,7 @@ class WP_Metadata {
 	}
 
 	/**
-   * Does the named registry exist?
+	 * Does the named registry exist?
 	 *
 	 * @param string $registry_name - Name of Registry
 	 *
@@ -1056,43 +934,39 @@ class WP_Metadata {
 
 	}
 
-	/*********************************************/
-	/*** Prefix related methods                ***/
-	/*********************************************/
 	/**
 	 * Collect $args from list of keys and values into a tree of keys and values.
 	 *
 	 * Look for $args based on their prefixes (i.e. 'html:').
 	 * If found capture the non-prefixed key and value into $collected_args for return.
 	 * (Stripping the prefix allows for nested values, i.e. 'label:html:class')
-   *
-   * @note ONLY collect the first level, so $args['label:html:class'] would become $args['label']['html:class'].
-   *       Subnames will get split later thanks to calls that drill down recursively.
-   *
-   * @param array $prefixed_args
-   * @param array $prefixes
+	 *
+	 * @note ONLY collect the first level, so $args['label:html:class'] would become $args['label']['html:class'].
+	 *       Subnames will get split later thanks to calls that drill down recursively.
+	 *
+	 * @param array $prefixed_args
+	 * @param array $prefixes
 	 *
 	 * @return array
 	 */
 	static function collect_args( $prefixed_args, $prefixes ) {
-    $collected_args = array();
+		$collected_args = array();
 
-
-    $arg_count = count( $prefixed_args ) - 1;
-    foreach( array_keys( $prefixed_args ) as $key ) {
-	    /*
+		$arg_count = count( $prefixed_args ) - 1;
+		foreach ( array_keys( $prefixed_args ) as $key ) {
+			/*
 	 * Move the complex keys (ones with colons ) to after the simple keys
 	 */
-	    if ( false !== strpos( $key, ':' ) ) {
-		    $value = $prefixed_args[ $key ];
-		    unset( $prefixed_args[ $key ] );
-		    $prefixed_args[ $key ] = $value;
-	    }
-    }
+			if ( false !== strpos( $key, ':' ) ) {
+				$value = $prefixed_args[ $key ];
+				unset( $prefixed_args[ $key ] );
+				$prefixed_args[ $key ] = $value;
+			}
+		}
 
 		foreach ( $prefixed_args as $arg_name => $arg_value ) {
 			if ( false === strpos( $arg_name, ':' ) ) {
-        $collected_args[ $arg_name ] = $arg_value;
+				$collected_args[ $arg_name ] = $arg_value;
 			} else {
 				$index = false;
 				list( $new_name, $sub_name ) = preg_split( '#:#', $arg_name, 2 );
@@ -1103,214 +977,91 @@ class WP_Metadata {
 					}
 				}
 				if ( isset( $prefixes[ $new_name ] ) ) {
-          $collected_args[ '_collected_args' ][ $arg_name ] = $arg_value;
-          if ( false === $index ) {
-	          $collected_args[ $new_name ][ $sub_name ] = $arg_value;
-          } else {
-	          $collected_args[ $new_name ][ $index ][ $sub_name ] = $arg_value;
-          }
-          unset( $collected_args[ $arg_name ] );
-        }
+					$collected_args['_collected_args'][ $arg_name ] = $arg_value;
+					if ( false === $index ) {
+						$collected_args[ $new_name ][ $sub_name ] = $arg_value;
+					} else {
+						$collected_args[ $new_name ][ $index ][ $sub_name ] = $arg_value;
+					}
+					unset( $collected_args[ $arg_name ] );
+				}
 			}
 		}
 
 		return $collected_args;
 
 	}
-  /**
-   * @param string $class_name
-   * @param string $method_name
-   *
-   * @return bool
-   */
-  static function has_own_method( $class_name, $method_name ) {
 
-    $has_own_method = false;
-
-    if ( method_exists( $class_name, $method_name ) ) {
-      $reflector      = new ReflectionMethod( $class_name, $method_name );
-      $has_own_method = $class_name == $reflector->getDeclaringClass()->name;
-    }
-
-    return $has_own_method;
-
-  }
-
-  /**
-   * Allow invoking of instance methods that are overridden by methods in a child class.
-   *
-   * This allows for methods as filters and actions without requiring them to call parent::method().
-   *
-   * @param object|null $instance
-   * @param string $class_name
-   * @param string $method_name
-   * @param array $args
-   *
-   * @return mixed
-   */
-  static function invoke_specific_class_method( $instance, $class_name, $method_name, $args ) {
-
-    $reflected_class  = new ReflectionClass( $class_name );
-    $reflected_method = $reflected_class->getMethod( $method_name );
-
-    return $reflected_method->invokeArgs( $instance, $args );
-
-  }
-
-
-  /**
-   * @param string $class_name
-   * @param string $property_name
-   *
-   * @note UNTESTED
-   *
-   * @return bool
-   */
-  static function has_own_static_property( $class_name, $property_name ) {
-
-    $has_own_static_property = false;
-
-    if ( property_exists( $class_name, $property_name ) ) {
-      $reflected_property      = new ReflectionProperty( $class_name, $property_name );
-      $has_own_static_property = $reflected_property->isStatic();
-    }
-
-    return $has_own_static_property;
-
-  }
-
-  /**
-   * Allow invoking of instance methods that are overridden by methods in a child class.
-   *
-   * This allows for methods as filters and actions without requiring them to call parent::method().
-   *
-   * @note UNTESTED
-   *
-   * @param string $class_name
-   * @param object $object
-   * @param string $method_name
-   *
-   * @return mixed
-   */
-  static function get_static_method_name( $class_name, $object, $method_name ) {
-
-    $reflected_method = new ReflectionProperty( $class_name, $method_name );
-
-    return $reflected_method->getValue( $object );
-
-  }
-
-  /**
-   * @param string $class_name
-   * @param string $property_name
-   *
-   * @return bool
-   */
-  static function non_public_property_exists( $class_name, $property_name ) {
-
-    $reflection = new ReflectionClass( $class_name );
-
-    if ( ! $reflection->hasProperty( $property_name ) ) {
-      $exists = false;
-    } else {
-      $property_name = $reflection->getProperty( $property_name );
-      $exists   = $property_name->isProtected() || $property_name->isPrivate();
-    }
-
-    return $exists;
-
-  }
-  /**
-   * Get an array of class name parent
-   *
-   * Returns an array of all parent class names with most distant ancenstor first down to parent class,
-   * or the named class (if inclusive.)
-   *
-   * @example array( 'WP_Base', 'WP_Field_Base', 'WP_Text_Field' )
-   *
-   * @param string $class_name
-   * @param bool $inclusive
-   *
-   * @return array
-   */
-  static function get_class_parents( $class_name, $inclusive = true ) {
-
-    if ( !( $parents = wp_cache_get( $cache_key = "class_lineage[{$class_name}]" ) ) ) {
-      $parents = $inclusive ? array( $class_name ) : array();
-
-      if ( $class_name = get_parent_class( $class_name ) ) {
-        $parents = array_merge( self::get_class_parents( $class_name, true ), $parents );
-      }
-
-      wp_cache_set( $cache_key, $parents );
-    }
-
-    return $parents;
-
-  }
+	/*********************************************/
+	/*** Prefix related methods                ***/
+	/*********************************************/
 
 	/**
-  * Collect an array of class annotations defined as either class constant or static method.
-  * Start with the most distant anscestor down to the current class and merge $annotations.
-  *
-  * @param string $class_name
-  * @param string $annotation_name
-  * @param array $annotations
-  *
-  * @return array
-  */
- static function get_annotations( $class_name, $annotation_name, $annotations = array() ) {
-
-   if ( ! isset( self::$_class_annotations[$key = "{$class_name}::{$annotation_name}"] ) ) {
-
-     $parents = self::get_class_parents( $class_name, true );
-
-     foreach ( $parents as $parent ) {
-
-       if ( defined( $const_ref = "{$parent}::{$annotation_name}" ) ) {
-         $class_annotations = array( self::constant( $annotation_name, $parent ) );
-       } else if ( self::has_own_method( $parent, $annotation_name ) ) {
-         $class_annotations = self::invoke_specific_class_method( null, $parent, $annotation_name, $annotations );
-       } else {
-	     $class_annotations = array();
-       }
-
-       foreach ( $class_annotations as $field_name => $class_annotation ) {
-         if ( isset( $annotations[ $field_name ] ) && is_array( $annotations[ $field_name ] ) ) {
-           $annotations[ $field_name ] = array_merge( $annotations[ $field_name ], $class_annotation );
-         } else {
-          $annotations[ $field_name ] = $class_annotation;
-         }
-       }
-     }
-     /*
-      * Remove any annotations values that are null.
-      */
-     self::$_class_annotations[$key] = array_filter( $annotations, array( __CLASS__, '_strip_null_elements' ) );
-
-   }
-   return self::$_class_annotations[$key];
-
- }
-
-	/**
-	 * Gets array of properties field names that should not get a prefix.
-	 *
 	 * @param string $class_name
 	 * @param string $property_name
 	 *
-	 * @return WP_Annotated_Property|bool
+	 * @note UNTESTED
+	 *
+	 * @return bool
 	 */
-	static function get_annotated_property( $class_name, $property_name ) {
+	static function has_own_static_property( $class_name, $property_name ) {
 
-		$annotated_properties = self::get_annotated_properties( $class_name );
+		$has_own_static_property = false;
 
-		return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : null;
+		if ( property_exists( $class_name, $property_name ) ) {
+			$reflected_property      = new ReflectionProperty( $class_name, $property_name );
+			$has_own_static_property = $reflected_property->isStatic();
+		}
+
+		return $has_own_static_property;
+
+	}
+
+	/**
+	 * Allow invoking of instance methods that are overridden by methods in a child class.
+	 *
+	 * This allows for methods as filters and actions without requiring them to call parent::method().
+	 *
+	 * @note UNTESTED
+	 *
+	 * @param string $class_name
+	 * @param object $object
+	 * @param string $method_name
+	 *
+	 * @return mixed
+	 */
+	static function get_static_method_name( $class_name, $object, $method_name ) {
+
+		$reflected_method = new ReflectionProperty( $class_name, $method_name );
+
+		return $reflected_method->getValue( $object );
 
 	}
 
 	/**
 	 * @param string $class_name
+	 * @param string $property_name
+	 *
+	 * @return bool
+	 */
+	static function non_public_property_exists( $class_name, $property_name ) {
+
+		$reflection = new ReflectionClass( $class_name );
+
+		if ( ! $reflection->hasProperty( $property_name ) ) {
+			$exists = false;
+		} else {
+			$property_name = $reflection->getProperty( $property_name );
+			$exists        = $property_name->isProtected() || $property_name->isPrivate();
+		}
+
+		return $exists;
+
+	}
+
+	/**
+	 * @param string $class_name
+	 *
 	 * @return array
 	 */
 	static function get_annotated_property_names( $class_name ) {
@@ -1321,20 +1072,7 @@ class WP_Metadata {
 
 	/**
 	 * @param string $class_name
-	 * @param string $property_name
 	 *
-	 * @return bool
-	 */
-	static function has_annotated_property( $class_name, $property_name ) {
-
-		$properties = self::get_annotated_properties( $class_name );
-
-		return isset( $properties[ $property_name ] );
-
-	}
-
-	/**
-	 * @param string $class_name
 	 * @return WP_Annotated_Property[]
 	 */
 	static function get_annotated_properties( $class_name ) {
@@ -1357,6 +1095,147 @@ class WP_Metadata {
 		}
 
 		return self::$_annotated_properties[ $class_name ];
+
+	}
+
+	/**
+	 * Collect an array of class annotations defined as either class constant or static method.
+	 * Start with the most distant anscestor down to the current class and merge $annotations.
+	 *
+	 * @param string $class_name
+	 * @param string $annotation_name
+	 * @param array $annotations
+	 *
+	 * @return array
+	 */
+	static function get_annotations( $class_name, $annotation_name, $annotations = array() ) {
+
+		if ( ! isset( self::$_class_annotations[ $key = "{$class_name}::{$annotation_name}" ] ) ) {
+
+			$parents = self::get_class_parents( $class_name, true );
+
+			foreach ( $parents as $parent ) {
+
+				if ( defined( $const_ref = "{$parent}::{$annotation_name}" ) ) {
+					$class_annotations = array( self::constant( $annotation_name, $parent ) );
+				} else if ( self::has_own_method( $parent, $annotation_name ) ) {
+					$class_annotations = self::invoke_specific_class_method( null, $parent, $annotation_name, $annotations );
+				} else {
+					$class_annotations = array();
+				}
+
+				foreach ( $class_annotations as $field_name => $class_annotation ) {
+					if ( isset( $annotations[ $field_name ] ) && is_array( $annotations[ $field_name ] ) ) {
+						$annotations[ $field_name ] = array_merge( $annotations[ $field_name ], $class_annotation );
+					} else {
+						$annotations[ $field_name ] = $class_annotation;
+					}
+				}
+			}
+			/*
+				* Remove any annotations values that are null.
+				*/
+			self::$_class_annotations[ $key ] = array_filter( $annotations, array( __CLASS__, '_strip_null_elements' ) );
+
+		}
+
+		return self::$_class_annotations[ $key ];
+
+	}
+
+	/**
+	 * Get an array of class name parent
+	 *
+	 * Returns an array of all parent class names with most distant ancenstor first down to parent class,
+	 * or the named class (if inclusive.)
+	 *
+	 * @example array( 'WP_Base', 'WP_Field_Base', 'WP_Text_Field' )
+	 *
+	 * @param string $class_name
+	 * @param bool $inclusive
+	 *
+	 * @return array
+	 */
+	static function get_class_parents( $class_name, $inclusive = true ) {
+
+		if ( ! ( $parents = wp_cache_get( $cache_key = "class_lineage[{$class_name}]" ) ) ) {
+			$parents = $inclusive ? array( $class_name ) : array();
+
+			if ( $class_name = get_parent_class( $class_name ) ) {
+				$parents = array_merge( self::get_class_parents( $class_name, true ), $parents );
+			}
+
+			wp_cache_set( $cache_key, $parents );
+		}
+
+		return $parents;
+
+	}
+
+	/**
+	 * @param string $class_name
+	 * @param string $const_name
+	 *
+	 * @return mixed
+	 *
+	 */
+	static function constant( $class_name, $const_name ) {
+
+		return defined( $const_ref = "{$class_name}::{$const_name}" ) ? constant( $const_ref ) : null;
+
+	}
+
+	/**
+	 * @param string $class_name
+	 * @param string $method_name
+	 *
+	 * @return bool
+	 */
+	static function has_own_method( $class_name, $method_name ) {
+
+		$has_own_method = false;
+
+		if ( method_exists( $class_name, $method_name ) ) {
+			$reflector      = new ReflectionMethod( $class_name, $method_name );
+			$has_own_method = $class_name == $reflector->getDeclaringClass()->name;
+		}
+
+		return $has_own_method;
+
+	}
+
+	/**
+	 * Allow invoking of instance methods that are overridden by methods in a child class.
+	 *
+	 * This allows for methods as filters and actions without requiring them to call parent::method().
+	 *
+	 * @param object|null $instance
+	 * @param string $class_name
+	 * @param string $method_name
+	 * @param array $args
+	 *
+	 * @return mixed
+	 */
+	static function invoke_specific_class_method( $instance, $class_name, $method_name, $args ) {
+
+		$reflected_class  = new ReflectionClass( $class_name );
+		$reflected_method = $reflected_class->getMethod( $method_name );
+
+		return $reflected_method->invokeArgs( $instance, $args );
+
+	}
+
+	/**
+	 * @param string $class_name
+	 * @param string $property_name
+	 *
+	 * @return bool
+	 */
+	static function has_annotated_property( $class_name, $property_name ) {
+
+		$properties = self::get_annotated_properties( $class_name );
+
+		return isset( $properties[ $property_name ] );
 
 	}
 
@@ -1384,8 +1263,26 @@ class WP_Metadata {
 	}
 
 	/**
+	 * Gets array of properties field names that should not get a prefix.
+	 *
+	 * @param string $class_name
+	 * @param string $property_name
+	 *
+	 * @return WP_Annotated_Property|bool
+	 */
+	static function get_annotated_property( $class_name, $property_name ) {
+
+		$annotated_properties = self::get_annotated_properties( $class_name );
+
+		return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : null;
+
+	}
+
+	/**
 	 * Return the HTML tag to be used by a view class.
+	 *
 	 * @param string $view_class
+	 *
 	 * @return array
 	 */
 	static function get_view_input_tag( $view_class ) {
@@ -1396,7 +1293,7 @@ class WP_Metadata {
 
 		if ( isset( $defaults[ $input_key = 'features[input]:element:html_tag' ] ) ) {
 
-			 $input_tag = $defaults[ $input_key ];
+			$input_tag = $defaults[ $input_key ];
 
 		}
 
@@ -1404,171 +1301,9 @@ class WP_Metadata {
 
 	}
 
-
-
-	/**
-	 * @param string $html_tag
-	 * @return array
-	 */
-	static function get_view_element_attributes( $html_tag ) {
-
-		return array_keys( self::get_html_attributes( $html_tag ) );
-
-	}
-
-  /**
-   * Call a named method starting with the most distant anscestor down to the current class filtering $value.
-   *
-   * @param object $object
-   * @param string $method_name
-   * @param mixed $value
-   *
-   * @return mixed
-   */
-  static function apply_class_filters( $object, $method_name, $value ) {
-
-    $args = func_get_args() ? array_slice( func_get_args(), 2 ) : array( null );
-    $parents = self::get_class_parents( get_class( $object ), true );
-
-    foreach ( $parents as $parent ) {
-      if ( self::has_own_method( $parent, $method_name ) ) {
-	      $args[ 0 ] = $value;
-        $value = self::invoke_specific_class_method( $object, $parent, $method_name, $args );
-      }
-    }
-
-    return $value;
-
-  }
-
-  /**
-   * Call a named method starting with the most distant anscestor down to the current class with no return value.
-   *
-   * @param object $object
-   * @param string $class_name
-   * @param string $method_name
-   */
-  static function do_class_action( $object, $class_name, $method_name ) {
-
-    $args = func_get_args();
-
-    $invoke_args = $args ? array_slice( $args, 3 ) : array();
-
-    $parents = self::get_class_parents( $class_name, true );
-
-    foreach ( $parents as $parent ) {
-      if ( self::has_own_method( $parent, $method_name ) ) {
-        self::invoke_specific_class_method( $object, $parent, $method_name, $invoke_args );
-      }
-    }
-
-  }
-
-  /**
-   * @param mixed $element
-   *
-   * @return bool
-   */
-  static function _strip_null_elements( $element ) {
-
-    return ! is_null( $element );
-
-  }
-
-
-  /**
-   * @param string $class_name
-   * @param string $const_name
-   *
-   * @return mixed
-   *
-   */
-  static function constant( $class_name, $const_name ) {
-
-    return defined( $const_ref = "{$class_name}::{$const_name}" ) ? constant( $const_ref ) : null;
-
-  }
-
-
-  /**
-   * Returns an instance of a storage object.
-   *
-   * @param string $storage_type
-   * @param object $owner
- 	 * @param array $storage_args
- 	 *
- 	 * @return null|WP_Storage_Base
- 	 */
- 	static function make_storage( $storage_type, $owner = null, $storage_args = array() ) {
-
- 		return WP_Storage_Base::make_new( $storage_type, $owner, $storage_args );
-
- 	}
-
-  /**
-   * @param string $view_type
-   * @param WP_Field_Base $field
- 	 * @param array $view_args
- 	 *
- 	 * @return WP_Field_View_Base
- 	 */
- 	static function make_field_view( $view_type, $field, $view_args = array() ) {
-
-		return WP_Field_View_Base::make_new( $view_type, $field, $view_args );
-
-  }
-
-  /**
-   * @param WP_Field_Base $field
- 	 * @param array[] $features_args
- 	 *
- 	 * @return null|WP_Field_Feature_Base
- 	 */
- 	static function make_field_features( $field, $features_args ) {
-
-    $features = array();
-
-    foreach( $features_args as $feature_type => $feature_args ) {
-
-      $features[ $feature_type ] = self::make_field_feature( $field, $feature_type, $feature_args );
-
-    }
-
-    return $features;
-
-  }
-
-  /**
-   * @param WP_Field_Base $field
- 	 * @param string $feature_type
- 	 * @param array $feature_args
- 	 *
- 	 * @return null|WP_Field_Feature_Base
- 	 */
- 	static function make_field_feature( $field, $feature_type, $feature_args ) {
-
- 		if ( $feature_class = self::get_feature_type_class( $feature_type ) ) {
-
- 			$feature = new $feature_class( $field, $feature_args );
-
-      if ( property_exists( $field, 'field' ) ) {
-
-        $view->field = $field;
-
-      }
-
- 		} else {
-
- 			$feature = null;
-
- 		}
-
- 		return $feature;
-
-  }
-
 	/**
 	 * @param string|object $class_name_or_object
+	 *
 	 * @return string[];
 	 *
 	 */
@@ -1582,6 +1317,7 @@ class WP_Metadata {
 
 	/**
 	 * @param string|object $class_name_or_object
+	 *
 	 * @return string[];
 	 *
 	 */
@@ -1598,14 +1334,297 @@ class WP_Metadata {
 	}
 
 	/**
+	 * @param string $html_tag
+	 *
+	 * @return array
+	 */
+	static function get_view_element_attributes( $html_tag ) {
+
+		return array_keys( self::get_html_attributes( $html_tag ) );
+
+	}
+
+	/**
+	 * @param $html_element
+	 *
+	 * @return array
+	 */
+	static function get_html_attributes( $html_element ) {
+
+		if ( ! isset( self::$_element_attributes[ $html_element ] ) ) {
+
+			/**
+			 * @see http://www.w3.org/TR/html5/dom.html#global-attributes
+			 */
+			$attributes = array(
+					'accesskey',
+					'class',
+					'contenteditable',
+					'dir',
+					'draggable',
+					'dropzone',
+					'hidden',
+					'id',
+					'lang',
+					'spellcheck',
+					'style',
+					'tabindex',
+					'title',
+					'translate'
+			);
+
+			switch ( $html_element ) {
+
+				case 'input':
+					$more_attributes = array(
+							'accept',
+							'alt',
+							'autocomplete',
+							'autofocus',
+							'autosave',
+							'checked',
+							'dirname',
+							'disabled',
+							'form',
+							'formaction',
+							'formenctype',
+							'formmethod',
+							'formnovalidate',
+							'formtarget',
+							'height',
+							'inputmode',
+							'list',
+							'max',
+							'maxlength',
+							'min',
+							'minlength',
+							'multiple',
+							'name',
+							'pattern',
+							'placeholder',
+							'readonly',
+							'required',
+							'selectionDirection',
+							'size',
+							'src',
+							'step',
+							'type',
+							'value',
+							'width'
+					);
+					break;
+
+				case 'textarea':
+					$more_attributes = array( 'cols', 'name', 'rows', 'tabindex', 'wrap' );
+					break;
+
+				case 'label':
+					$more_attributes = array( 'for', 'form' );
+					break;
+
+				case 'ul':
+					$more_attributes = array( 'compact', 'type' );
+					break;
+
+				case 'ol':
+					$more_attributes = array( 'compact', 'reversed', 'start', 'type' );
+					break;
+
+				case 'li':
+					$more_attributes = array( 'type', 'value' );
+					break;
+
+				case 'a':
+					$more_attributes = array(
+							'charset',
+							'coords',
+							'download',
+							'href',
+							'hreflang',
+							'media',
+							'rel',
+							'target',
+							'type'
+					);
+					break;
+
+				case 'section':
+				case 'div':
+				case 'span':
+				default:
+					$more_attributes = false;
+					break;
+			}
+
+			if ( $more_attributes ) {
+				$attributes = array_merge( $attributes, $more_attributes );
+			}
+
+			self::$_element_attributes[ $html_element ] = array_fill_keys( $attributes, false );
+
+		}
+
+		return self::$_element_attributes[ $html_element ];
+
+	}
+
+	/**
+	 * Call a named method starting with the most distant anscestor down to the current class filtering $value.
+	 *
+	 * @param object $object
+	 * @param string $method_name
+	 * @param mixed $value
+	 *
+	 * @return mixed
+	 */
+	static function apply_class_filters( $object, $method_name, $value ) {
+
+		$args    = func_get_args() ? array_slice( func_get_args(), 2 ) : array( null );
+		$parents = self::get_class_parents( get_class( $object ), true );
+
+		foreach ( $parents as $parent ) {
+			if ( self::has_own_method( $parent, $method_name ) ) {
+				$args[0] = $value;
+				$value   = self::invoke_specific_class_method( $object, $parent, $method_name, $args );
+			}
+		}
+
+		return $value;
+
+	}
+
+	/**
+	 * Call a named method starting with the most distant anscestor down to the current class with no return value.
+	 *
+	 * @param object $object
+	 * @param string $class_name
+	 * @param string $method_name
+	 */
+	static function do_class_action( $object, $class_name, $method_name ) {
+
+		$args = func_get_args();
+
+		$invoke_args = $args ? array_slice( $args, 3 ) : array();
+
+		$parents = self::get_class_parents( $class_name, true );
+
+		foreach ( $parents as $parent ) {
+			if ( self::has_own_method( $parent, $method_name ) ) {
+				self::invoke_specific_class_method( $object, $parent, $method_name, $invoke_args );
+			}
+		}
+
+	}
+
+	/**
+	 * @param mixed $element
+	 *
+	 * @return bool
+	 */
+	static function _strip_null_elements( $element ) {
+
+		return ! is_null( $element );
+
+	}
+
+	/**
+	 * Returns an instance of a storage object.
+	 *
+	 * @param string $storage_type
+	 * @param object $owner
+	 * @param array $storage_args
+	 *
+	 * @return null|WP_Storage_Base
+	 */
+	static function make_storage( $storage_type, $owner = null, $storage_args = array() ) {
+
+		return WP_Storage_Base::make_new( $storage_type, $owner, $storage_args );
+
+	}
+
+	/**
+	 * @param string $view_type
+	 * @param WP_Field_Base $field
+	 * @param array $view_args
+	 *
+	 * @return WP_Field_View_Base
+	 */
+	static function make_field_view( $view_type, $field, $view_args = array() ) {
+
+		return WP_Field_View_Base::make_new( $view_type, $field, $view_args );
+
+	}
+
+	/**
+	 * @param WP_Field_Base $field
+	 * @param array[] $features_args
+	 *
+	 * @return null|WP_Field_Feature_Base
+	 */
+	static function make_field_features( $field, $features_args ) {
+
+		$features = array();
+
+		foreach ( $features_args as $feature_type => $feature_args ) {
+
+			$features[ $feature_type ] = self::make_field_feature( $field, $feature_type, $feature_args );
+
+		}
+
+		return $features;
+
+	}
+
+	/**
+	 * @param WP_Field_Base $field
+	 * @param string $feature_type
+	 * @param array $feature_args
+	 *
+	 * @return null|WP_Field_Feature_Base
+	 */
+	static function make_field_feature( $field, $feature_type, $feature_args ) {
+
+		if ( $feature_class = self::get_feature_type_class( $feature_type ) ) {
+
+			$feature = new $feature_class( $field, $feature_args );
+
+			if ( property_exists( $field, 'field' ) ) {
+
+				$view->field = $field;
+
+			}
+
+		} else {
+
+			$feature = null;
+
+		}
+
+		return $feature;
+
+	}
+
+	/**
+	 * @param $feature_type
+	 *
+	 * @return string
+	 */
+	static function get_feature_type_class( $feature_type ) {
+
+		return self::$_registries['field_feature_types']->get_entry( $feature_type );
+
+	}
+
+	/**
 	 * @param string|object $class_name_or_object
 	 * @param string $var_name
+	 *
 	 * @return string[];
 	 *
 	 */
 	static function get_class_var( $class_name_or_object, $var_name ) {
 
-	 	$class_vars = self::get_class_vars( $class_name_or_object );
+		$class_vars = self::get_class_vars( $class_name_or_object );
 
 		return isset( $class_vars[ $var_name ] ) ? $class_vars[ $var_name ] : null;
 
@@ -1613,6 +1632,7 @@ class WP_Metadata {
 
 	/**
 	 * @param string $class_name
+	 *
 	 * @return string[];
 	 *
 	 */
@@ -1624,9 +1644,9 @@ class WP_Metadata {
 		 */
 		$class_vars = call_user_func( array( $class_name, 'CLASS_VARS' ) );
 
-		if ( ! empty( $class_vars[ 'parameters' ] ) && is_array( $class_vars[ 'parameters' ] ) ) {
+		if ( ! empty( $class_vars['parameters'] ) && is_array( $class_vars['parameters'] ) ) {
 
-			$parameters = $class_vars[ 'parameters' ];
+			$parameters = $class_vars['parameters'];
 
 		} else {
 
@@ -1639,27 +1659,16 @@ class WP_Metadata {
 	}
 
 	/**
-	  * Build Property Parameters for Object Constructor
-	  *
-	  * @param string $class_name
-	  * @param array $object_args
-	  *
-	  * @return array
-	  */
-	 static function build_property_parameters( $class_name, $object_args = array() ) {
-
-		 return WP_Annotated_Property::build_parameters( $class_name, $object_args );
-
-	 }
-
-	/**
+	 * Build Property Parameters for Object Constructor
 	 *
 	 * @param string $class_name
-	 * @param array $default_values
+	 * @param array $object_args
+	 *
+	 * @return array
 	 */
-	static function register_default_annotations( $class_name, $default_values ) {
+	static function build_property_parameters( $class_name, $object_args = array() ) {
 
-		WP_Annotated_Property::register_default_annotations( $class_name, $default_values );
+		return WP_Annotated_Property::build_parameters( $class_name, $object_args );
 
 	}
 

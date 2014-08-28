@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Field_Label_Feature
  */
@@ -12,15 +13,15 @@ class WP_Field_Label_Feature extends WP_Field_Feature_Base {
 	/**
 	 * @return array
 	 */
- static function PROPERTIES() {
+	static function PROPERTIES() {
 
-   return array(
+		return array(
 
-     'element' => array( 'html_tag' => 'label' ),
+				'element' => array( 'html_tag' => 'label' ),
 
-   );
+		);
 
- }
+	}
 
 	/**
 	 * @return mixed|string

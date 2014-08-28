@@ -1,29 +1,28 @@
 <?php
+
 /**
  * Class WP_Object_Type
  */
 final class WP_Object_Type {
 
 	/**
+	 * @var array
+	 */
+	protected static $_object_type_classes = array(
+			'post'    => array(),
+			'user'    => array(),
+			'comment' => array(),
+		  'option' => array(),
+		  'site-option' => array(),
+	);
+	/**
 	 * @var bool
 	 */
 	var $class = false;
-
 	/**
 	 * @var bool
 	 */
 	var $subtype = false;
-
-	/**
-	 * @var array
-	 */
-	protected static $_object_type_classes = array(
-		'post' => array(),
-		'user' => array(),
-		'comment' => array(),
-		//'option' => array(),
-		//'site-option' => array(),)
-	);
 
 	/**
 	 * @param bool|string|array|object $object_type
@@ -35,26 +34,6 @@ final class WP_Object_Type {
 			$this->assign( $object_type );
 
 		}
-
-	}
-
-	/**
-	 * Register object type
-	 *
-	 * @param $class
-	 * @param $class_args
-	 *
-	 * @return bool Whether the object type $class was registered
-	 */
-	public static function register_class( $class, $class_args = array() ) {
-
-		if ( ! isset( self::$_object_type_classes[ $class ] ) ) {
-			self::$_object_type_classes[ $class ] = $class_args;
-
-			return true;
-		}
-
-		return false;
 
 	}
 
@@ -76,25 +55,22 @@ final class WP_Object_Type {
 		}
 
 		if ( is_a( $object_type, __CLASS__ ) ) {
-			$this->class = $object_type->class;
+			$this->class   = $object_type->class;
 			$this->subtype = $class->subtype;
-		}
-		else {
+		} else {
 			if ( is_string( $object_type ) ) {
 				if ( false === strpos( $object_type, ':' ) ) {
-					$this->class = 'post';
+					$this->class   = 'post';
 					$this->subtype = $object_type;
-				}
-				else {
+				} else {
 					list( $this->class, $this->subtype ) = explode( ':', $object_type );
 				}
-			}
-			else {
+			} else {
 				if ( is_array( $object_type ) ) {
 					$object_type = (object) $object_type;
 				}
 
-				$this->class = property_exists( $object_type, 'class' ) ? $object_type->class : false;
+				$this->class   = property_exists( $object_type, 'class' ) ? $object_type->class : false;
 				$this->subtype = property_exists( $object_type, 'subtype' ) ? $object_type->subtype : false;
 			}
 
@@ -108,6 +84,26 @@ final class WP_Object_Type {
 		if ( empty( $this->subtype ) ) {
 			$this->subtype = 'any';
 		}
+
+	}
+
+	/**
+	 * Register object type
+	 *
+	 * @param $class
+	 * @param $class_args
+	 *
+	 * @return bool Whether the object type $class was registered
+	 */
+	public static function register_class( $class, $class_args = array() ) {
+
+		if ( ! isset( self::$_object_type_classes[ $class ] ) ) {
+			self::$_object_type_classes[ $class ] = $class_args;
+
+			return true;
+		}
+
+		return false;
 
 	}
 

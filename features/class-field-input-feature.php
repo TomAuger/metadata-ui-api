@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Field_Input_Feature
  */
@@ -7,13 +8,13 @@ class WP_Field_Input_Feature extends WP_Field_Feature_Base {
 	/**
 	 * @return array
 	 */
- static function PROPERTIES() {
+	static function PROPERTIES() {
 
-   return array(
-     'element' => array( 'html_tag' => 'input' ),
-   );
+		return array(
+				'element' => array( 'html_tag' => 'input' ),
+		);
 
- }
+	}
 
 	/**
 	 * @return mixed

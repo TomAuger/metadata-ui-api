@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Memory_Storage
  *

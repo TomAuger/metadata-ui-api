@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Textarea_Field
  */
@@ -15,7 +16,7 @@ class WP_Textarea_Field extends WP_Field_Base {
 	static function CLASS_VARS() {
 
 		return array(
-			'defaults' => array( 'view:view_type' => 'textarea' ),
+				'defaults' => array( 'view:view_type' => 'textarea' ),
 		);
 
 	}

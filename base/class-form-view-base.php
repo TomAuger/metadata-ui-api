@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Form_View_Base
  */
@@ -25,46 +26,6 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	var $element;
 
 	/**
-	 * @return array
-	 */
-	static function CLASS_VARS() {
-		return array(
-			'parameters' => array(
-		     '$value',
-		     '$parent',
-		     '$args',
-			)
-    );
-	}
-
-	/**
-	 * @return array
-	 */
- static function PROPERTIES() {
-
-   return array(
-     'form' => array( 'type' => 'WP_Form', 'auto_create' => false ),
-   );
-
- }
-
-	/**
-	 * @param string $view_type
-	 * @param string $form
-	 * @param array $view_args
-	 *
-	 * @return WP_Form_View
-   *
-	 */
-	static function make_new( $view_type, $form, $view_args = array() ) {
-
-		$form_view = new WP_Form_View( $view_type, $form, $view_args );
-
-		return $form_view;
-
-	}
-
-	/**
 	 * @param string $view_type
 	 * @param string $form
 	 * @param array $view_args
@@ -79,6 +40,46 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 		parent::__construct( $view_args );
 
 		$this->owner = $form;
+
+	}
+
+	/**
+	 * @return array
+	 */
+	static function CLASS_VARS() {
+		return array(
+				'parameters' => array(
+						'$value',
+						'$parent',
+						'$args',
+				)
+		);
+	}
+
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array(
+				'form' => array( 'type' => 'WP_Form', 'auto_create' => false ),
+		);
+
+	}
+
+	/**
+	 * @param string $view_type
+	 * @param string $form
+	 * @param array $view_args
+	 *
+	 * @return WP_Form_View
+	 *
+	 */
+	static function make_new( $view_type, $form, $view_args = array() ) {
+
+		$form_view = new WP_Form_View( $view_type, $form, $view_args );
+
+		return $form_view;
 
 	}
 
@@ -157,6 +158,5 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 //		return str_replace( '_', '-', $this->element->get_name() ) . '-' . $this->element->get_class();
 //
 //	}
-
 
 }
