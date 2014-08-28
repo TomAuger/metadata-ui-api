@@ -198,7 +198,9 @@ class WP_Annotated_Property {
 
 		$args_index = false;
 
-		foreach ( WP_Metadata::get_make_new_parameters( $class_name ) as $parameter_name ) {
+		$make_new_parameters = WP_Metadata::get_make_new_parameters( $class_name );
+
+		foreach ( $make_new_parameters as $parameter_name ) {
 
 			if ( preg_match( '#^(\$value|\$parent)$#', $parameter_name ) ) {
 

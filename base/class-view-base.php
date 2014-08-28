@@ -22,6 +22,10 @@ class WP_View_Base extends WP_Metadata_Base {
 	 */
 	var $owner;
 
+	/**
+	 * @var array
+	 */
+	private static $_shortnames = array();
 
 	/**
 	* @return array
@@ -73,22 +77,6 @@ class WP_View_Base extends WP_Metadata_Base {
 
 		$this->element->value = $this->get_element_value();
 		return $this->element->get_html();
-	}
-
-
-	/**
-	 * Return the HTML tag to be used by this class.
-	 * @return array
-	 */
-	function get_element_tag() {
-
-		if ( ! ( $html_tag = $this->get_annotation_value( 'html_tag', 'element' ) ) ) {
-
-			$html_tag = 'div';
-
-		}
-
-		return $html_tag;
 
 	}
 

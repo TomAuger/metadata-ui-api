@@ -27,7 +27,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	var $features = false;
 
 	/**
-	 * @var array
+	 * @var array[]
 	 */
 	private static $_shortnames = array();
 
@@ -100,7 +100,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 		}
 
-		$view_type_args = WP_Metadata::get_view_type_args( 'fields', $view_args[ 'view_type' ] );
+		$view_type_args = WP_Metadata::get_field_view_type_args( $view_args[ 'view_type' ] );
 
 		if ( is_string( $view_type_args ) && class_exists( $view_type_args ) ) {
 
@@ -198,7 +198,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 			$shortnames = parent::get_shortnames();
 
-			$properties = self::PROPERTIES();
+			$properties = $this->get_annotations( 'PROPERTIES' );
 
 			if ( ! empty( $properties['features']['keys'] ) && is_array( $feature_keys = $properties['features']['keys'] ) ) {
 
@@ -207,10 +207,13 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 			}
 
-			$attributes = implode( '|', array_keys( WP_Metadata::get_html_attributes( 'input' ) ) );
-			$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
-			$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
+			if ( $attributes = $this->get_view_input_attributes() ) {
 
+				$attributes = implode( '|', $attributes );
+				$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
+				$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
+
+			}
 			self::$_shortnames[ $class_name ] = $shortnames;
 
 		}
@@ -289,6 +292,17 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 		}
 
 		return $this->features['input'];
+
+	}
+
+	/**
+	 * @param string $view_class
+	 *
+	 * @return string[]
+	 */
+	static function get_input_tag( $view_class ) {
+
+		return WP_Metadata::get_view_input_tag( $view_class );
 
 	}
 

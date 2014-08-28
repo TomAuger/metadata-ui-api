@@ -55,6 +55,11 @@ class WP_Metadata {
    */
   private static $_class_annotations;
 
+	/**
+	 * @var array
+	 */
+	private static $_annotated_properties;
+
   /**
  	 * @var WP_Registry[]
  	 */
@@ -874,6 +879,9 @@ class WP_Metadata {
 	}
 
 	/**
+	 *
+	 */
+	/**
 	 * Register a class or array of View Type args.
 	 *
 	 * @example
@@ -881,12 +889,27 @@ class WP_Metadata {
 	 *      WP_Metadata::register_field_view( 'text', 'WP_Text_Field_View' );
 	 *      WP_Metadata::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
 	 *
-	 * @param string $view_type The name of the view that is unique for this class.
-	 * @param string|array $view_type_args The class name for the View object or an 'Prototype' array to pass to make_new().
+	 * @param string $field_view
+	 * @param string|array $field_view_args
 	 */
-	static function register_field_view( $view_type, $view_type_args ) {
+	static function register_field_view( $field_view, $field_view_args ) {
 
-		self::register_view( 'fields', $view_type, $view_type_args );
+		self::register_view( 'field_views', $field_view, $field_view_args );
+
+	}
+
+	/**
+	 * Retrieve the class name for a named field view.
+	 *
+	 * @param string $field_view_type The name of the field_view that is unique for this class.
+	 *
+	 * @return string
+	 */
+	static function get_field_view_type_args( $field_view_type ) {
+
+		return self::field_view_exists( $field_view_type )
+			? self::$_views[ 'field_views' ][ $field_view_type ]
+			: false;
 
 	}
 
@@ -899,7 +922,7 @@ class WP_Metadata {
 	 */
 	static function field_view_exists( $view_type ) {
 
-		return self::view_exists( 'field', $view_type );
+		return self::view_exists( 'field_views', $view_type );
 
 	}
 
@@ -1053,6 +1076,20 @@ class WP_Metadata {
 	 */
 	static function collect_args( $prefixed_args, $prefixes ) {
     $collected_args = array();
+
+
+    $arg_count = count( $prefixed_args ) - 1;
+    foreach( array_keys( $prefixed_args ) as $key ) {
+	    /*
+	 * Move the complex keys (ones with colons ) to after the simple keys
+	 */
+	    if ( false !== strpos( $key, ':' ) ) {
+		    $value = $prefixed_args[ $key ];
+		    unset( $prefixed_args[ $key ] );
+		    $prefixed_args[ $key ] = $value;
+	    }
+    }
+
 		foreach ( $prefixed_args as $arg_name => $arg_value ) {
 			if ( false === strpos( $arg_name, ':' ) ) {
         $collected_args[ $arg_name ] = $arg_value;
@@ -1061,7 +1098,7 @@ class WP_Metadata {
 				list( $new_name, $sub_name ) = preg_split( '#:#', $arg_name, 2 );
 				if ( preg_match( '#^(.+)\[([^]]+)\]$#', $new_name, $matches ) ) {
 					list( $null, $new_name, $index ) = $matches;
-					if ( ! is_array( $collected_args[ $new_name ] ) ) {
+					if ( ! isset( $collected_args[ $new_name ] ) || ! is_array( $collected_args[ $new_name ] ) ) {
 						$collected_args[ $new_name ] = array();
 					}
 				}
@@ -1104,14 +1141,14 @@ class WP_Metadata {
    *
    * This allows for methods as filters and actions without requiring them to call parent::method().
    *
-   * @param object $instance
+   * @param object|null $instance
    * @param string $class_name
    * @param string $method_name
    * @param array $args
    *
    * @return mixed
    */
-  static function invoke_instance_method( $instance, $class_name, $method_name, $args ) {
+  static function invoke_specific_class_method( $instance, $class_name, $method_name, $args ) {
 
     $reflected_class  = new ReflectionClass( $class_name );
     $reflected_method = $reflected_class->getMethod( $method_name );
@@ -1212,49 +1249,172 @@ class WP_Metadata {
 
   }
 
-  /**
-   * Collect an array of class annotations defined as either class constant or static method.
-   * Start with the most distant anscestor down to the current class and merge $annotations.
-   *
-   * @param object $instance
-   * @param string $annotation_name
-   * @param array $annotations
-   *
-   * @return array
-   */
-  static function get_annotations( $instance, $annotation_name, $annotations = array() ) {
+	/**
+  * Collect an array of class annotations defined as either class constant or static method.
+  * Start with the most distant anscestor down to the current class and merge $annotations.
+  *
+  * @param string $class_name
+  * @param string $annotation_name
+  * @param array $annotations
+  *
+  * @return array
+  */
+ static function get_annotations( $class_name, $annotation_name, $annotations = array() ) {
 
-    $class_name = get_class( $instance );
+   if ( ! isset( self::$_class_annotations[$key = "{$class_name}::{$annotation_name}"] ) ) {
 
-    if ( ! isset( self::$_class_annotations[$key = "{$class_name}::{$annotation_name}"] ) ) {
+     $parents = self::get_class_parents( $class_name, true );
 
-      $parents = self::get_class_parents( $class_name, true );
+     foreach ( $parents as $parent ) {
 
-      foreach ( $parents as $parent ) {
+       if ( defined( $const_ref = "{$parent}::{$annotation_name}" ) ) {
+         $class_annotations = array( self::constant( $annotation_name, $parent ) );
+       } else if ( self::has_own_method( $parent, $annotation_name ) ) {
+         $class_annotations = self::invoke_specific_class_method( null, $parent, $annotation_name, $annotations );
+       } else {
+	     $class_annotations = array();
+       }
 
-        if ( defined( $const_ref = "{$parent}::{$annotation_name}" ) ) {
-          $class_annotations = array( self::constant( $annotation_name, $parent ) );
-        } else if ( self::has_own_method( $parent, $annotation_name ) ) {
-          $class_annotations = self::invoke_instance_method( $instance, $parent, $annotation_name, $annotations );
-        }
+       foreach ( $class_annotations as $field_name => $class_annotation ) {
+         if ( isset( $annotations[ $field_name ] ) && is_array( $annotations[ $field_name ] ) ) {
+           $annotations[ $field_name ] = array_merge( $annotations[ $field_name ], $class_annotation );
+         } else {
+          $annotations[ $field_name ] = $class_annotation;
+         }
+       }
+     }
+     /*
+      * Remove any annotations values that are null.
+      */
+     self::$_class_annotations[$key] = array_filter( $annotations, array( __CLASS__, '_strip_null_elements' ) );
 
-        foreach ( $class_annotations as $field_name => $class_annotation ) {
-          if ( isset( $annotations[ $field_name ] ) && is_array( $annotations[ $field_name ] ) ) {
-            $annotations[ $field_name ] = array_merge( $annotations[ $field_name ], $class_annotation );
-          } else {
-	          $annotations[ $field_name ] = $class_annotation;
-          }
-        }
-      }
-      /*
-       * Remove any annotations values that are null.
-       */
-      self::$_class_annotations[$key] = array_filter( $annotations, array( __CLASS__, '_strip_null_elements' ) );
+   }
+   return self::$_class_annotations[$key];
 
-    }
-    return self::$_class_annotations[$key];
+ }
 
-  }
+	/**
+	 * Gets array of properties field names that should not get a prefix.
+	 *
+	 * @param string $class_name
+	 * @param string $property_name
+	 *
+	 * @return WP_Annotated_Property|bool
+	 */
+	static function get_annotated_property( $class_name, $property_name ) {
+
+		$annotated_properties = self::get_annotated_properties( $class_name );
+
+		return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : null;
+
+	}
+
+	/**
+	 * @param string $class_name
+	 * @return array
+	 */
+	static function get_annotated_property_names( $class_name ) {
+
+		return array_keys( self::get_annotated_properties( $class_name ) );
+
+	}
+
+	/**
+	 * @param string $class_name
+	 * @param string $property_name
+	 *
+	 * @return bool
+	 */
+	static function has_annotated_property( $class_name, $property_name ) {
+
+		$properties = self::get_annotated_properties( $class_name );
+
+		return isset( $properties[ $property_name ] );
+
+	}
+
+	/**
+	 * @param string $class_name
+	 * @return WP_Annotated_Property[]
+	 */
+	static function get_annotated_properties( $class_name ) {
+
+		if ( ! isset( self::$_annotated_properties[ $class_name ] ) ) {
+
+			$annotated_properties = self::get_annotations( $class_name, 'PROPERTIES' );
+
+			/**
+			 * Finally, convert all annotated properties to a WP_Annotated_Property class.
+			 */
+			foreach ( $annotated_properties as $property_name => $property_args ) {
+
+				$annotated_properties[ $property_name ] = new WP_Annotated_Property( $property_name, $property_args );
+
+			}
+
+			self::$_annotated_properties[ $class_name ] = $annotated_properties;
+
+		}
+
+		return self::$_annotated_properties[ $class_name ];
+
+	}
+
+	/**
+	 * @param string $class_name
+	 * @param string $annotation_name
+	 * @param string $property_name
+	 *
+	 * @return mixed
+	 */
+	static function get_annotation_value( $class_name, $annotation_name, $property_name ) {
+
+		if ( $property = self::get_annotated_property( $class_name, $property_name ) ) {
+
+			$value = $property->get_annotation_value( $annotation_name );
+
+		} else {
+
+			$value = null;
+
+		}
+
+		return $value;
+
+	}
+
+	/**
+	 * Return the HTML tag to be used by a view class.
+	 * @param string $view_class
+	 * @return array
+	 */
+	static function get_view_input_tag( $view_class ) {
+
+		$input_tag = false;
+
+		$defaults = WP_Metadata::get_class_defaults( $view_class );
+
+		if ( isset( $defaults[ $input_key = 'features[input]:element:html_tag' ] ) ) {
+
+			 $input_tag = $defaults[ $input_key ];
+
+		}
+
+		return $input_tag ? $input_tag : 'input';
+
+	}
+
+
+
+	/**
+	 * @param string $html_tag
+	 * @return array
+	 */
+	static function get_view_element_attributes( $html_tag ) {
+
+		return array_keys( self::get_html_attributes( $html_tag ) );
+
+	}
 
   /**
    * Call a named method starting with the most distant anscestor down to the current class filtering $value.
@@ -1273,7 +1433,7 @@ class WP_Metadata {
     foreach ( $parents as $parent ) {
       if ( self::has_own_method( $parent, $method_name ) ) {
 	      $args[ 0 ] = $value;
-        $value = self::invoke_instance_method( $object, $parent, $method_name, $args );
+        $value = self::invoke_specific_class_method( $object, $parent, $method_name, $args );
       }
     }
 
@@ -1298,7 +1458,7 @@ class WP_Metadata {
 
     foreach ( $parents as $parent ) {
       if ( self::has_own_method( $parent, $method_name ) ) {
-        self::invoke_instance_method( $object, $parent, $method_name, $invoke_args );
+        self::invoke_specific_class_method( $object, $parent, $method_name, $invoke_args );
       }
     }
 
@@ -1405,7 +1565,51 @@ class WP_Metadata {
 
  		return $feature;
 
- 	}
+  }
+
+	/**
+	 * @param string|object $class_name_or_object
+	 * @return string[];
+	 *
+	 */
+	static function get_class_defaults( $class_name_or_object ) {
+
+		$defaults = self::get_class_vars( $class_name_or_object, 'defaults' );
+
+		return $defaults ? $defaults : array();
+
+	}
+
+	/**
+	 * @param string|object $class_name_or_object
+	 * @return string[];
+	 *
+	 */
+	static function get_class_vars( $class_name_or_object ) {
+
+		if ( is_object( $class_name_or_object ) ) {
+
+			$class_name_or_object = get_class( $class_name_or_object );
+
+		}
+
+		return self::get_annotations( $class_name_or_object, 'CLASS_VARS' );
+
+	}
+
+	/**
+	 * @param string|object $class_name_or_object
+	 * @param string $var_name
+	 * @return string[];
+	 *
+	 */
+	static function get_class_var( $class_name_or_object, $var_name ) {
+
+	 	$class_vars = self::get_class_vars( $class_name_or_object );
+
+		return isset( $class_vars[ $var_name ] ) ? $class_vars[ $var_name ] : null;
+
+	}
 
 	/**
 	 * @param string $class_name
@@ -1414,6 +1618,10 @@ class WP_Metadata {
 	 */
 	static function get_make_new_parameters( $class_name ) {
 
+		/**
+		 * @note DO NOT use self::get_class_vars() here.
+		 * Parameters should ONLY be from $class_name, not it's parents.
+		 */
 		$class_vars = call_user_func( array( $class_name, 'CLASS_VARS' ) );
 
 		if ( ! empty( $class_vars[ 'parameters' ] ) && is_array( $class_vars[ 'parameters' ] ) ) {

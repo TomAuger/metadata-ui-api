@@ -37,11 +37,6 @@ abstract class WP_Metadata_Base {
 	/**
 	 * @var array
 	 */
-	private static $_annotated_properties;
-
-	/**
-	 * @var array
-	 */
 	private static $_defaulted_property_values;
 
 	/**
@@ -77,25 +72,18 @@ abstract class WP_Metadata_Base {
 			$this->do_class_action( 'initialize_class' );
 		}
 
-		if ( $this->apply_class_filters( 'do_assign_args', true, $args ) ) {
+		if ( ! is_array( $args ) ) {
+			$args = array();
+		}
 
-			if ( ! is_array( $args ) ) {
-				$args = array();
-			}
+		if ( $this->do_assign_args( true, $args ) ) {
 
-//			$args = $this->apply_class_filters( 'pre_prefix_args', $args );
-//			$args = $this->prefix_args( $args );
+			$args  = $this->get_defaults( $args );
 
-			$args = $this->apply_class_filters( 'pre_expand_args', $args );
 			$args = $this->expand_args( $args );
 
-			$defaults = $this->apply_class_filters( 'defaults', array() );
-			$args  = array_merge( $defaults, $args );
-
-			$args = $this->apply_class_filters( 'pre_collect_args', $args );
 			$args = $this->collect_args( $args );
 
-			$args       = $this->apply_class_filters( 'pre_assign_args', $args );
 			$this->args = $args;
 			$this->assign_args( $args );
 
@@ -107,13 +95,23 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
+	 * @param bool $continue
+	 * @param array $args
+	 *
+	 * @return bool
+	 */
+	function do_assign_args( $continue, $args = array() ) {
+		return $continue;
+	}
+
+	/**
 	 *
 	 */
 	function initialize_class() {
 		/**
 		 * Initialize Class Property Annotations for the class of '$this.'
 		 */
-		$this->get_annotated_properties( '::' );
+		$this->get_annotated_properties();
 
 	}
 
@@ -122,11 +120,9 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_class_defaults() {
 
-		$class_values = $this->get_annotations( 'CLASS_VARS' );
+		$defaults = WP_Metadata::get_class_var( get_class( $this ), 'defaults' );
 
-		return ! empty( $class_values[ 'defaults' ] ) && is_array( $class_values[ 'defaults' ] )
-			? $class_values[ 'defaults' ]
-			: array();
+		return is_array( $defaults ) ? $defaults : array();
 
 	}
 
@@ -134,38 +130,31 @@ abstract class WP_Metadata_Base {
 	 * @param $args array
 	 * @return array
 	 */
-	function defaults( $args ) {
+	function get_defaults( $args = array() ) {
 
 		if ( ! isset( $this->_defaults ) ) {
-			$args = array_merge( $this->get_annotated_properties(), $args );
-			foreach ( $args as $property_name => $property ) {
+
+			$property_defaults = $this->get_annotated_properties();
+
+			foreach ( $property_defaults as $property_name => $property ) {
+
 				if ( is_null( $property->default ) || ! $property->auto_create ) {
-					unset( $args[ $property_name ] );
+
+					unset( $property_defaults[ $property_name ] );
+
 				} else {
-					$args[ $property_name ] = $property->default;
-				}
-			}
-			if ( count( $class_defaults = $this->get_class_defaults() ) ) {
 
-				/*
-				 * Copy class default elements that don't exist to end of $args array.
-				 *
-				 * Don't use array_merge() here.  We need the class elements at the
-				 * end of the array but only $args[$name] does not already exist.
-				 */
-				foreach( $class_defaults as $name => $value ) {
-					if ( ! isset( $args[ $name ] ) ) {
-						$args[ $name ] = $value;
-					}
+					$property_defaults[ $property_name ] = $property->default;
+
 				}
 
 			}
 
-			$this->_defaults = $args;
+			$this->_defaults = array_merge( self::get_class_defaults(), $property_defaults );
 
 		}
 
-		return $this->_defaults;
+		return array_merge( $this->_defaults, $args );
 	}
 
 //	/**
@@ -248,7 +237,7 @@ abstract class WP_Metadata_Base {
 	 */
 	function expand_args( $args ) {
 
-		if ( count( $shortnames = $this->get_shortnames() ) ) {
+		if ( count( $shortnames = $this->get_shortnames( $args ) ) ) {
 
 			foreach ( $shortnames as $regex => $result ) {
 				foreach ( $args as $name => $value ) {
@@ -274,40 +263,6 @@ abstract class WP_Metadata_Base {
 		return $args;
 
 	}
-
-//	/**
-//	 * Ensure all $args have been prefixed that don't already have an underscore in their name.
-//	 *
-//	 * @param array $args
-//	 *
-//	 * @return array
-//	 */
-//	function prefix_args( $args ) {
-//
-//		if ( $prefix = $this->get_prefix() ) {
-//
-//			foreach ( $args as $arg_name => $arg_value ) {
-//				/**
-//				 * For every $arg passed-in that does not contain an underscore, is not already prefixed, and
-//				 * for which there is a property on this object
-//				 */
-//				if ( false === strpos( $arg_name, '_' ) && ! preg_match( "#^{$prefix}_#", $arg_name ) &&
-//				     (
-//						     property_exists( $this, $property_name = "{$prefix}:{$arg_name}" ) ||
-//						     method_exists( $this, $method_name = "set_{$property_name}" )
-//				     )
-//				) {
-//
-//					$args[ $property_name ] = $arg_value;
-//					unset( $args[ $arg_name ] );
-//
-//				}
-//			}
-//		}
-//
-//		return $args;
-//
-//	}
 
 	/**
 	 * collect $args from delegate properties. Also store in $this->delegated_args array.
@@ -529,6 +484,7 @@ abstract class WP_Metadata_Base {
 
 									$object_args['$value']  = $key_name;
 									$object_args['$parent'] = $this;
+									$object_args['$property'] = $annotated_property;
 
 									$class_name = WP_Metadata::get_registry_item( $annotated_property->registry, $key_name );
 
@@ -652,6 +608,15 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
+	 * @return array
+	 */
+	function get_properties() {
+
+		return array_merge( $this->get_annotated_properties(), get_object_vars( $this ) );
+
+	}
+
+	/**
 	 * Gets array of properties field names that should not get a prefix.
 	 *
 	 * @param string $property_name
@@ -660,9 +625,7 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_annotated_property( $property_name ) {
 
-		$annotated_properties = $this->get_annotated_properties();
-
-		return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : false;
+		return WP_Metadata::get_annotated_property( get_class( $this ), $property_name );
 
 	}
 
@@ -673,7 +636,7 @@ abstract class WP_Metadata_Base {
 	 */
 	function has_annotated_property( $property_name ) {
 
-		return isset( self::$_annotated_properties[ get_class( $this ) ][ $property_name ] );
+		return WP_Metadata::has_annotated_property( get_class( $this ), $property_name );
 
 	}
 
@@ -683,33 +646,7 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_annotated_properties() {
 
-		if ( ! isset( self::$_annotated_properties[ $class_name = get_class( $this ) ] ) ) {
-
-			/**
-			 * @var array[] $annotated_properties
-			 */
-			$annotated_properties = $this->get_annotations( 'PROPERTIES' );
-
-			foreach ( $annotated_properties as $property_name => $property_args ) {
-
-				$annotated_properties[ $property_name ] = new WP_Annotated_Property( $property_name, $property_args );
-
-			}
-
-			self::$_annotated_properties[ $class_name ] = $annotated_properties;
-
-		}
-
-		return self::$_annotated_properties[ $class_name ];
-
-	}
-
-	/**
-	 * @return array
-	 */
-	function get_properties() {
-
-		return array_merge( $this->get_annotated_properties(), get_object_vars( $this ) );
+		return WP_Metadata::get_annotated_properties( get_class( $this ) );
 
 	}
 
@@ -718,7 +655,7 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_annotated_property_names() {
 
-		return array_keys( $this->get_annotated_properties() );
+		return WP_Metadata::get_annotated_property_names( get_class( $this ) );
 
 	}
 
@@ -730,7 +667,19 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_annotations( $annotation_name, $annotations = array() ) {
 
-		return WP_Metadata::get_annotations( $this, $annotation_name, $annotations );
+		return WP_Metadata::get_annotations( get_class( $this ), $annotation_name, $annotations );
+
+	}
+
+	/**
+	 * @param string $annotation_name
+	 * @param string $property_name
+	 *
+	 * @return mixed
+	 */
+	function get_annotation_value( $annotation_name, $property_name ) {
+
+		WP_Metadata::get_annotation_value( get_class( $this ), $annotation_name, $property_name );
 
 	}
 
@@ -789,16 +738,6 @@ abstract class WP_Metadata_Base {
 
 		return $prefixed_args;
 
-	}
-
-	/**
-	 * @param string $annotation_name
-	 * @param string $property_name
-	 *
-	 * @return mixed
-	 */
-	function get_annotation_value( $annotation_name, $property_name ) {
-		return $this->get_annotated_property( $property_name )->get_annotation_value( $annotation_name );
 	}
 
 }

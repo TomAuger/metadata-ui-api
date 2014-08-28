@@ -93,25 +93,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @return array
-	 */
-	function get_shortnames() {
-
-		$shortnames = parent::get_shortnames();
-
-		$attributes = WP_Metadata::get_html_attributes( 'input' );
-
-		unset( $attributes['form'] ); // Reserve 'form' for instances of WP_Form.
-
-		$attributes = implode( '|', array_keys( $attributes ) );
-
-		$shortnames[ "^({$attributes})$" ] = 'view:input:element:$1';
-
-		return $shortnames;
-
-	}
-
-	/**
 	 * Returns an array of object properties and their annotations.
 	 *
 	 * @return array
@@ -397,6 +378,48 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 		$this->storage->object = $object;
 
+	}
+
+	/**
+	 * @param array $args
+	 * @return array
+	 */
+	function get_shortnames( $args ) {
+
+		$shortnames = parent::get_shortnames();
+
+		$view_class = WP_Metadata::get_field_view_type_args( $args[ 'view:view_type' ] );
+
+		if ( class_exists( $view_class ) && $attributes = $this->get_view_input_attributes( $view_class ) ) {
+
+			unset( $attributes['form'] ); // Reserve 'form' for instances of WP_Form.
+
+			$attributes = implode( '|', $attributes );
+
+			$shortnames["^({$attributes})$"] = 'view:input:element:$1';
+
+		}
+
+		return $shortnames;
+
+	}
+
+	/**
+	 *
+	 * @param string|bool $view_class
+	 * @return string[]
+	 */
+	function get_view_input_attributes( $view_class = false ) {
+
+		if ( ! $view_class ) {
+
+			$view_class = get_class( $this->view );
+
+		}
+
+		$input_tag = WP_Metadata::get_view_input_tag( $view_class );
+
+		return $input_tag ? WP_Metadata::get_view_element_attributes( $input_tag ) : array();
 	}
 
 	/**
