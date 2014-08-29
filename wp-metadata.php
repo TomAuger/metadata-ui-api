@@ -1638,19 +1638,19 @@ class WP_Metadata {
 	 */
 	static function get_make_new_parameters( $class_name ) {
 
-		/**
-		 * @note DO NOT use self::get_class_vars() here.
-		 * Parameters should ONLY be from $class_name, not it's parents.
-		 */
-		$class_vars = call_user_func( array( $class_name, 'CLASS_VARS' ) );
+		$parameters = array();
 
-		if ( ! empty( $class_vars['parameters'] ) && is_array( $class_vars['parameters'] ) ) {
+		$parents = self::get_class_parents( $class_name );
 
-			$parameters = $class_vars['parameters'];
+		foreach( $parents as $this_class ) {
 
-		} else {
+			$class_vars = call_user_func( array( $this_class, 'CLASS_VARS' ) );
 
-			$parameters = array();
+			if ( ! empty( $class_vars['parameters'] ) && is_array( $class_vars['parameters'] ) ) {
+
+				$parameters = $class_vars['parameters'];
+
+			}
 
 		}
 

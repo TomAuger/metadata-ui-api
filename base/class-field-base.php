@@ -205,15 +205,22 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	}
 
+	/**
+	 * @return bool|string
+	 */
 	function initial_element_name() {
+
 		return $this->field_name;
+
 	}
 
 	/**
 	 * @return string
 	 */
 	function initial_element_id() {
+
 		return str_replace( '_', '-', $this->element->get_name() ) . '-field';
+
 	}
 
 	/**
@@ -443,7 +450,9 @@ class WP_Field_Base extends WP_Metadata_Base {
 	function __set( $property_name, $value ) {
 
 		if ( property_exists( $this->view, $property_name ) ) {
+
 			$this->view->$property_name = $value;
+
 		}
 
 	}

@@ -69,6 +69,27 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
+	 * @return array
+	 */
+	static function CLASS_VARS() {
+
+		return array(
+				'defaults'   => array( 'type' => 'mixed[]' ),
+				'parameters' => array( '$args' ),
+		);
+
+	}
+
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array();
+
+	}
+
+	/**
 	 * @param string $filter
 	 *
 	 */
@@ -181,21 +202,6 @@ abstract class WP_Metadata_Base {
 		return $args;
 
 	}
-
-//	/**
-//	 * Gets the property (var) prefix from a constant to be used for this current class.
-//	 *
-//	 * @example: const PREFIX = 'form';
-//	 *
-//	 * Intended to be used by subclasses.
-//	 *
-//	 * @return array
-//	 */
-//	function get_prefix() {
-//
-//		return $this->constant( 'PREFIX' );
-//
-//	}
 
 	/**
 	 * Returns an array of shortname regexes as array key and expansion as key value.
@@ -550,27 +556,6 @@ abstract class WP_Metadata_Base {
 		}
 
 		return call_user_func_array( array( 'WP_Metadata', 'apply_class_filters' ), $args );
-
-	}
-
-	/**
-	 * @return array
-	 */
-	static function CLASS_VARS() {
-
-		return array(
-				'defaults'   => array( 'type' => 'mixed[]' ),
-				'parameters' => array( '$args' ),
-		);
-
-	}
-
-	/**
-	 * @return array
-	 */
-	static function PROPERTIES() {
-
-		return array();
 
 	}
 
