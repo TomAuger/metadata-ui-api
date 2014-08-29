@@ -9,7 +9,6 @@ This is a project of the [WordPress core Options/Metadata team](http://make.word
 
 This is the list of TODOs currently planned:
 
-- Change `PARAMETERS()` annotation to use a `'parameters'` argument in `PROPERTIES()` annotation. 
 - Review code in for other concerns.
 
 ## Documentation
