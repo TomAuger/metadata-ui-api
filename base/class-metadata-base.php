@@ -670,15 +670,6 @@ abstract class WP_Metadata_Base {
 	}
 
 	/**
-	 * @return array
-	 */
-	function get_annotated_property_names() {
-
-		return WP_Metadata::get_annotated_property_names( get_class( $this ) );
-
-	}
-
-	/**
 	 * @param string $annotation_name
 	 * @param string $property_name
 	 *
@@ -690,6 +681,12 @@ abstract class WP_Metadata_Base {
 
 	}
 
+	/**
+	 * @param string $field1
+	 * @param string $field2
+	 *
+	 * @return int
+	 */
 	private function _scaler_types_first( $field1, $field2 ) {
 
 		$sort       = 0;

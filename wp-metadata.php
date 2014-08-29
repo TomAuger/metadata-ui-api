@@ -1062,17 +1062,6 @@ class WP_Metadata {
 	/**
 	 * @param string $class_name
 	 *
-	 * @return array
-	 */
-	static function get_annotated_property_names( $class_name ) {
-
-		return array_keys( self::get_annotated_properties( $class_name ) );
-
-	}
-
-	/**
-	 * @param string $class_name
-	 *
 	 * @return WP_Annotated_Property[]
 	 */
 	static function get_annotated_properties( $class_name ) {
