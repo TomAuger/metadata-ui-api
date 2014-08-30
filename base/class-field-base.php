@@ -96,17 +96,28 @@ class WP_Field_Base extends WP_Metadata_Base {
 	/**
 	 */
 	static function CLASS_VARS() {
+
+		/*
+		 * These are the feature keys for the base field view object.
+		 * If you custom view needs different ones you'll need to handle
+		 * in your view or maybe in your field.
+		 */
+		$feature_keys = 'label|input|help|message|infobox';
+
+		$shortnames = array(
+			'^view_type$'                                       => 'view:view_type',
+			'^label$'                                           => 'view:features[label]:label_text',
+			'^element:(.+)$'                                    => 'view:features[input]:element:$1',
+			"^({$feature_keys}):?wrapper:(.+)$"                 => 'view:features[$1]:wrapper:$2',
+			"^({$feature_keys}):(element:)?(.+)$"               => 'view:features[$1]:element:$3',
+			"^features\[({$feature_keys})\]:(element:)?(.+)$"   => 'view:features[$1]:element:$3',
+		);
+
 		return array(
 				'defaults'   => array(
 						'view:view_type' => 'text'
 				),
-				'shortnames' => array(
-						'^label$'                    => 'view:label:label_text',
-						'^label:([^_]+)$'            => 'view:label:$1',
-						'^(input|element):([^_]+)$'  => 'view:input:element:$2',
-						'^(input:)?wrapper:([^_]+)$' => 'view:input:wrapper:$2',
-						'^view_type$'                => 'view:view_type',
-				),
+				'shortnames' => $shortnames,
 				'parameters' => array(
 						'$value',
 						'$object_type',

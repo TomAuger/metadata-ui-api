@@ -1298,7 +1298,7 @@ class WP_Metadata {
 	 */
 	static function get_class_defaults( $class_name_or_object ) {
 
-		$defaults = self::get_class_vars( $class_name_or_object, 'defaults' );
+		$defaults = self::get_class_var( $class_name_or_object, 'defaults' );
 
 		return $defaults ? $defaults : array();
 
