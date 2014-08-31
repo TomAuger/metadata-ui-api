@@ -2,6 +2,9 @@
 
 /**
  * Class WP_Registry
+ *
+ * Simple class to implement a registry for values like 'storage_types', 'field_types' and 'field_feature_types'.
+ *
  */
 class WP_Registry {
 
@@ -16,7 +19,9 @@ class WP_Registry {
 	private $_entries = array();
 
 	/**
-	 * @param string $registry_name
+	 * Instantiate a new registry.
+	 *
+	 * @param string $registry_name Name of the registry, for reference.
 	 */
 	function __construct( $registry_name ) {
 
@@ -25,25 +30,30 @@ class WP_Registry {
 	}
 
 	/**
-	 * @param string $name
-	 * @param mixed $args
 	 *
-	 * @return int
+	 * Register an named entry and it's $data to this
+	 *
+	 * @param string $name Name of the Entry to Register
+	 * @param mixed $data Arguments to register. This can be an array or even a string, such as a class name.
+	 *
+	 * @return int The index of the entry in the registry.
 	 */
-	function register_entry( $name, $args ) {
+	function register_entry( $name, $data ) {
 
 		$index = count( $this->_entries );
 
-		$this->_entries[ $name ] = $args;
+		$this->_entries[ $name ] = $data;
 
 		return $index;
 
 	}
 
 	/**
-	 * @param string $name
+	 * Get the $data for a named Entry from $this Registry.
 	 *
-	 * @return mixed
+	 * @param string $name Name of the Entry for which to get its $data from the Registry.
+	 *
+	 * @return mixed The $data for this Registry's named Entry, or null if no such named Entry found.
 	 */
 	function get_entry( $name ) {
 
@@ -52,9 +62,11 @@ class WP_Registry {
 	}
 
 	/**
-	 * @param string $name
+	 * Test to see if $this Registry has the specified named Entry
 	 *
-	 * @return bool
+	 * @param string $name Name of the Entry for which to test to see if it exists in the Registry.
+	 *
+	 * @return bool True if the named Entry exists in the Registry, false if not.
 	 */
 	function entry_exists( $name ) {
 
