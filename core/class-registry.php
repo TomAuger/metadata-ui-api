@@ -6,7 +6,7 @@
  * Simple class to implement a registry for values like 'storage_types', 'field_types' and 'field_feature_types'.
  *
  */
-class WP_Registry {
+final class WP_Registry {
 
 	/**
 	 * @var string

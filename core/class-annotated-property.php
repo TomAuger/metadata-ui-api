@@ -2,8 +2,9 @@
 
 /**
  * Class WP_Annotated_Property
+ *
  */
-class WP_Annotated_Property {
+final class WP_Annotated_Property {
 
 	/**
 	 * @var array List of default

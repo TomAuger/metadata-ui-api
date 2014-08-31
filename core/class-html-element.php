@@ -25,7 +25,7 @@
  * Designed for HTML5.  Not designed to generate valid XHTML.
  *
  */
-class WP_Html_Element {
+final class WP_Html_Element {
 
 	/**
 	 * Provide list of HTML element names that do not need a closing tag.
