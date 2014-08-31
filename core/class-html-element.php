@@ -3,14 +3,26 @@
 /**
  * Class WP_Html_Element
  *
- * Class to generate HTML element including contained elements, if applicable.
+ * Class used to generate an HTML element, including contained elements, if applicable.
  *
- * The benefits of this class is that it allows an associative array of attributes and values
- * to be passed to functions with default values and allow easy generation of HTML.
+ * This class allows an associative array of $args containing attributes and values to be
+ * passed down through functions that call other functions, some of which may set default
+ * $arg values, where the $args are ultimately designed to generate HTML.
+ *
+ * As an example, a developer can call register_post_field() and pass a value of 10 for
+ * the $field_args key of 'view:features[input]:element:size' and that allows the HTML
+ * Element to receive an array with a key/value of 'size'=>10 in the $attributes array
+ * passed to the HTML Element's __construct() method.
+ *
+ * This if fields use HTML Element objects to construct the HTML elements needed for output
+ * no extra work needs to be done to support initialization of any property that is valid
+ * for the element type identified by the $tag_name property.
  *
  * Class does not (currently?) contain child HTML Elements; its $value property
  * should contain the generated text of the child HTML Elements.  This may change
  * if we discover the need for containing children.
+ *
+ * Designed for HTML5.  Not designed to generate valid XHTML.
  *
  */
 class WP_Html_Element {
@@ -37,7 +49,9 @@ class WP_Html_Element {
 	 * To generate an HTML element that contains other HTML elements, set this property with the text
 	 * string that contains the HTML elements.
 	 *
-	 * @var string
+	 * Can be a callable that will generate the value.
+	 *
+	 * @var null|string|callable
 	 */
 	var $value;
 
@@ -58,9 +72,9 @@ class WP_Html_Element {
 	function __construct( $tag_name, $attributes = array(), $value = null ) {
 
 		/**
-		 * reset_element() initializes the properties of the HTML Element.
+		 * assign() initializes the properties of the HTML Element.
 		 */
-		$this->reset_element( $tag_name, $attributes, $value );
+		$this->assign( $tag_name, $attributes, $value );
 
 	}
 
@@ -96,13 +110,14 @@ class WP_Html_Element {
 	/**
 	 * Used to initialize an HTML Element with it's constructor parameters.
 	 *
-	 * Also useful to allow HTML Elements to be reused rather than having to create a new one, in a loop, for example.
+	 * Also useful to allow HTML Elements to be reused rather than having to create a new one
+	 * where the HTML Element object is just being used for output, in a loop for example.
 	 *
 	 * @param string $tag_name
 	 * @param array $attributes
 	 * @param null|callable|string $value
 	 */
-	function reset_element( $tag_name, $attributes = array(), $value = null ) {
+	function assign( $tag_name, $attributes = array(), $value = null ) {
 
 		$this->tag_name = $tag_name;
 		if ( is_null( $attributes ) ) {
@@ -120,23 +135,65 @@ class WP_Html_Element {
 	 */
 	function get_html() {
 
-		$html = "<{$this->tag_name} " . $this->get_attributes_html() . '>';
+		/**
+		 * Sanitize this tag_name to ensure
+		 */
+		if ( ! ( $tag_name = WP_Metadata::sanitize_identifier( $this->tag_name ) ) ) {
 
-		if ( ! $this->is_void_element() ) {
-			/**
-			 * @todo Need to find a use-case to test this:
+			/*
+			 * If tag name is empty after sanitization, it's not a valid tag name.
+			 * Provide some type of indicator of value in the generated HTML.
+			 *
+			 * @todo Figure out how to sanitize it enough so we can debugging output.
+			 *
 			 */
-			$value = is_callable( $this->value ) ? call_user_func( $this->value[0], $this->value[1] ) : $this->value;
 
-			$html .= "{$value}</{$this->tag_name}>";
+			$html = "<!-- invalid WP_Html_Element->tag_name -->";
+
+		} else {
+
+			/*
+			 * Build the HTML Element's opening tag.
+			 */
+			$html = "<{$tag_name} " . $this->get_attributes_html() . '>';
+
+			if ( ! $this->is_void_element() ) {
+				/*
+				 * If not a void element and
+				 */
+				if ( is_callable( $this->value ) ) {
+
+					/*
+					 * Call the callable to generate the value.
+					 * Pass in $this so it has some context.
+					 */
+					$value = call_user_func( $this->value, $this );
+
+				} else {
+
+					/*
+					 * Just grab the value.
+					 */
+					$value = $this->value;
+
+				}
+
+				/*
+				 * Append the inner text value and the closing tag.
+				 */
+				$html .= "{$value}</{$tag_name}>";
+			}
+
 		}
-
 		return $html;
 
 	}
 
 	/**
-	 * Generate the HTML that is the names and attributes for an HTML sans tag and angle brackets
+	 * Generate the HTML that for the names and attributes inside an HTML element's opening tag.
+	 *
+	 * Only generates name/value pairs for attributes that are valid for the HTML element type
+	 * as indicated by tag_name.
 	 *
 	 * @example output (sans single quotes):
 	 *
@@ -173,7 +230,14 @@ class WP_Html_Element {
 				/*
 				 *  Include if the attribute has a value and is valid for this HTML Element type
 				 */
-				$html[] = "{$name}=\"{$value}\"";  // @todo How to sanitize $value?
+				if ( $name = WP_Metadata::sanitize_identifier( $name ) ) {
+					/**
+					 * Is the name provided can be sanitized (because if not the sanitize_identifier() returns a null)
+					 * add this name/value pair to the $html array.
+					 */
+					$value  = esc_attr( $value );
+					$html[] = "{$name}=\"{$value}\"";
+				}
 			}
 		}
 
@@ -185,7 +249,8 @@ class WP_Html_Element {
 	}
 
 	/**
-	 * Acess the internal associative array containing the names and value of the attributes for this HTML Element.
+	 * Acess the internal associative array containing the names and value of the attributes
+	 * for this HTML Element.
 	 *
 	 * @return array
 	 */
@@ -196,7 +261,8 @@ class WP_Html_Element {
 	}
 
 	/**
-	 * Tests the current $tag_name to determine if it represents an HTML Element that does not require a closing tag.
+	 * Tests the current $tag_name to determine if it represents an HTML5 element that does
+	 * not require a closing tag.
 	 *
 	 * @return bool
 	 */
@@ -248,7 +314,9 @@ class WP_Html_Element {
 	 */
 	function get_attribute_value( $attribute_name ) {
 
-		return ! empty( $this->_attributes[ $attribute_name ] ) ? trim( $this->_attributes[ $attribute_name ] ) : false;
+		return ! empty( $this->_attributes[ $attribute_name ] )
+			? trim( $this->_attributes[ $attribute_name ] )
+			: false;
 
 	}
 

@@ -479,7 +479,7 @@ class WP_Metadata {
 		} else {
 			$forms = $_POST['wp_metadata_forms'];
 			foreach ( $forms as $form_name => $form_data ) {
-				$form = self::make_form( $form_name, wp_get_post_object_type( $post_type ), array( 'view' => false ) );
+				$form = self::make_form( $form_name, WP_Metadata::get_post_object_type_literal( $post_type ), array( 'view' => false ) );
 				/**
 				 * @var WP_Field_Base $field
 				 */
@@ -529,7 +529,7 @@ class WP_Metadata {
 	static function _edit_post_form( $post ) {
 
 		$post_type    = $post->post_type;
-		$object_type  = wp_get_post_object_type( $post_type );
+		$object_type  = WP_Metadata::get_post_object_type_literal( $post_type );
 		$current_form = preg_replace( '#^edit_form_(.*)$#', '$1', current_action() );
 
 		if ( $current_form == get_post_type_object( $post_type )->default_form ) {
@@ -784,7 +784,7 @@ class WP_Metadata {
 			if ( ! $reusable_element ) {
 				$reusable_element = new WP_Html_Element( $tag_name, $attributes, $value );
 			} else {
-				$reusable_element->reset_element( $tag_name, $attributes, $value );
+				$reusable_element->assign( $tag_name, $attributes, $value );
 			}
 			$element = $reusable_element;
 		}
@@ -1661,6 +1661,47 @@ class WP_Metadata {
 
 	}
 
+	/**
+	 * Returns an Object Type literal given a post type
+	 *
+	 * @param string $post_type
+	 *
+	 * @return string
+	 */
+	static function get_post_object_type_literal( $post_type ) {
+
+		return WP_Object_Type::get_post_object_type_literal( $post_type );
+
+	}
+
+	/**
+	 * Sanitizes an identifier
+	 *
+	 * An identifier is defined as a string that must start with a letter and can contain letters numbers or underscrores.
+	 *
+	 * Identifiers are converted to lower case but will return null if the identifier is not valid.
+	 *
+	 * Dashes are allowed if a single '-' is passed at the 2nd parameter.
+	 *
+	 * @param string $identifier String to sanitize following the rules of an identifier.
+	 *
+	 * @param string $allow Typically used to allow a dash in the idenitifier; If needed, pass in a literal string '-'.
+	 *
+	 * @return null|string
+	 */
+	static function sanitize_identifier( $identifier, $allow = '' ) {
+
+		$identifier = strtolower( $identifier );
+
+		if ( ! preg_match( '#^[a-z_]#', $identifier ) || preg_replace( "#[^a-z0-9_{$allow}]#", '', $identifier ) != $identifier ) {
+
+			$identifier = null;
+
+		}
+
+		return $identifier;
+
+	}
 }
 
 WP_Metadata::on_load();

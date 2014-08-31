@@ -27,15 +27,33 @@ function wp_ensure_object_type( $args ) {
 }
 
 /**
- * Register object type
+ * Register a new Object Type $class.
  *
- * @param $class
- * @param $class_args
+ * Allows a plugin or theme to register it' own $class values for Object Types.
+ *
+ * An example might be for a plugin we call 'Awesome Event Calendar', it might
+ * register a new Object Type $class of 'aec_event' where 'aec_' is the plugin's
+ * prefix:
+ *
+ *    register_object_type_class( 'aec_event' );
+ *
+ * This would allow developers to register fields for an 'aec_event'.
+ * HOWEVER, an event would probably best be a custom post type so this functionality
+ * may be rarely used, if ever.  Still, it's here if it is needed.
+ *
+ * The $args array is currently unused but here for future needs.
+ *
+ * $class values cannot be registered twice
+ *
+ * @param string $class The new Object Type $class to register.
+ * @param array $class_args The $args for the registered $class. Currently unused.
  *
  * @return bool Whether the object type $class was registered
  */
 function register_object_type_class( $class, $class_args = array() ) {
+
 	return WP_Object_Type::register_class( $class, $class_args );
+
 }
 
 /**
@@ -47,7 +65,9 @@ function register_object_type_class( $class, $class_args = array() ) {
  * @return bool Whether the object type $type_name was registered
  */
 function register_field_type( $type_name, $type_def = array() ) {
+
 	return WP_Metadata::register_field_type( $type_name, $type_def );
+
 }
 
 /**
@@ -57,7 +77,9 @@ function register_field_type( $type_name, $type_def = array() ) {
  * @return bool Return true if it was registered, false if not.
  */
 function register_autoload_class( $class_name, $class_filepath ) {
+
 	return WP_Metadata::register_autoload_class( $class_name, $class_filepath );
+
 }
 
 
