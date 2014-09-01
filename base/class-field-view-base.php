@@ -221,8 +221,8 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 			if ( $attributes = $this->get_view_input_attributes() ) {
 
 				$attributes                                                    = implode( '|', $attributes );
-				$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:html:$2';
-				$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:html:$2';
+				$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:element:$2';
+				$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:$2';
 
 			}
 			self::$_shortnames[ $class_name ] = $shortnames;
