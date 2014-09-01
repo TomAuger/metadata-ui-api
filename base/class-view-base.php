@@ -87,7 +87,7 @@ class WP_View_Base extends WP_Metadata_Base {
 	 */
 	function get_wrapper_tag() {
 
-		if ( ! ( $html_tag = $this->get_annotation_value( 'html_tag', 'wrapper' ) ) ) {
+		if ( ! ( $html_tag = $this->get_annotation_custom( 'html_tag', 'wrapper' ) ) ) {
 
 			$html_tag = 'div';
 

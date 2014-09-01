@@ -332,7 +332,7 @@ abstract class WP_Metadata_Base {
 
 		/*
 		 * Assign the arg values to properties, if they exist.
-		 * If no property exists capture value in the $this->extra[] array.
+		 * If no property exists capture value in the $this->custom[] array.
 		 */
 		foreach ( $args as $name => $value ) {
 
@@ -515,7 +515,9 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_annotated_property( $property_name ) {
 
-		return WP_Metadata::get_annotated_property( get_class( $this ), $property_name );
+		$annotated_properties = WP_Metadata::get_annotated_properties( get_class( $this ) );
+
+		return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : null;
 
 	}
 
@@ -677,8 +679,37 @@ abstract class WP_Metadata_Base {
 	 */
 	function get_annotation_value( $annotation_name, $property_name ) {
 
-		WP_Metadata::get_annotation_value( get_class( $this ), $annotation_name, $property_name );
+		if ( $property = $this->get_annotated_property( $property_name ) ) {
 
+			$value = $property->get_annotation_value( $annotation_name );
+
+		} else {
+
+			$value = null;
+
+		}
+
+		return $value;
+	}
+	/**
+	 * @param string $annotation_name
+	 * @param string $property_name
+	 *
+	 * @return mixed
+	 */
+	function get_annotation_custom( $annotation_name, $property_name ) {
+
+		if ( $property = $this->get_annotated_property( $property_name ) ) {
+
+			$value = $property->get_annotation_custom( $annotation_name );
+
+		} else {
+
+			$value = null;
+
+		}
+
+		return $value;
 	}
 
 	/**

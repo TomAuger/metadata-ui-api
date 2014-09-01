@@ -120,7 +120,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 				'shortnames' => $shortnames,
 				'parameters' => array(
 						'$value',
-						'$object_type',
+						'object_type',
 						'$args',
 				)
 		);

@@ -937,9 +937,9 @@ class WP_Metadata {
 	/**
 	 * Collect $args from list of keys and values into a tree of keys and values.
 	 *
-	 * Look for $args based on their prefixes (i.e. 'html:').
+	 * Look for $args based on their prefixes (i.e. 'view:').
 	 * If found capture the non-prefixed key and value into $collected_args for return.
-	 * (Stripping the prefix allows for nested values, i.e. 'label:html:class')
+	 * (Stripping the prefix allows for nested values, i.e. 'view:features[label]:wrapper:class')
 	 *
 	 * @note ONLY collect the first level, so $args['label:html:class'] would become $args['label']['html:class'].
 	 *       Subnames will get split later thanks to calls that drill down recursively.
@@ -1225,45 +1225,6 @@ class WP_Metadata {
 		$properties = self::get_annotated_properties( $class_name );
 
 		return isset( $properties[ $property_name ] );
-
-	}
-
-	/**
-	 * @param string $class_name
-	 * @param string $annotation_name
-	 * @param string $property_name
-	 *
-	 * @return mixed
-	 */
-	static function get_annotation_value( $class_name, $annotation_name, $property_name ) {
-
-		if ( $property = self::get_annotated_property( $class_name, $property_name ) ) {
-
-			$value = $property->get_annotation_value( $annotation_name );
-
-		} else {
-
-			$value = null;
-
-		}
-
-		return $value;
-
-	}
-
-	/**
-	 * Gets array of properties field names that should not get a prefix.
-	 *
-	 * @param string $class_name
-	 * @param string $property_name
-	 *
-	 * @return WP_Annotated_Property|bool
-	 */
-	static function get_annotated_property( $class_name, $property_name ) {
-
-		$annotated_properties = self::get_annotated_properties( $class_name );
-
-		return isset( $annotated_properties[ $property_name ] ) ? $annotated_properties[ $property_name ] : null;
 
 	}
 
