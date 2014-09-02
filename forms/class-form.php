@@ -65,7 +65,7 @@ class WP_Form extends WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
-	static function CLASS_VARS() {
+	static function CLASS_VALUES() {
 		return array(
 				'parameters' => array(
 						'$value',
@@ -240,8 +240,8 @@ class WP_Form extends WP_Metadata_Base {
 	 *
 	 * @return array
 	 */
-	function get_defaults( $args ) {
-		$args                 = parent::get_defaults( $args );
+	function get_default_args( $args ) {
+		$args                 = parent::get_default_args( $args );
 		$args['element_name'] = str_replace( '-', '_', $this->form_name );
 
 		return $args;

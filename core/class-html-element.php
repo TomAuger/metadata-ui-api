@@ -82,7 +82,7 @@ final class WP_Html_Element {
 	 * Define the parameters needs for the make_new() Factory menthod for this class.
 	 * @return array
 	 */
-	static function CLASS_VARS() {
+	static function CLASS_VALUES() {
 		return array(
 				'parameters' => array(
 						'html_tag',

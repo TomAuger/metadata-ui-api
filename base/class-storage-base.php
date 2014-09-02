@@ -40,7 +40,7 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 	/**
 	 * @return array
 	 */
-	static function CLASS_VARS() {
+	static function CLASS_VALUES() {
 		return array(
 				'parameters' => array(
 						'$value',
@@ -60,8 +60,8 @@ abstract class WP_Storage_Base extends WP_Metadata_Base {
 	static function PROPERTIES() {
 
 		return array(
-				'owner'  => array( 'prefix' => false, 'auto_create' => false ),
-				'object' => array( 'prefix' => false, 'auto_create' => false ),
+				'owner'  => array( 'auto_create' => false ),
+				'object' => array( 'auto_create' => false ),
 		);
 
 	}

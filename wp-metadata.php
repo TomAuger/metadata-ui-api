@@ -56,11 +56,6 @@ class WP_Metadata {
 	private static $_class_annotations;
 
 	/**
-	 * @var array
-	 */
-	private static $_annotated_properties;
-
-	/**
 	 * @var WP_Registry[]
 	 */
 	private static $_registries = array(
@@ -165,20 +160,6 @@ class WP_Metadata {
 
 		if ( is_admin() ) {
 			add_action( 'admin_init', array( __CLASS__, '_admin_init' ) );
-		}
-
-	}
-
-	/**
-	 * Initialize the generic registries.
-	 *
-	 */
-	static function initialize_registries() {
-
-		foreach ( array_keys( self::$_registries ) as $registry_name ) {
-
-			self::$_registries[ $registry_name ] = new WP_Registry( $registry_name );
-
 		}
 
 	}
@@ -881,13 +862,13 @@ class WP_Metadata {
 	}
 
 	/**
-	 * @param string $registry_name  - Name of Registry
+	 * @param string $registry_type  - Name of Registry
 	 * @param string $item_name      - Name of item in registry
 	 * @param null|mixed $item_value - Value of item in registry
 	 */
-	static function register_registry_item( $registry_name, $item_name, $item_value = null ) {
+	static function register_registry_item( $registry_type, $item_name, $item_value = null ) {
 
-		self::$_registries[ $registry_name ]->register_entry( $item_name, $item_value );
+		self::$_registries[ $registry_type ]->register_entry( $item_name, $item_value );
 
 	}
 
@@ -896,41 +877,66 @@ class WP_Metadata {
 	/*********************************************/
 
 	/**
-	 * @param string $registry_name - Name of Registry
+	 * Initialize the generic registries.
+	 *
+	 */
+	static function initialize_registries() {
+
+		foreach ( array_keys( self::$_registries ) as $registry_type ) {
+
+			self::register_registry( $registry_type );
+
+		}
+
+	}
+
+	/**
+	 * Registers a new type of Registry.
+	 *
+	 * @param string $registry_type  - Name of Registry
+	 */
+	static function register_registry( $registry_type ) {
+
+		self::$_registries[ $registry_type ] = new WP_Registry( $registry_type );
+
+	}
+
+	/**
+	 * @param string $registry_type - Name of Registry
 	 * @param string $item_name     - Name of item in registry
 	 *
 	 * @return null|mixed
 	 */
-	static function get_registry_item( $registry_name, $item_name ) {
+	static function get_registry_item( $registry_type, $item_name ) {
 
-		return self::$_registries[ $registry_name ]->get_entry( $item_name );
+		return self::$_registries[ $registry_type ]->get_entry( $item_name );
 
 	}
 
 	/**
 	 * Does the named registry item exist?
 	 *
-	 * @param string $registry_name - Name of Registry
+	 * @param string $registry_type - Name of Registry
 	 * @param string $item_name     - Name of item in registry
 	 *
 	 * @return bool
 	 */
-	static function registry_item_exists( $registry_name, $item_name ) {
+	static function registry_item_exists( $registry_type, $item_name ) {
 
-		return self::$_registries[ $registry_name ]->entry_exists( $item_name );
+		return self::$_registries[ $registry_type ]->entry_exists( $item_name );
 
 	}
 
 	/**
 	 * Does the named registry exist?
 	 *
-	 * @param string $registry_name - Name of Registry
+	 * @param string $registry_type - Name of Registry
 	 *
 	 * @return bool
 	 */
-	static function registry_exists( $registry_name ) {
+	static function registry_exists( $registry_type ) {
 
-		return isset( self::$_registries[ $registry_name ] );
+		return isset( self::$_registries[ $registry_type ] );
 
 	}
 
@@ -1059,78 +1065,6 @@ class WP_Metadata {
 
 	}
 
-	/**
-	 * @param string $class_name
-	 *
-	 * @return WP_Annotated_Property[]
-	 */
-	static function get_annotated_properties( $class_name ) {
-
-		if ( ! isset( self::$_annotated_properties[ $class_name ] ) ) {
-
-			$annotated_properties = self::get_annotations( $class_name, 'PROPERTIES' );
-
-			/**
-			 * Finally, convert all annotated properties to a WP_Annotated_Property class.
-			 */
-			foreach ( $annotated_properties as $property_name => $property_args ) {
-
-				$annotated_properties[ $property_name ] = new WP_Annotated_Property( $property_name, $property_args );
-
-			}
-
-			self::$_annotated_properties[ $class_name ] = $annotated_properties;
-
-		}
-
-		return self::$_annotated_properties[ $class_name ];
-
-	}
-
-	/**
-	 * Collect an array of class annotations defined as either class constant or static method.
-	 * Start with the most distant anscestor down to the current class and merge $annotations.
-	 *
-	 * @param string $class_name
-	 * @param string $annotation_name
-	 * @param array $annotations
-	 *
-	 * @return array
-	 */
-	static function get_annotations( $class_name, $annotation_name, $annotations = array() ) {
-
-		if ( ! isset( self::$_class_annotations[ $key = "{$class_name}::{$annotation_name}" ] ) ) {
-
-			$parents = self::get_class_parents( $class_name, true );
-
-			foreach ( $parents as $parent ) {
-
-				if ( defined( $const_ref = "{$parent}::{$annotation_name}" ) ) {
-					$class_annotations = array( self::constant( $annotation_name, $parent ) );
-				} else if ( self::has_own_method( $parent, $annotation_name ) ) {
-					$class_annotations = self::invoke_specific_class_method( null, $parent, $annotation_name, $annotations );
-				} else {
-					$class_annotations = array();
-				}
-
-				foreach ( $class_annotations as $field_name => $class_annotation ) {
-					if ( isset( $annotations[ $field_name ] ) && is_array( $annotations[ $field_name ] ) ) {
-						$annotations[ $field_name ] = array_merge( $annotations[ $field_name ], $class_annotation );
-					} else {
-						$annotations[ $field_name ] = $class_annotation;
-					}
-				}
-			}
-			/*
-				* Remove any annotations values that are null.
-				*/
-			self::$_class_annotations[ $key ] = array_filter( $annotations, array( __CLASS__, '_strip_null_elements' ) );
-
-		}
-
-		return self::$_class_annotations[ $key ];
-
-	}
 
 	/**
 	 * Get an array of class name parent
@@ -1210,21 +1144,10 @@ class WP_Metadata {
 		$reflected_class  = new ReflectionClass( $class_name );
 		$reflected_method = $reflected_class->getMethod( $method_name );
 
+		if ( is_bool( $args ) ) {
+		 	echo '';
+		}
 		return $reflected_method->invokeArgs( $instance, $args );
-
-	}
-
-	/**
-	 * @param string $class_name
-	 * @param string $property_name
-	 *
-	 * @return bool
-	 */
-	static function has_annotated_property( $class_name, $property_name ) {
-
-		$properties = self::get_annotated_properties( $class_name );
-
-		return isset( $properties[ $property_name ] );
 
 	}
 
@@ -1259,27 +1182,95 @@ class WP_Metadata {
 	 */
 	static function get_class_defaults( $class_name_or_object ) {
 
-		$defaults = self::get_class_var( $class_name_or_object, 'defaults' );
+		$defaults = self::get_class_value( $class_name_or_object, 'defaults' );
 
 		return $defaults ? $defaults : array();
 
 	}
 
 	/**
+	 * Collect an array of class vars defined as either class constant or static method.
+	 * Start with the most distant anscestor down to the current class and merge $class_vars.
+	 *
 	 * @param string|object $class_name_or_object
 	 *
 	 * @return string[];
 	 *
 	 */
-	static function get_class_vars( $class_name_or_object ) {
+	static function get_class_values( $class_name_or_object ) {
 
-		if ( is_object( $class_name_or_object ) ) {
+		return self::get_class_vars( $class_name_or_object, 'CLASS_VALUES' );
 
-			$class_name_or_object = get_class( $class_name_or_object );
+	}
+
+	static function get_annotations() {
+	}
+
+	/**
+	 * Collect an array of class vars defined as either class constant or static method.
+	 * Start with the most distant anscestor down to the current class and merge $class_vars.
+	 *
+	 * @param string|object $class_name_or_object
+	 * @param string $class_var
+	 *
+	 * @return string[];
+	 *
+	 */
+	static function get_class_vars( $class_name_or_object, $class_var ) {
+
+		$class_name = is_object( $class_name_or_object ) ? get_class( $class_name_or_object ) : $class_name_or_object;
+
+		if ( !( $class_vars = wp_cache_get( $cache_key = "{$class_name}::class_vars[{$class_var}]", 'wp-metadata' ) ) ) {
+
+			$parents = self::get_class_parents( $class_name, true );
+
+			$class_vars = array();
+
+			foreach ( $parents as $parent ) {
+
+				if ( defined( $const_ref = "{$parent}::{$class_var}" ) ) {
+
+					$class_class_vars = array( self::constant( $class_var, $parent ) );
+
+				} else if ( self::has_own_method( $parent, $class_var ) ) {
+
+					$class_class_vars = WP_Metadata::invoke_specific_class_method( null, $parent, $class_var, $class_vars );
+
+				} else {
+
+					$class_class_vars = array();
+
+				}
+
+				foreach ( $class_class_vars as $field_name => $class_class_var ) {
+
+					if ( isset( $class_vars[ $field_name ] ) && is_array( $class_vars[ $field_name ] ) ) {
+
+						$class_vars[ $field_name ] = array_merge( $class_vars[ $field_name ], $class_class_var );
+
+					} else {
+
+						$class_vars[ $field_name ] = $class_class_var;
+
+					}
+
+				}
+
+			}
+
+			/*
+		   * Remove any class_vars values that are null.
+			 */
+			$class_vars = array_filter( $class_vars, array( __CLASS__, '_strip_null_elements' ) );
+
+			/*
+			 * Now store all that work in the object cache!
+			 */
+			wp_cache_set( $cache_key, $class_vars, 'wp-metadata' );
 
 		}
 
-		return self::get_annotations( $class_name_or_object, 'CLASS_VARS' );
+		return $class_vars;
 
 	}
 
@@ -1567,16 +1558,16 @@ class WP_Metadata {
 
 	/**
 	 * @param string|object $class_name_or_object
-	 * @param string $var_name
+	 * @param string $value_name
 	 *
 	 * @return string[];
 	 *
 	 */
-	static function get_class_var( $class_name_or_object, $var_name ) {
+	static function get_class_value( $class_name_or_object, $value_name ) {
 
-		$class_vars = self::get_class_vars( $class_name_or_object );
+		$class_values = self::get_class_values( $class_name_or_object );
 
-		return isset( $class_vars[ $var_name ] ) ? $class_vars[ $var_name ] : null;
+		return isset( $class_values[ $value_name ] ) ? $class_values[ $value_name ] : null;
 
 	}
 
@@ -1594,7 +1585,7 @@ class WP_Metadata {
 
 		foreach( $parents as $this_class ) {
 
-			$class_vars = call_user_func( array( $this_class, 'CLASS_VARS' ) );
+			$class_vars = call_user_func( array( $this_class, 'CLASS_VALUES' ) );
 
 			if ( ! empty( $class_vars['parameters'] ) && is_array( $class_vars['parameters'] ) ) {
 

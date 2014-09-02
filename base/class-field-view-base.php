@@ -56,7 +56,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	/**
 	 * @return array
 	 */
-	static function CLASS_VARS() {
+	static function CLASS_VALUES() {
 		return array(
 				'parameters' => array(
 						'view_type',
@@ -77,7 +77,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 				'features' => array(
 						'type'     => 'WP_Field_Feature_Base[]',
 						'default'  => '$key_name',
-						'registry' => 'field_feature_types',
+						'registry' => 'field_feature_types',    // @todo Is $registry needed?
 						'keys'     => array(
 								'label',
 								'input',
@@ -209,7 +209,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 
 			$shortnames = parent::get_shortnames();
 
-			$properties = $this->get_annotations( 'PROPERTIES' );
+			$properties = $this->get_class_vars( 'PROPERTIES' );
 
 			if ( ! empty( $properties['features']['keys'] ) && is_array( $feature_keys = $properties['features']['keys'] ) ) {
 
@@ -244,7 +244,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 		 */
 		$field = $this->field;
 
-		if ( ! $field->has_annotated_property( $field->field_name ) ) {
+		if ( ! $field->has_property_annotations( $field->field_name ) ) {
 
 			$prefix = false;
 

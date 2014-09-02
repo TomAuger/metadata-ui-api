@@ -38,7 +38,7 @@ abstract class WP_Field_Feature_Base extends WP_View_Base {
 	/**
 	 * @return array
 	 */
-	static function CLASS_VARS() {
+	static function CLASS_VALUES() {
 		return array(
 				'parameters' => array(
 						'$value',

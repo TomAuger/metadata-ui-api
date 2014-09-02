@@ -44,7 +44,7 @@
  *     $args = array( 'type' => 'WP_Form', 'auto_create' => false ),
  *     $property = new WP_Annotated_Property( $name, $form );
  *
- * The main use of this class within WP_Metadata is in ::get_annotated_properties( $class_name )
+ * The main use of this class within WP_Metadata is in ::get_property_annotations( $class_name )
  * where each sub-array of 'annotation' arrays is passed into an object of type
  * WP_Annotated_Property. The array if 'annotation' arrays is returned by the PROPERTIES() method.
  *
@@ -97,7 +97,7 @@ final class WP_Annotated_Property {
 	var $default;
 
 	/**
-	 * @var array Allows for overriding the 'parameters' in CLASS_VARS() in the case it is needed.
+	 * @var array Allows for overriding the 'parameters' in CLASS_VALUES() in the case it is needed.
 	 *
 	 * @todo Need to find a use-case before implementing this.
 	 */
@@ -180,9 +180,9 @@ final class WP_Annotated_Property {
 		 */
 		if ( empty( $annotations['type'] ) ) {
 			/*
-			 * Default to 'string' if not declared.
+			 * Default to 'mixed' if not declared.
 			 */
-			$this->property_type = 'string';
+			$this->property_type = 'mixed';
 		} else if ( preg_match( '#(.+)\[\]$#', $annotations['type'], $match ) ) {
 			/*
 			 * In case of array, designed by trailing brackets e.g. '[]',
@@ -334,7 +334,7 @@ final class WP_Annotated_Property {
 	 * Calls the make_new() static factory method declared for the class in $property_type, if it exists.
 	 *
 	 * Assuming the make_new() method expects parameters the $class named in $property_type should have a
-	 * CLASS_VARS() method that returns an array with an element 'parameters' that itself is a simple
+	 * CLASS_VALUES() method that returns an array with an element 'parameters' that itself is a simple
 	 * array who values specify indicators for the args required, list in the same order that make_new()
 	 * expects them.
 	 *
@@ -342,9 +342,9 @@ final class WP_Annotated_Property {
 	 *
 	 *    static function make_new( $field_name, $object_type, $field_args = array() );
 	 *
-	 * And the class annotations for WP_Field_Base::CLASS_VARS() contain a 'parameters' element like this:
+	 * And the class annotations for WP_Field_Base::CLASS_VALUES() contain a 'parameters' element like this:
 	 *
-	 *   	static function CLASS_VARS() {
+	 *   	static function CLASS_VALUES() {
 	 *
 	 *		  return array(
 	 *			  	'...' => array( ... ),

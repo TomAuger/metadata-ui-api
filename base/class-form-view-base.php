@@ -46,7 +46,7 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	/**
 	 * @return array
 	 */
-	static function CLASS_VARS() {
+	static function CLASS_VALUES() {
 		return array(
 				'parameters' => array(
 						'$value',

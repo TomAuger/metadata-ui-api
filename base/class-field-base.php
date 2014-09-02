@@ -95,7 +95,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	/**
 	 */
-	static function CLASS_VARS() {
+	static function CLASS_VALUES() {
 
 		/*
 		 * These are the feature keys for the base field view object.
