@@ -1,9 +1,7 @@
 <?php
 namespace WP_Metadata\Unit_Tests;
 
-require dirname( __FILE__ ) . '/factory.php';
-
-class WP_Metadata_UnitTestCase extends \WP_UnitTestCase {
+class WPMetadata_UnitTestCase extends \WP_UnitTestCase {
 	public function setUp() {
 		parent::setUp();
 	}
@@ -55,9 +53,9 @@ class WP_Metadata_UnitTestCase extends \WP_UnitTestCase {
 
 		unset($GLOBALS['wp_query'], $GLOBALS['wp_the_query']);
 
-		$GLOBALS['wp_the_query'] =& new WP_Query();
-		$GLOBALS['wp_query'] =& $GLOBALS['wp_the_query'];
-		$GLOBALS['wp'] =& new WP();
+		$GLOBALS['wp_the_query'] = new WP_Query();
+		$GLOBALS['wp_query'] = $GLOBALS['wp_the_query'];
+		$GLOBALS['wp'] = new WP();
 
 		foreach ( $GLOBALS['wp']->public_query_vars as $v ) {
 			unset( $GLOBALS[ $v ] );
