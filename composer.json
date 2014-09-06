@@ -1,0 +1,49 @@
+{
+  "name": "wordpress-metadata/metadata-ui-api",
+  "type": "project",
+  "license": "GPLv2",
+  "description": "An API for building form UI for WordPress content types (post types, users, comments, Settings options, etc.).",
+  "homepage": "https://github.com/wordpress-metadata/metadata-ui-api",
+  "authors": [
+    {
+      "name": "WordPress Metadata",
+      "email": "joe@example.com",
+      "homepage": "https://github.com/wordpress-metadata"
+    }
+  ],
+  "support": {
+	"issues" : "https://github.com/wordpress-metadata/metadata-ui-api/issues",
+    "source" : "https://github.com/wordpress-metadata/metadata-ui-api"
+  },
+  "repositories": [
+    {
+      "type": "composer",
+      "url": "http://wpackagist.org"
+    },
+    {
+      "type": "package",
+      "package": {
+        "name": "wordpress/wordpress",
+        "version": "3.9.1",
+        "type": "webroot",
+        "dist": {
+          "type": "zip",
+          "url": "https://wordpress.org/wordpress-3.9.1.zip"
+        },
+        "require" : {
+          "fancyguy/webroot-installer": "1.1.0"
+        }
+      }
+    }
+  ],
+  "require": {
+    "php": ">=5.3.2",
+    "fancyguy/webroot-installer": "1.1.0",
+    "composer/installers": "v1.0.12",
+    "vlucas/phpdotenv": "~1.0.6"
+  },
+  "require-dev": {
+    "mockery/mockery": ">=0.7.2",
+    "phpunit/phpunit": "4.2.4"
+  }
+}
