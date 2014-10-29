@@ -1,4 +1,6 @@
 <?php
+// @todo Take code to support options here
+
 /**
  * Registers a form for a option.
  *

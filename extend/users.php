@@ -1,4 +1,6 @@
 <?php
+// @todo Take code to support users fields / meta here
+
 /**
  * Returns an object type given a user role
  *
