@@ -426,6 +426,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function get_value() {
 
+		//@ todo switch for storage post meta / post core / taxonomy get functions here
 		return $this->storage->get_value( $this->storage_key() );
 
 	}
@@ -456,6 +457,8 @@ class WP_Field_Base extends WP_Metadata_Base {
 		if ( ! is_null( $value ) ) {
 			$this->set_value( $value );
 		}
+
+		//@ todo switch for storage post meta / post core / taxonomy update functions here
 		if ( $this->has_storage() ) {
 			$this->storage->update_value( $this->value() );
 		}
