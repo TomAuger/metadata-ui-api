@@ -17,6 +17,8 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+// @todo Needs cleanup, needs implementation of callbacks
+
 /**
  * Example code structures from Custom Metadata (Automattic)
  *
@@ -170,8 +172,8 @@ function wpm_example_init_custom_fields() {
 		'form'   => 'wpm_example_meta_box_1',
 		'type'   => 'radio',
 		'values' => array( // set possible value/options
-						   'option1' => 'Option #1', // key => value pair (key is stored in DB)
-						   'option2' => 'Option #2',
+		                   'option1' => 'Option #1', // key => value pair (key is stored in DB)
+		                   'option2' => 'Option #2',
 		),
 		'label'  => 'Radio field',
 	) );
@@ -181,8 +183,8 @@ function wpm_example_init_custom_fields() {
 		'form'   => 'wpm_example_meta_box_1',
 		'type'   => 'select',
 		'values' => array( // set possible value/options
-						   'option1' => 'Option #1', // key => value pair (key is stored in DB)
-						   'option2' => 'Option #2',
+		                   'option1' => 'Option #1', // key => value pair (key is stored in DB)
+		                   'option2' => 'Option #2',
 		),
 		'label'  => 'Select field',
 	) );
@@ -192,10 +194,10 @@ function wpm_example_init_custom_fields() {
 		'form'   => 'wpm_example_meta_box_1',
 		'type'   => 'multi_select',
 		'values' => array( // set possible value/options
-						   'option1' => 'Option #1', // key => value pair (key is stored in DB)
-						   'option2' => 'Option #2',
-						   'option3' => 'Option #3',
-						   'option4' => 'Option #4',
+		                   'option1' => 'Option #1', // key => value pair (key is stored in DB)
+		                   'option2' => 'Option #2',
+		                   'option3' => 'Option #3',
+		                   'option4' => 'Option #4',
 		),
 		'label'  => 'Multi Select field',
 	) );
@@ -207,10 +209,10 @@ function wpm_example_init_custom_fields() {
 		'form'   => 'wpm_example_meta_box_1',
 		'type'   => 'multi_select',
 		'values' => array( // set possible value/options
-						   'option1' => 'Option #1', // key => value pair (key is stored in DB)
-						   'option2' => 'Option #2',
-						   'option3' => 'Option #3',
-						   'option4' => 'Option #4',
+		                   'option1' => 'Option #1', // key => value pair (key is stored in DB)
+		                   'option2' => 'Option #2',
+		                   'option3' => 'Option #3',
+		                   'option4' => 'Option #4',
 		),
 		'label'  => 'Multi Select field (with chosen)',
 		'chosen' => true,
@@ -221,10 +223,10 @@ function wpm_example_init_custom_fields() {
 		'form'    => 'wpm_example_meta_box_1',
 		'type'    => 'select',
 		'values'  => array( // set possible value/options
-							'option1' => 'Option #1', // key => value pair (key is stored in DB)
-							'option2' => 'Option #2',
-							'option3' => 'Option #3',
-							'option4' => 'Option #4',
+		                    'option1' => 'Option #1', // key => value pair (key is stored in DB)
+		                    'option2' => 'Option #2',
+		                    'option3' => 'Option #3',
+		                    'option4' => 'Option #4',
 		),
 		'label'   => 'Select field (with select2)',
 		'select2' => true,
@@ -409,36 +411,43 @@ function wpm_example_init_custom_fields() {
 		'required_cap' => 'edit_posts' // limit to users who can edit posts
 	) );
 
-	/**
-	 *
-	 *
-	 * @param unknown $thing_slug  string Slug of the field or group
-	 * @param unknown $thing       object Field or Group args set up when registering
-	 * @param unknown $object_type string What type of object (post, comment, user)
-	 * @param unknown $object_id   int|string ID of the object
-	 * @param unknown $object_slug string
-	 */
-	function wpm_example_custom_exclude_callback( $thing_slug, $thing, $object_type, $object_id, $object_slug ) {
-
-		// exclude from all posts that are in the aside category
-		return in_category( 'aside', $object_id );
-	}
-
 	register_post_field( 'wpm_example_fieldIncludedCallback', 'post', array(
 		'description' => 'This field is included using a custom callback; will only be included for posts that are not published',
 		'label'       => 'Included Field (with callback)',
 		'include'     => 'wpm_example_custom_include_callback',
 	) );
 
-	function wpm_example_custom_include_callback( $thing_slug, $thing, $object_type, $object_id, $object_slug ) {
+}
+add_action( 'custom_metadata_manager_init_metadata', 'wpm_example_init_custom_fields' );
 
-		$post = get_post( $object_id );
+/**
+ * @param unknown $thing_slug  string Slug of the field or group
+ * @param unknown $thing       object Field or Group args set up when registering
+ * @param unknown $object_type string What type of object (post, comment, user)
+ * @param unknown $object_id   int|string ID of the object
+ * @param unknown $object_slug string
+ */
+function wpm_example_custom_exclude_callback( $thing_slug, $thing, $object_type, $object_id, $object_slug ) {
 
-		return 'publish' != $post->post_status;
-	}
+	// exclude from all posts that are in the aside category
+	return in_category( 'aside', $object_id );
+
 }
 
-add_action( 'custom_metadata_manager_init_metadata', 'wpm_example_init_custom_fields' );
+/**
+ * @param unknown $thing_slug  string Slug of the field or group
+ * @param unknown $thing       object Field or Group args set up when registering
+ * @param unknown $object_type string What type of object (post, comment, user)
+ * @param unknown $object_id   int|string ID of the object
+ * @param unknown $object_slug string
+ */
+function wpm_example_custom_include_callback( $thing_slug, $thing, $object_type, $object_id, $object_slug ) {
+
+	$post = get_post( $object_id );
+
+	return 'publish' != $post->post_status;
+
+}
 
 /**
  * this is an example of a column callback function
@@ -455,6 +464,7 @@ add_action( 'custom_metadata_manager_init_metadata', 'wpm_example_init_custom_fi
 function wpm_example_field_name2_callback( $field_slug, $field, $object_type, $object_id, $value ) {
 
 	echo sprintf( 'The value of field "%s" is %s. <br /><a href="http://icanhascheezburger.files.wordpress.com/2010/10/04dc84b6-3dde-45db-88ef-f7c242731ce3.jpg">Here\'s a LOLCat</a>', $field_slug, $value ? $value : 'not set' );
+
 }
 
 /**
@@ -478,6 +488,7 @@ function wpm_example_field_custom_hidden_1_callback( $field_slug, $field, $value
 	<input type="hidden" name="<?php echo $field_slug; ?>" value="<?php echo $value; ?>" />
 	<hr />
 <?php
+
 }
 
 /**
@@ -524,5 +535,4 @@ function wpm_example_init_custom_post_type() {
 	// other types here
 
 }
-
 add_action( 'init', 'wpm_example_init_custom_post_type' );
