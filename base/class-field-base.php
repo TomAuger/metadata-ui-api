@@ -399,7 +399,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 *
 	 * @return array
 	 */
-	function get_shortnames( $args ) {
+	function get_shortnames( $args = array() ) {
 
 		$shortnames = parent::get_shortnames();
 

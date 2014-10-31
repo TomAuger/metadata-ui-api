@@ -623,7 +623,7 @@ abstract class WP_Metadata_Base {
 	 *
 	 * @return array
 	 */
-	function get_shortnames() {
+	function get_shortnames( $args = array() ) {
 
 		$class_vars = $this->get_class_vars( 'CLASS_VALUES' );
 

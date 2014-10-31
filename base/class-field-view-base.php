@@ -201,9 +201,11 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	}
 
 	/**
+	 * @param array $args
+	 *
 	 * @return array
 	 */
-	function get_shortnames() {
+	function get_shortnames( $args = array() ) {
 
 		if ( ! isset( self::$_shortnames[ $class_name = get_class( $this ) ] ) ) {
 
