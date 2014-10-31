@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Taxonomy_Storage
  *
@@ -14,7 +15,7 @@ class WP_Taxonomy_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'taxonomy_';
+//	const PREFIX = 'taxonomy';
 
 	/**
 	 * @return mixed $value

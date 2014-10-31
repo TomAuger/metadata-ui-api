@@ -1,13 +1,9 @@
 <?php
+
 /**
  * Class WP_Field_Label_Feature
  */
 class WP_Field_Label_Feature extends WP_Field_Feature_Base {
-
-	/**
-	 *
-	 */
-	const HTML_TAG = 'label';
 
 	/**
 	 * @var string
@@ -15,19 +11,22 @@ class WP_Field_Label_Feature extends WP_Field_Feature_Base {
 	var $label_text;
 
 	/**
-	 * @param WP_Field_Base $field
-	 * @param array $feature_args
+	 * @return array
 	 */
-	function __construct( $field, $feature_args = array() ) {
+	static function PROPERTIES() {
 
-		parent::__construct( $field, $feature_args );
+		return array(
+
+				'element' => array( 'html_tag' => 'label' ),
+
+		);
 
 	}
 
 	/**
 	 * @return mixed|string
 	 */
-	function html_value() {
+	function get_element_value() {
 
 		return $this->label_text;
 

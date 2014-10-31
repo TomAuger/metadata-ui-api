@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Class WP_Memory_Storage
  *
@@ -16,7 +17,7 @@ class WP_Memory_Storage extends WP_Storage_Base {
 	/**
 	 *
 	 */
-	const PREFIX = 'memory_';
+//	const PREFIX = 'memory';
 
 	/**
 	 * @var mixed
