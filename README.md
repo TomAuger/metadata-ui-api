@@ -5,12 +5,6 @@ An API for building form UI for WordPress content types (post types, users, comm
 
 This is a project of the [WordPress core Options/Metadata team](http://make.wordpress.org/core/components/options-meta/).
 
-##TODO; _"colons-in-args"_ Branch:
-
-This is the list of TODOs currently planned:
-
-- Review code in for other concerns.
-
 ## Documentation
 
 We are preparing to start documenting things now that we have our initial base code, check back soon!
