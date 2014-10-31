@@ -59,7 +59,6 @@ class WP_Metadata {
 	 * @var WP_Registry[]
 	 */
 	private static $_registries = array(
-			'storage_types'       => null,
 			'field_types'         => null,
 			'field_feature_types' => null,
 	);
@@ -73,16 +72,11 @@ class WP_Metadata {
 			'WP_Registry'              => 'core/class-registry.php',
 			'WP_Annotated_Property'    => 'core/class-annotated-property.php',
 			'WP_Metadata_Base'         => 'base/class-metadata-base.php',
-			'WP_Storage_Base'          => 'base/class-storage-base.php',
 			'WP_Field_Base'            => 'base/class-field-base.php',
 			'WP_Field_Feature_Base'    => 'base/class-field-feature-base.php',
 			'WP_View_Base'             => 'base/class-view-base.php',
 			'WP_Form_View_Base'        => 'base/class-form-view-base.php',
 			'WP_Field_View_Base'       => 'base/class-field-view-base.php',
-			'WP_Core_Storage'          => 'storage/class-core-storage.php',
-			'WP_Meta_Storage'          => 'storage/class-meta-storage.php',
-			'WP_Option_Storage'        => 'storage/class-option-storage.php',
-			'WP_Memory_Storage'        => 'storage/class-memory-storage.php',
 			'WP_Form'                  => 'forms/class-form.php',
 			'WP_Text_Field'            => 'fields/class-text-field.php',
 			'WP_Textarea_Field'        => 'fields/class-textarea-field.php',
@@ -136,14 +130,6 @@ class WP_Metadata {
 		self::register_feature_type( 'help', 'WP_Field_Help_Feature' );
 		self::register_feature_type( 'infobox', 'WP_Field_Infobox_Feature' );
 
-		/*
-		 * Register "storage" classes
-		 */
-		self::register_storage_type( 'meta', 'WP_Meta_Storage' );
-		self::register_storage_type( 'core', 'WP_Core_Storage' );
-		self::register_storage_type( 'option', 'WP_Option_Storage' );
-		self::register_storage_type( 'taxonomy', 'WP_Taxonomy_Storage' );
-		self::register_storage_type( 'memory', 'WP_Memory_Storage' );
 
 		//    /**
 		//     * Hook a different hook differently based on how the page is loaded to initialize the fields.
@@ -252,16 +238,6 @@ class WP_Metadata {
 	static function register_feature_type( $feature_type, $feature_class ) {
 
 		self::$_registries['field_feature_types']->register_entry( $feature_type, $feature_class );
-
-	}
-
-	/**
-	 * @param string $storage_type_name       - Name of storage
-	 * @param bool|string $storage_type_class - Classname
-	 */
-	static function register_storage_type( $storage_type_name, $storage_type_class = false ) {
-
-		self::$_registries['storage_types']->register_entry( $storage_type_name, $storage_type_class );
 
 	}
 
@@ -520,7 +496,7 @@ class WP_Metadata {
 
 			$form = self::get_form( $current_form, $object_type );
 
-			$form->set_storage_object( $post );
+			$form->set_object( $post );
 			$form->the_form();
 		}
 
@@ -836,30 +812,6 @@ class WP_Metadata {
 	/*********************************************/
 	/***  Field Storage Type Registry Methods  ***/
 	/*********************************************/
-
-	/**
-	 * @param string $storage_type
-	 *
-	 * @return string
-	 */
-	static function get_storage_type_class( $storage_type ) {
-
-		return self::$_registries['storage_types']->get_entry( $storage_type );
-
-	}
-
-	/**
-	 * Does the named storage type exist?
-	 *
-	 * @param string $storage_type_name The name of the view that is unique for this class.
-	 *
-	 * @return bool
-	 */
-	static function storage_type_exists( $storage_type_name ) {
-
-		return self::$_registries['storage_types']->entry_exists( $storage_type_name );
-
-	}
 
 	/**
 	 * @param string $registry_type  - Name of Registry
@@ -1465,21 +1417,6 @@ class WP_Metadata {
 	static function _strip_null_elements( $element ) {
 
 		return ! is_null( $element );
-
-	}
-
-	/**
-	 * Returns an instance of a storage object.
-	 *
-	 * @param string $storage_type
-	 * @param object $owner
-	 * @param array $storage_args
-	 *
-	 * @return null|WP_Storage_Base
-	 */
-	static function make_storage( $storage_type, $owner = null, $storage_args = array() ) {
-
-		return WP_Storage_Base::make_new( $storage_type, $owner, $storage_args );
 
 	}
 

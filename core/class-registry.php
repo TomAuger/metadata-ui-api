@@ -3,7 +3,7 @@
 /**
  * Class WP_Registry
  *
- * Simple class to implement a registry for values like 'storage_types', 'field_types' and 'field_feature_types'.
+ * Simple class to implement a registry for values like 'field_types' and 'field_feature_types'.
  *
  */
 final class WP_Registry {

@@ -26,7 +26,6 @@
  *			return array(
  *				'value'   => array( 'type' => 'mixed' ),
  *				'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
- *				'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
  *				'view'    => array( 'type' => 'WP_Field_View_Base' ),
  *			);
  *
@@ -147,7 +146,7 @@ final class WP_Annotated_Property {
 	 *
 	 * @example
 	 *
-	 *    'field_type', 'storage_type', 'field_feature_type', etc.
+	 *    'field_type', ''field_feature_type', etc.
 	 */
 	var $registry;
 

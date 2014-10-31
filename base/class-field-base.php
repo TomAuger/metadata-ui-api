@@ -43,7 +43,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	var $field_args;
 
 	/**
-	 * @var bool|WP_Storage_Base
+	 * @var bool|string
 	 */
 	var $storage = false;
 
@@ -71,6 +71,13 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 * @var null|mixed
 	 */
 	protected $_value = null;
+
+	/**
+	 * Holds the object being edited.
+	 *
+	 * @var WP_Post|WP_User|object
+	 */
+	protected $_object;
 
 	/**
 	 * @param string $field_name
@@ -136,7 +143,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 		return array(
 				'value'   => array( 'type' => 'mixed' ),
 				'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
-				'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
+				'storage' => array( 'type' => 'text', 'default' => 'meta' ),
 				'view'    => array( 'type' => 'WP_Field_View_Base' ),
 		);
 
@@ -263,32 +270,6 @@ class WP_Field_Base extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @param string $storage_type_name
-	 * @param array $storage_type_args
-	 */
-	function initialize_storage( $storage_type_name, $storage_type_args = array() ) {
-
-		if ( ! WP_Metadata::storage_type_exists( $storage_type_name ) ) {
-			$storage_type_name = WP_Meta_Storage::STORAGE_TYPE;
-		}
-		$storage_type_args['owner'] = $this;
-		$this->storage              = $this->make_storage( $storage_type_name, $storage_type_args );
-
-	}
-
-	/**
-	 * @param string $storage_type
-	 * @param array $storage_args
-	 *
-	 * @return null|WP_Storage_Base
-	 */
-	function make_storage( $storage_type, $storage_args ) {
-
-		return WP_Metadata::make_storage( $this, $storage_type, $storage_args );
-
-	}
-
-	/**
 	 * @param string $feature_type
 	 * @param array $feature_args
 	 *
@@ -310,36 +291,15 @@ class WP_Field_Base extends WP_Metadata_Base {
 	}
 
 	/**
-	 * @param null|mixed $value
-	 */
-	function update_value( $value = null ) {
-
-		if ( ! is_null( $value ) ) {
-			$this->set_value( $value );
-		}
-		if ( $this->has_storage() ) {
-			$this->storage->update_value( $this->value() );
-		}
-
-	}
-
-	/**
-	 * Determine is the storage property contains a "Storage" object.
+	 * Determine is the field is configured correctly for storage.
 	 */
 	function has_storage() {
 
-		/**
-		 * Use "Structural Typing" to determine is $this->storage is a storage
-		 *
-		 * Structural Typing provides for maximum flexibility while still being able to
-		 * recognize (most) valid and invalid objects. The only real downside is if
-		 * an object is inspected and *coincidentally* has the same structure but
-		 * is not an object of the appropriate type. In this case that danger is low.
-		 *
-		 * @see http://en.wikipedia.org/wiki/Structural_type_system
-		 * @see http://stackoverflow.com/questions/12720585/what-is-structural-typing-for-interfaces-in-typescript
-		 */
-		return method_exists( $this->storage, 'get_value' ) && method_exists( $this->storage, 'update_value' );
+		return preg_match( '#(option|memory)#', $this->storage ) || (
+			! empty( $this->storage ) &&
+			is_object( $this->_object ) &&
+			preg_match( '#(post|meta|term)#', $this->storage )
+		);
 
 	}
 
@@ -363,7 +323,118 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function get_value() {
 
-		return $this->storage->get_value( $this->storage_key() );
+		switch ( $this->storage ) {
+			case 'post':
+				$value = $this->_object->{$this->field->field_name};
+				break;
+			case 'meta':
+				$value = get_metadata( 'post', $this->object_id(), $this->storage_key(), true );
+				break;
+			case 'term':
+				break;
+			case 'option':
+				$value = get_option( $this->storage_key(), true );
+				break;
+			case 'memory':
+				$value = $this->_object;
+				break;
+			default:
+				$value = null;
+		}
+		return $value;
+
+	}
+
+	/**
+	 * @param null|mixed $value
+	 */
+	function update_value( $value = null ) {
+
+		if ( ! is_null( $value ) ) {
+			$this->set_value( $value );
+		}
+
+		switch ( $this->storage ) {
+			case 'core':
+				// @var wpdb $wpdb
+				global $wpdb;
+				$wpdb->update( $wpdb->posts,
+					array( $this->field_name => esc_sql( $this->value() ) ),
+					array( 'ID' => $this->object_id() )
+				);
+				break;
+			case 'meta':
+				update_metadata( 'post', $this->object_id(), $this->storage_key(), esc_sql( $this->value() ) );
+				break;
+			case 'taxonomy':
+				// @todo
+				break;
+			case 'option':
+				update_option( $this->storage_key(), esc_sql( $this->value() ) );
+				break;
+			case 'memory':
+				$this->_object = $this->value();
+				break;
+		}
+
+	}
+
+	/**
+	 * Get Storage key for the Storage
+	 *
+	 * @return string
+	 */
+	function storage_key() {
+
+		switch ( $this->storage ) {
+			case 'core':
+				$storage_key = $this->field_name;
+				break;
+			case 'meta':
+				$storage_key = "_{$this->field_name}";
+				break;
+			case 'taxonomy':
+				$storage_key = false;  // @todo
+				break;
+			case 'option':
+				if ( $group = $this->object_type->subtype ) {
+					$storage_key = "_{WP_Metadata::$prefix}{$group}[{$this->field_name}]";
+				} else {
+					$storage_key = "_{WP_Metadata::$prefix}{$this->field_name}";
+				}
+				break;
+			default:
+				$storage_key = null;
+		}
+		return $storage_key;
+
+	}
+
+	/**
+	 * @return bool
+	 */
+	function has_field() {
+
+		switch ( $this->storage ) {
+			case 'core':
+				$has_field = property_exists( $this->_object, $this->field_name );
+				break;
+			case 'meta':
+				$has_field = get_metadata( 'post', $this->object_id(), $this->storage_key(), true );
+				break;
+			case 'taxonomy':
+				$has_field = false;  // @todo
+				break;
+			case 'option':
+				$has_field = get_option( $this->storage_key(), true );
+				break;
+			case 'memory':
+				$has_field = true;
+				break;
+			default:
+				$has_field = null;
+		}
+		return $has_field;
 
 	}
 
@@ -376,12 +447,28 @@ class WP_Field_Base extends WP_Metadata_Base {
 
 	}
 
-	/**
-	 * @return bool|string
-	 */
-	function storage_key() {
 
-		return $this->field_name;
+	/**
+	 * @param $object_id
+	 */
+	function set_object_id( $object_id ) {
+
+		if ( is_object( $this->_object ) && property_exists( $this->_object, 'ID' ) ) {
+			$this->_object->ID = $object_id;
+		}
+
+	}
+
+	/**
+	 * @return int
+	 */
+	function object_id() {
+
+		if ( is_object( $this->_object ) && property_exists( $this->_object, 'ID' ) ) {
+			$object_id = $this->_object->ID;
+		}
+
+		return $object_id;
 
 	}
 
@@ -390,7 +477,7 @@ class WP_Field_Base extends WP_Metadata_Base {
 	 */
 	function set_object( $object ) {
 
-		$this->storage->object = $object;
+		$this->_object = $object;
 
 	}
 

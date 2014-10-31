@@ -82,7 +82,6 @@ class WP_Form extends WP_Metadata_Base {
 
 		return array(
 				'view'    => array( 'type' => 'WP_Form_View', 'default' => 'default' ),
-				'storage' => array( 'type' => 'WP_Storage_Base', 'default' => 'meta' ),
 				'fields'  => array( 'type' => 'WP_Field_Base[]' ),
 		);
 
@@ -216,22 +215,6 @@ class WP_Form extends WP_Metadata_Base {
 
 		$field->form                        = $this;
 		$this->fields[ $field->field_name ] = $field;
-
-	}
-
-	/**
-	 * @param WP_Post|object $object
-	 */
-	function set_storage_object( $object ) {
-
-		/**
-		 * @var WP_Field_Base $field
-		 */
-		foreach ( $this->fields as $field ) {
-			if ( ! is_object( $field->storage->object ) ) {
-				$field->storage->object = $object;
-			}
-		}
 
 	}
 
