@@ -5,10 +5,12 @@
  */
 
 require( dirname( __FILE__ ) . '/functions.php' );
-require( dirname( __FILE__ ) . '/functions/post.php' );
-require( dirname( __FILE__ ) . '/functions/user.php' );
-require( dirname( __FILE__ ) . '/functions/comment.php' );
-require( dirname( __FILE__ ) . '/functions/option.php' );
+require( dirname( __FILE__ ) . '/core-classes.php' );
+require( dirname( __FILE__ ) . '/base-classes.php' );
+require( dirname( __FILE__ ) . '/form-classes.php' );
+require( dirname( __FILE__ ) . '/field-classes.php' );
+require( dirname( __FILE__ ) . '/feature-classes.php' );
+require( dirname( __FILE__ ) . '/view-classes.php' );
 
 /**
  * Class WP_Metadata
@@ -60,39 +62,7 @@ class WP_Metadata {
 	 */
 	private static $_registries = array(
 			'field_types'         => null,
-			'field_feature_types' => null,
-	);
-
-	/**
-	 * @var array
-	 */
-	private static $_autoload_classes = array(
-			'WP_Object_Type'           => 'core/class-object-type.php',
-			'WP_Html_Element'          => 'core/class-html-element.php',
-			'WP_Registry'              => 'core/class-registry.php',
-			'WP_Annotated_Property'    => 'core/class-annotated-property.php',
-			'WP_Metadata_Base'         => 'base/class-metadata-base.php',
-			'WP_Field_Base'            => 'base/class-field-base.php',
-			'WP_Field_Feature_Base'    => 'base/class-field-feature-base.php',
-			'WP_View_Base'             => 'base/class-view-base.php',
-			'WP_Form_View_Base'        => 'base/class-form-view-base.php',
-			'WP_Field_View_Base'       => 'base/class-field-view-base.php',
-			'WP_Form'                  => 'forms/class-form.php',
-			'WP_Text_Field'            => 'fields/class-text-field.php',
-			'WP_Textarea_Field'        => 'fields/class-textarea-field.php',
-			'WP_Url_Field'             => 'fields/class-url-field.php',
-			'WP_Date_Field'            => 'fields/class-date-field.php',
-			'WP_Hidden_Field'          => 'fields/class-hidden-field.php',
-			'WP_Field_Input_Feature'   => 'features/class-field-input-feature.php',
-			'WP_Field_Label_Feature'   => 'features/class-field-label-feature.php',
-			'WP_Field_Help_Feature'    => 'features/class-field-help-feature.php',
-			'WP_Field_Message_Feature' => 'features/class-field-message-feature.php',
-			'WP_Field_Infobox_Feature' => 'features/class-field-infobox-feature.php',
-			'WP_Form_View'             => 'views/class-form-view.php',
-			'WP_Text_Field_View'       => 'views/class-text-field-view.php',
-			'WP_Textarea_Field_View'   => 'views/class-textarea-field-view.php',
-			'WP_Select_Field_View'     => 'views/class-select-view.php',
-			'WP_Hidden_Field_View'     => 'views/class-hidden-field-view.php',
+			'feature_types' => null,
 	);
 
 
@@ -100,8 +70,6 @@ class WP_Metadata {
 	 *
 	 */
 	static function on_load() {
-
-		spl_autoload_register( array( __CLASS__, '_autoloader' ) );
 
 		self::initialize_registries();
 
@@ -237,53 +205,7 @@ class WP_Metadata {
 	 */
 	static function register_feature_type( $feature_type, $feature_class ) {
 
-		self::$_registries['field_feature_types']->register_entry( $feature_type, $feature_class );
-
-	}
-
-	/**
-	 * @param string $class_name
-	 * @param string $class_filepath
-	 *
-	 * @return bool Return true if it was registered, false if not.
-	 */
-	static function register_autoload_class( $class_name, $class_filepath ) {
-
-		if ( ! isset( self::$_autoload_classes[ $class_name ] ) ) {
-
-			self::$_autoload_classes[ $class_name ] = $class_filepath;
-
-			return true;
-
-		}
-
-		return false;
-
-	}
-
-	/**
-	 * @param string $class_name
-	 */
-	static function _autoloader( $class_name ) {
-
-		if ( isset( self::$_autoload_classes[ $class_name ] ) ) {
-
-			$filepath = self::$_autoload_classes[ $class_name ];
-
-			/**
-			 * @todo This needs to be made to work for Windows...
-			 */
-			if ( '/' == $filepath[0] ) {
-
-				require_once( $filepath );
-
-			} else {
-
-				require_once( dirname( __FILE__ ) . "/{$filepath}" );
-
-			}
-
-		}
+		self::$_registries['feature_types']->register_entry( $feature_type, $feature_class );
 
 	}
 
@@ -805,7 +727,7 @@ class WP_Metadata {
 	 */
 	static function feature_type_exists( $feature_type_name ) {
 
-		return self::$_registries['field_feature_types']->entry_exists( $feature_type_name );
+		return self::$_registries['feature_types']->entry_exists( $feature_type_name );
 
 	}
 
@@ -1437,15 +1359,15 @@ class WP_Metadata {
 	 * @param WP_Field_Base $field
 	 * @param array[] $features_args
 	 *
-	 * @return null|WP_Field_Feature_Base
+	 * @return null|WP_Feature_Base
 	 */
-	static function make_field_features( $field, $features_args ) {
+	static function make_features( $field, $features_args ) {
 
 		$features = array();
 
 		foreach ( $features_args as $feature_type => $feature_args ) {
 
-			$features[ $feature_type ] = self::make_field_feature( $field, $feature_type, $feature_args );
+			$features[ $feature_type ] = self::make_feature( $field, $feature_type, $feature_args );
 
 		}
 
@@ -1458,9 +1380,9 @@ class WP_Metadata {
 	 * @param string $feature_type
 	 * @param array $feature_args
 	 *
-	 * @return null|WP_Field_Feature_Base
+	 * @return null|WP_Feature_Base
 	 */
-	static function make_field_feature( $field, $feature_type, $feature_args ) {
+	static function make_feature( $field, $feature_type, $feature_args ) {
 
 		if ( $feature_class = self::get_feature_type_class( $feature_type ) ) {
 
@@ -1489,7 +1411,7 @@ class WP_Metadata {
 	 */
 	static function get_feature_type_class( $feature_type ) {
 
-		return self::$_registries['field_feature_types']->get_entry( $feature_type );
+		return self::$_registries['feature_types']->get_entry( $feature_type );
 
 	}
 

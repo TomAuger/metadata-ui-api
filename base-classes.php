@@ -1,4 +1,7 @@
 <?php
+/**
+ * Metadata Base Classes
+ */
 
 /**
  * Class WP_Metadata_Base
@@ -39,7 +42,6 @@ abstract class WP_Metadata_Base {
 	 *             all it's ancestor classes.
 	 */
 	private $_initialized = array();
-
 
 	/**
 	 * Instantiate most any object of the WP_Metadata feature-as-plugin.
@@ -278,11 +280,11 @@ abstract class WP_Metadata_Base {
 	 *                    hardcoded in WP_Metadata::$_registries or registered using
 	 *                    WP_Metadata::register_registry(). This registry is used to
 	 *                    look up class names by key when 'type' is an array of objects,
-	 *                    i.e. 'WP_Field_Feature_Base[]'.
+	 *                    i.e. 'WP_Feature_Base[]'.
 	 *
 	 *  - 'keys'        - The array of array key names (string) for when 'type' is
 	 *                    an array of objects, i.e. for when 'type' is the array
-	 *                    'WP_Field_Feature_Base[]' then the array of key names
+	 *                    'WP_Feature_Base[]' then the array of key names
 	 *                    is: array('label','input','help','message','infobox')
 	 *
 	 *  - 'prefix'      - The qualifing prefix for this property. This can be specified
@@ -707,6 +709,7 @@ abstract class WP_Metadata_Base {
 		return $property_prefixes;
 
 	}
+
 	/**
 	 * Assign the element values in the $args array to the properties of this object.
 	 *
@@ -873,7 +876,6 @@ abstract class WP_Metadata_Base {
 		return $property_values;
 	}
 
-
 	/**
 	 * @param string $property_name
 	 *
@@ -949,7 +951,6 @@ abstract class WP_Metadata_Base {
 
 	}
 
-
 	/**
 	 * @return array
 	 */
@@ -1000,7 +1001,6 @@ abstract class WP_Metadata_Base {
 
 		return $value;
 	}
-
 
 	/**
 	 * @param array $args
@@ -1099,4 +1099,1503 @@ abstract class WP_Metadata_Base {
 		return $result;
 
 	}
+}
+
+/**
+ * Class WP_Field_Base
+ *
+ * @mixin WP_Field_View_Base
+ */
+abstract class WP_Field_Base extends WP_Metadata_Base {
+
+	/**
+	 *
+	 */
+	const FIELD_TYPE = 'unspecified';
+
+	/**
+	 *
+	 */
+//	const PREFIX = 'field';
+
+	/**
+	 * @var bool|string
+	 */
+	var $field_name = false;
+
+	/**
+	 * @var bool|string
+	 */
+	var $field_type = false;
+
+	/**
+	 * @var bool
+	 */
+	var $field_required = false;
+
+	/**
+	 * @var mixed
+	 */
+	var $field_default = null;
+
+	/**
+	 * @var array
+	 */
+	var $field_args;
+
+	/**
+	 * @var bool|string
+	 */
+	var $storage = false;
+
+	/**
+	 * @var bool|WP_Object_Type
+	 */
+	var $object_type = false;
+
+	/**
+	 * @var string|WP_Field_View_Base
+	 */
+	var $view = false;
+
+	/**
+	 * @var WP_Form
+	 */
+	var $form;
+
+	/**
+	 * @var bool|int
+	 */
+	protected $_field_index = false;
+
+	/**
+	 * @var null|mixed
+	 */
+	protected $_value = null;
+
+	/**
+	 * Holds the object being edited.
+	 *
+	 * @var WP_Post|WP_User|object
+	 */
+	protected $_object;
+
+	/**
+	 * @param string $field_name
+	 * @param array $field_args
+	 */
+	function __construct( $field_name, $field_args = array() ) {
+
+		$this->field_name = $field_name;
+
+		if ( isset( $field_args['form'] ) ) {
+			/**
+			 * This may be needed by subobjects before it is assigned
+			 * in $this->assign_args(), so do now rather than wait.
+			 */
+			$this->form = $field_args['form'];
+			unset( $field_args['form'] );
+		}
+
+		parent::__construct( $field_args );
+
+	}
+
+	/**
+	 */
+	static function CLASS_VALUES() {
+
+		/*
+		 * These are the feature keys for the base field view object.
+		 * If you custom view needs different ones you'll need to handle
+		 * in your view or maybe in your field.
+		 */
+		$feature_keys = 'label|input|help|message|infobox';
+
+		$shortnames = array(
+			'^view_type$'                                       => 'view:view_type',
+			'^label$'                                           => 'view:features[label]:label_text',
+			'^element:(.+)$'                                    => 'view:features[input]:element:$1',
+			"^({$feature_keys}):?wrapper:(.+)$"                 => 'view:features[$1]:wrapper:$2',
+			"^({$feature_keys}):(element:)?(.+)$"               => 'view:features[$1]:element:$3',
+			"^features\[({$feature_keys})\]:(element:)?(.+)$"   => 'view:features[$1]:element:$3',
+		);
+
+		return array(
+				'defaults'   => array(
+						'view:view_type' => 'text'
+				),
+				'shortnames' => $shortnames,
+				'parameters' => array(
+						'$value',
+						'object_type',
+						'$args',
+				)
+		);
+	}
+
+	/**
+	 * Returns an array of object properties and their annotations.
+	 *
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array(
+				'value'   => array( 'type' => 'mixed' ),
+				'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
+				'storage' => array( 'type' => 'text', 'default' => 'meta' ),
+				'view'    => array( 'type' => 'WP_Field_View_Base' ),
+		);
+
+	}
+
+	/**
+	 * Make a New Field object
+	 *
+	 * @param string $field_name
+	 * @param string|WP_Object_Type $object_type
+	 * @param array $field_args
+	 *
+	 * @return WP_Field_Base
+	 *
+	 */
+	static function make_new( $field_name, $object_type, $field_args = array() ) {
+
+		$field = false;
+
+		if ( ! isset( $field_args['field_type'] ) ) {
+			/*
+			 * We have to do this normalization of the 'type' $arg prior to
+			 * the Field classes __construct() because it drives the class used
+			 * to instantiate the Field. All other $args can be normalized
+			 * in the Field class constructor.
+			 */
+			if ( ! isset( $field_args['type'] ) ) {
+
+				$field_args['field_type'] = 'text';
+
+			} else {
+
+				$field_args['field_type'] = $field_args['type'];
+
+				unset( $field_args['type'] );
+
+			}
+		}
+
+		/**
+		 * @var string|object $field_type_args If string, a class. If an array, call recursively.
+		 */
+		$field_type_args = WP_Metadata::get_field_type_args( $field_args['field_type'] );
+
+		if ( is_string( $field_type_args ) && class_exists( $field_type_args ) ) {
+
+			/**
+			 * Field type is a Class name
+			 */
+			$field = new $field_type_args( $field_name, $field_args );
+
+		} else if ( is_array( $field_type_args ) ) {
+
+			/**
+			 * Field Type passed to make_new() is a 'Prototype'
+			 */
+			$field_args = wp_parse_args( $field_args, $field_type_args );
+
+			$field = self::make_new( $field_name, $object_type, $field_args );
+
+		} else {
+
+			$field = null;
+
+		}
+
+		return $field;
+
+	}
+
+	/**
+	 * @return mixed
+	 */
+	function form_element_name() {
+
+		return $this->form->form_name;
+
+	}
+
+	/**
+	 * @return bool|string
+	 */
+	function initial_element_name() {
+
+		return $this->field_name;
+
+	}
+
+	/**
+	 * @return string
+	 */
+	function initial_element_id() {
+
+		return str_replace( '_', '-', $this->element->get_name() ) . '-field';
+
+	}
+
+	/**
+	 * @param string $view_type
+	 * @param array $view_args
+	 */
+	function initialize_field_view( $view_type, $view_args = array() ) {
+
+		if ( ! WP_Metadata::field_view_exists( $view_type ) ) {
+			$this->view = false;
+		} else {
+			$view_args['view_type'] = $view_type;
+			$view_args['field']     = $this; // This is redundant, but that's okay
+			$this->view             = $this->make_field_view( $view_type, $view_args );
+		}
+
+	}
+
+	/**
+	 * @param string $view_type
+	 * @param array $view_args
+	 *
+	 * @return WP_Field_View_Base
+	 */
+	function make_field_view( $view_type, $view_args = array() ) {
+
+		return WP_Field_View_Base::make_new( $view_type, $this, $view_args );
+
+	}
+
+	/**
+	 * @param string $feature_type
+	 * @param array $feature_args
+	 *
+	 * @return null|WP_Feature_Base
+	 */
+	function make_feature( $feature_type, $feature_args ) {
+
+		return WP_Metadata::make_feature( $this, $feature_type, $feature_args );
+
+	}
+
+	/**
+	 * @return WP_Feature_Base
+	 */
+	function input_feature() {
+
+		return $this->view->input_feature();
+
+	}
+
+	/**
+	 * Determine is the field is configured correctly for storage.
+	 */
+	function has_storage() {
+
+		return preg_match( '#(option|memory)#', $this->storage ) || (
+			! empty( $this->storage ) &&
+			is_object( $this->_object ) &&
+			preg_match( '#(post|meta|term)#', $this->storage )
+		);
+
+	}
+
+	/**
+	 *
+	 */
+	function value() {
+
+		if ( is_null( $this->_value ) && $this->field->has_storage() ) {
+
+			$this->_value = $this->get_value();
+
+		}
+
+		return $this->_value;
+
+	}
+
+	/**
+	 *
+	 */
+	function get_value() {
+
+		switch ( $this->storage ) {
+			case 'post':
+				$value = $this->_object->{$this->field->field_name};
+				break;
+			case 'meta':
+				$value = get_metadata( 'post', $this->object_id(), $this->storage_key(), true );
+				break;
+			case 'term':
+				break;
+			case 'option':
+				$value = get_option( $this->storage_key(), true );
+				break;
+			case 'memory':
+				$value = $this->_object;
+				break;
+			default:
+				$value = null;
+		}
+		return $value;
+
+	}
+
+	/**
+	 * @param null|mixed $value
+	 */
+	function update_value( $value = null ) {
+
+		if ( ! is_null( $value ) ) {
+			$this->set_value( $value );
+		}
+
+		switch ( $this->storage ) {
+			case 'core':
+				// @var wpdb $wpdb
+				global $wpdb;
+				$wpdb->update( $wpdb->posts,
+					array( $this->field_name => esc_sql( $this->value() ) ),
+					array( 'ID' => $this->object_id() )
+				);
+				break;
+			case 'meta':
+				update_metadata( 'post', $this->object_id(), $this->storage_key(), esc_sql( $this->value() ) );
+				break;
+			case 'taxonomy':
+				// @todo
+				break;
+			case 'option':
+				update_option( $this->storage_key(), esc_sql( $this->value() ) );
+				break;
+			case 'memory':
+				$this->_object = $this->value();
+				break;
+		}
+
+	}
+
+	/**
+	 * Get Storage key for the Storage
+	 *
+	 * @return string
+	 */
+	function storage_key() {
+
+		switch ( $this->storage ) {
+			case 'core':
+				$storage_key = $this->field_name;
+				break;
+			case 'meta':
+				$storage_key = "_{$this->field_name}";
+				break;
+			case 'taxonomy':
+				$storage_key = false;  // @todo
+				break;
+			case 'option':
+				if ( $group = $this->object_type->subtype ) {
+					$storage_key = "_{WP_Metadata::$prefix}{$group}[{$this->field_name}]";
+				} else {
+					$storage_key = "_{WP_Metadata::$prefix}{$this->field_name}";
+				}
+				break;
+			default:
+				$storage_key = null;
+		}
+		return $storage_key;
+
+	}
+
+	/**
+	 * @return bool
+	 */
+	function has_field() {
+
+		switch ( $this->storage ) {
+			case 'core':
+				$has_field = property_exists( $this->_object, $this->field_name );
+				break;
+			case 'meta':
+				$has_field = get_metadata( 'post', $this->object_id(), $this->storage_key(), true );
+				break;
+			case 'taxonomy':
+				$has_field = false;  // @todo
+				break;
+			case 'option':
+				$has_field = get_option( $this->storage_key(), true );
+				break;
+			case 'memory':
+				$has_field = true;
+				break;
+			default:
+				$has_field = null;
+		}
+		return $has_field;
+
+	}
+
+	/**
+	 * @param mixed $value
+	 */
+	function set_value( $value ) {
+
+		$this->_value = $value;
+
+	}
+
+
+	/**
+	 * @param $object_id
+	 */
+	function set_object_id( $object_id ) {
+
+		if ( is_object( $this->_object ) && property_exists( $this->_object, 'ID' ) ) {
+			$this->_object->ID = $object_id;
+		}
+
+	}
+
+	/**
+	 * @return int
+	 */
+	function object_id() {
+
+		if ( is_object( $this->_object ) && property_exists( $this->_object, 'ID' ) ) {
+			$object_id = $this->_object->ID;
+		}
+
+		return $object_id;
+
+	}
+
+	/**
+	 * @param object $object
+	 */
+	function set_object( $object ) {
+
+		$this->_object = $object;
+
+	}
+
+	/**
+	 * @param array $args
+	 *
+	 * @return array
+	 */
+	function get_shortnames( $args = array() ) {
+
+		$shortnames = parent::get_shortnames();
+
+		$view_class = WP_Metadata::get_field_view_type_args( $args['view:view_type'] );
+
+		if ( class_exists( $view_class ) && $attributes = $this->get_view_input_attributes( $view_class ) ) {
+
+			unset( $attributes['form'] ); // Reserve 'form' for instances of WP_Form.
+
+			$attributes = implode( '|', $attributes );
+
+			$shortnames["^({$attributes})$"] = 'view:input:element:$1';
+
+		}
+
+		return $shortnames;
+
+	}
+
+	/**
+	 *
+	 * @param string|bool $view_class
+	 *
+	 * @return string[]
+	 */
+	function get_view_input_attributes( $view_class = false ) {
+
+		if ( ! $view_class ) {
+
+			$view_class = get_class( $this->view );
+
+		}
+
+		$input_tag = WP_Metadata::get_view_input_tag( $view_class );
+
+		return $input_tag ? WP_Metadata::get_view_element_attributes( $input_tag ) : array();
+	}
+
+	/**
+	 * Delegate accesses for missing poperties to the $_field_view property
+	 *
+	 * @param string $property_name
+	 *
+	 * @return mixed
+	 */
+	function __get( $property_name ) {
+
+		return property_exists( $this->view, $property_name ) ? $this->view->$property_name : null;
+
+	}
+
+	/**
+	 * Delegate accesses for missing poperties to the $_field_view property
+	 *
+	 * @param string $property_name
+	 * @param mixed $value
+	 *
+	 */
+	function __set( $property_name, $value ) {
+
+		if ( property_exists( $this->view, $property_name ) ) {
+
+			$this->view->$property_name = $value;
+
+		}
+
+	}
+
+	/**
+	 * Delegate calls for missing methods to the $_field_view property
+	 *
+	 * @param string $method_name
+	 * @param array $args
+	 *
+	 * @return mixed
+	 */
+	function __call( $method_name, $args = array() ) {
+
+		return method_exists( $this->view, $method_name ) ? call_user_func_array( array(
+				$this->view,
+				$method_name
+		), $args ) : null;
+
+	}
+
+}
+
+/**
+ * Class WP_View_Base
+ *
+ * @TODO Refactor so this class can handle an arbitrary list of properties, not just 'wrapper' and 'element'
+ *
+ */
+abstract class WP_View_Base extends WP_Metadata_Base {
+
+	/**
+	 * @var array
+	 */
+	private static $_shortnames = array();
+	/**
+	 * @var WP_Html_Element
+	 */
+	var $wrapper = null;
+	/**
+	 * @var WP_Html_Element
+	 */
+	var $element = null;
+	/**
+	 * @var WP_Metadata_Base
+	 */
+	var $owner;
+
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array(
+				'wrapper' => array( 'type' => 'WP_Html_Element' ),
+				'element' => array( 'type' => 'WP_Html_Element' ),
+		);
+
+	}
+
+	/**
+	 * @return string
+	 */
+	function get_html() {
+
+		if ( is_object( $wrapper = $this->wrapper ) && method_exists( $wrapper, 'get_html' ) ) {
+
+			$wrapper->value = $this->get_element_html();
+
+			$html = $wrapper->get_html();
+
+		} else {
+
+			$html = null;
+
+		}
+
+		return $html;
+
+	}
+
+	/**
+	 * @return string
+	 */
+	function get_element_html() {
+
+		$this->element->value = $this->get_element_value();
+
+		return $this->element->get_html();
+
+	}
+
+	/**
+	 * Get the value of the element.
+	 *
+	 * @note: Typically this will be overridden in child classes.
+	 *
+	 * @return bool
+	 */
+	function get_element_value() {
+		return false;
+	}
+
+	/**
+	 * Return the HTML tag to be used by this class.
+	 *
+	 * @return array
+	 */
+	function get_wrapper_tag() {
+
+		if ( ! ( $html_tag = $this->get_annotation_custom( 'html_tag', 'wrapper' ) ) ) {
+
+			$html_tag = 'div';
+
+		}
+
+		return $html_tag;
+
+	}
+
+	/**
+	 * @param array $feature_args
+	 *
+	 * @return array
+	 */
+	function initialize( $feature_args ) {
+
+		$this->element->append_class( $this->initialize_attribute( 'class', 'element' ) );
+		$this->element->set_id( $this->initialize_attribute( 'id', 'element' ) );
+
+		$this->wrapper->append_class( $this->initialize_attribute( 'class', 'wrapper' ) );
+		$this->wrapper->set_id( $this->initialize_attribute( 'id', 'wrapper' ) );
+
+		return '';
+	}
+
+
+	/**
+	 * @param string $attribute_name
+	 * @param string $html_element_name
+	 *
+	 * @return mixed
+	 */
+	function initialize_attribute( $attribute_name, $html_element_name ) {
+		$value = null;
+		switch ( $element_attribute = "{$html_element_name}_{$attribute_name}" ) {
+
+			case 'element_name':
+			case 'element_id':
+			case 'element_class':
+
+				if ( method_exists( $this, $method_name = "initial_{$element_attribute}" ) ) {
+
+					$value = $this->{$method_name}();
+
+				} else {
+
+					switch ( $element_attribute ) {
+						case 'element_name':
+							$value = 'element_name_not_set_in_child_class';
+							break;
+
+						case 'element_id':
+							$value = str_replace( '_', '-', $this->element->get_name() );
+							break;
+
+						case 'element_class':
+							$value = '';
+							break;
+					}
+
+				}
+				break;
+
+			case 'wrapper_id':
+
+				$value = $this->element->get_id() . '-wrapper';
+				break;
+
+			case 'wrapper_class':
+
+				if ( $classes = $this->element->get_class() ) {
+
+					$classes = explode( ' ', $classes );
+
+					foreach ( $classes as &$class ) {
+
+						$class = trim( $class ) . '-wrapper';
+
+					}
+
+					$value = implode( ' ', $classes );
+
+				}
+
+				break;
+
+		}
+
+		return $value;
+	}
+
+}
+
+/**
+ * Class WP_Field_View_Base
+ *
+ * @mixin WP_Field_Base
+ * @property WP_Field_Input_Feature $input
+ * @property WP_Field_Label_Feature $label
+ * @property WP_Field_Help_Feature $help
+ * @property WP_Field_Message_Feature $message
+ * @property WP_Field_Infobox_Feature $infobox
+ *
+ */
+abstract class WP_Field_View_Base extends WP_View_Base {
+
+	/**
+	 * @var array[]
+	 */
+	private static $_shortnames = array();
+	/**
+	 * @var string
+	 */
+	var $view_type;
+	/**
+	 * @var WP_Field_Base
+	 */
+	var $field;
+	/**
+	 * @var bool|array
+	 */
+	var $features = false;
+
+	/**
+	 * @param string $view_type
+	 * @param WP_Field_Base|null $field
+	 * @param array $view_args
+	 */
+	function __construct( $view_type, $field, $view_args = array() ) {
+
+		$this->view_type = $view_type;
+
+		if ( is_object( $field ) ) {
+
+			$field->view = $this;
+
+		}
+
+		$this->field = $field;
+
+		parent::__construct( $view_args );
+
+		$this->owner = $field;
+
+	}
+
+	/**
+	 * @return array
+	 */
+	static function CLASS_VALUES() {
+		return array(
+				'parameters' => array(
+						'view_type',
+						'$parent',
+						'$value',
+				)
+		);
+	}
+
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array(
+				'field'    => array( 'type' => 'WP_Field_Base', 'auto_create' => false ),
+				'wrapper'  => array( 'type' => 'WP_Html_Element' ),
+				'features' => array(
+						'type'     => 'WP_Feature_Base[]',
+						'default'  => '$key_name',
+						'registry' => 'feature_types',    // @todo Is $registry needed?
+						'keys'     => array(
+								'label',
+								'input',
+								'help',
+								'message',
+								'infobox',
+						),
+				)
+		);
+
+	}
+
+	/**
+	 * @param string $view_type
+	 * @param WP_Field_Base|null $field
+	 * @param array $view_args
+	 *
+	 * @return WP_Field_View_Base
+	 *
+	 */
+	static function make_new( $view_type, $field, $view_args = array() ) {
+
+		$view = false;
+
+		if ( ! isset( $view_args['view_type'] ) ) {
+			/*
+			 * We have to do this normalization of the 'type' $arg prior to
+			 * the Field classes __construct() because it drives the class used
+			 * to instantiate the View. All other $args can be normalized
+			 * in the Field class constructor.
+			 */
+			if ( ! isset( $view_args['type'] ) ) {
+
+				$view_args['view_type'] = 'text';
+
+			} else {
+
+				$view_args['view_type'] = $view_args['type'];
+
+				unset( $view_args['type'] );
+
+			}
+
+		}
+
+		$view_type_args = WP_Metadata::get_field_view_type_args( $view_args['view_type'] );
+
+		if ( is_string( $view_type_args ) && class_exists( $view_type_args ) ) {
+
+			/**
+			 * View Type is a Class name
+			 */
+			$view = new $view_type_args( $view_type, $field, $view_args );
+
+		} else if ( is_array( $view_type_args ) ) {
+
+			/**
+			 * View Type passed to make_new() is a 'Prototype'
+			 */
+			$view_args = wp_parse_args( $view_args, $view_type_args );
+
+			$view = self::make_new( $view_name, $object_type, $view_args );
+
+		}
+
+		if ( $view ) {
+
+			if ( property_exists( $field, 'field' ) ) {
+
+				$view->field = $field;
+
+			}
+
+		} else {
+
+			$view = null;
+
+		}
+
+		return $view;
+
+	}
+
+	/**
+	 * @param string $view_class
+	 *
+	 * @return string[]
+	 */
+	static function get_input_tag( $view_class ) {
+
+		return WP_Metadata::get_view_input_tag( $view_class );
+
+	}
+
+	/**
+	 * @param $args
+	 */
+	function initialize( $args ) {
+		/**
+		 * @var WP_Field_Label_Feature $label
+		 */
+		if ( ! empty( $this->features['label'] ) && is_object( $label = $this->features['label'] ) ) {
+			$label->element->set_attribute_value( 'for', $this->features['input']->element->get_id() );
+		}
+
+	}
+
+	function initial_element_id() {
+
+		return $this->field->field_name . '-metadata-field';
+
+	}
+
+	/**
+	 * @return bool|string
+	 */
+	function initial_element_class() {
+
+		return "metadata-field";
+
+	}
+
+	/**
+	 * @param array $args
+	 *
+	 * @return array
+	 */
+	function get_shortnames( $args = array() ) {
+
+		if ( ! isset( self::$_shortnames[ $class_name = get_class( $this ) ] ) ) {
+
+			$shortnames = parent::get_shortnames();
+
+			$properties = $this->get_class_vars( 'PROPERTIES' );
+
+			if ( ! empty( $properties['features']['keys'] ) && is_array( $feature_keys = $properties['features']['keys'] ) ) {
+
+				$features                           = implode( '|', $feature_keys );
+				$shortnames["^({$features}):(.+)$"] = 'features[$1]:$2';
+
+			}
+
+			if ( $attributes = $this->get_view_input_attributes() ) {
+
+				$attributes                                                    = implode( '|', $attributes );
+				$shortnames["^features\\[([^]]+)\\]:({$attributes})$"]         = 'features[$1]:element:$2';
+				$shortnames["^features\\[([^]]+)\\]:wrapper:({$attributes})$"] = 'features[$1]:wrapper:$2';
+
+			}
+			self::$_shortnames[ $class_name ] = $shortnames;
+
+		}
+
+		return self::$_shortnames[ $class_name ];
+
+	}
+
+	/**
+	 * Delegate to $field explicitly since it is defined in base class.
+	 *
+	 * @return array
+	 */
+	function get_prefix() {
+		/**
+		 * @var WP_Metadata_Base $field
+		 */
+		$field = $this->field;
+
+		if ( ! $field->has_property_annotations( $field->field_name ) ) {
+
+			$prefix = false;
+
+		} else {
+
+			$prefix = $field->get_annotated_property( $field->field_name )->prefix;
+
+		}
+
+		return $prefix;
+	}
+
+	/**
+	 * Convenience so users can use a more specific name than get_html().
+	 *
+	 * @return string
+	 */
+	function get_field_html() {
+
+		return $this->get_html();
+
+	}
+
+	/**
+	 * @return string
+	 */
+	function get_element_html() {
+
+		return $this->get_features_html();
+
+	}
+
+	/**
+	 * @return array
+	 */
+	function get_features_html() {
+
+		$features_html = array();
+
+		foreach ( $this->get_feature_types() as $feature_type ) {
+			/**
+			 * @var WP_Feature_Base $feature
+			 */
+			$feature = $this->features[ $feature_type ];
+
+			if ( 'input' == $feature_type ) {
+
+				$features_html[ $feature_type ] = $this->get_input_html();
+
+			} else {
+
+				$features_html[ $feature_type ] = $feature->get_feature_html();
+
+			}
+
+		}
+
+		return implode( "\n", $features_html );
+
+	}
+
+	/**
+	 * Gets array of field feature type names
+	 *
+	 * @return array
+	 */
+	function get_feature_types() {
+
+		$features = $this->get_annotated_property( 'features' );
+
+		return is_array( $features->keys ) ? $features->keys : array();
+
+	}
+
+	/**
+	 *  Allow Input HTML to be overridden in Field or Field View
+	 *
+	 *  To override in Field, implement get_input_html().
+	 *  To override in Field View, implement get_input_html().
+	 *
+	 */
+	function get_input_html() {
+
+		if ( method_exists( $this->field, 'get_input_html' ) ) {
+
+			$input_html = $this->field->get_input_html();
+
+		} else {
+
+			$input_html = $this->input_feature()->get_feature_html();
+
+		}
+
+		return $input_html;
+	}
+
+	/**
+	 * @return WP_Feature_Base
+	 */
+	function input_feature() {
+
+		if ( ! isset( $this->features['input'] ) ) {
+
+			// Do this to ensure the return value of input_feature() can be dereferenced. Should never be needed.
+			$this->features['input'] = new WP_Field_Input_Feature( $this->field->view );
+
+		}
+
+		return $this->features['input'];
+
+	}
+
+	/**
+	 * Delegate accesses for missing poperties to the $field property
+	 *
+	 * @param string $property_name
+	 *
+	 * @return mixed
+	 */
+	function __get( $property_name ) {
+
+		return isset( $this->features[ $property_name ] ) ? $this->features[ $property_name ] : ( property_exists( $this->field,
+				$property_name ) ? $this->field[ $property_name ] : null );
+
+	}
+
+	/**
+	 * Delegate accesses for missing poperties to the $field property
+	 *
+	 * @param string $property_name
+	 * @param mixed $value
+	 *
+	 * @return mixed
+	 */
+	function __set( $property_name, $value ) {
+
+		return isset( $this->features[ $property_name ] ) ? $this->features[ $property_name ] = $value : ( property_exists( $this->field,
+				$property_name ) ? $this->field->$property_name = $value : null );
+
+	}
+
+	/**
+	 * Delegate calls for missing methods to the $field property
+	 *
+	 * @param string $method_name
+	 * @param array $args
+	 *
+	 * @return mixed
+	 */
+	function __call( $method_name, $args = array() ) {
+
+		return method_exists( $this->field, $method_name ) ? call_user_func_array( array(
+				$this->field,
+				$method_name
+		), $args ) : parent::__call( $method_name, $args );
+
+	}
+
+	/**
+	 * @param string $property_name
+	 *
+	 * @return bool
+	 */
+	function __isset( $property_name ) {
+
+		return isset( $this->features[ $property_name ] );
+
+	}
+
+}
+
+/**
+ * Class WP_Feature_Base
+ */
+abstract class WP_Feature_Base extends WP_View_Base {
+
+	/**
+	 * @var string
+	 */
+	var $feature_type;
+
+	/**
+	 * @var WP_Field_Base
+	 */
+	var $field;
+
+	/**
+	 * @var WP_Field_View_Base
+	 */
+	var $view;
+
+	/**
+	 * @param WP_Field_View_Base $view
+	 * @param array $feature_args
+	 */
+	function __construct( $view, $feature_args = array() ) {
+
+		$this->field = $view->field;
+		$this->view  = $view;
+
+		parent::__construct( $feature_args );
+
+		$this->owner = $this->field;
+
+	}
+
+	/**
+	 * @return array
+	 */
+	static function CLASS_VALUES() {
+		return array(
+				'parameters' => array(
+						'$value',
+						'$parent',
+						'$args',
+				)
+		);
+	}
+
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array(
+				'field' => array( 'type' => 'WP_Field_Base', 'auto_create' => false ),
+		);
+
+	}
+
+	/**
+	 * Returns a new instance of a Field Feature object.
+	 *
+	 * @param string $feature_type
+	 * @param WP_Field_View_Base $view
+	 * @param array $feature_args
+	 *
+	 * @return null|WP_Feature_Base
+	 */
+	static function make_new( $feature_type, $view, $feature_args = array() ) {
+
+		if ( $feature_type_class = WP_Metadata::get_feature_type_class( $feature_type ) ) {
+
+			$feature_args['feature_type'] = $feature_type;
+
+			$feature = new $feature_type_class( $view, $feature_args );
+
+		} else {
+
+			$feature = null;
+
+		}
+
+		return $feature;
+
+	}
+
+	/**
+	 * @return bool|string
+	 */
+	function initial_element_id() {
+
+		return str_replace( '_', '-', $this->field_name() ) . "-field-{$this->feature_type}";
+
+	}
+
+	/**
+	 *  Used in initial_*() functions above.
+	 */
+	function field_name() {
+
+		return $this->field->field_name;
+
+	}
+
+	/**
+	 * @return bool|string
+	 */
+	function initial_element_class() {
+
+		return "feature field-{$this->feature_type}";
+
+	}
+
+	/**
+	 * @return bool|string
+	 */
+	function initial_element_name() {
+
+		return 'wp_metadata_forms[' . $this->field->form_element_name() . '][' . $this->field_name() . ']';
+
+	}
+
+	/**
+	 * @return string
+	 */
+	function get_feature_html() {
+
+		return $this->get_html();
+
+	}
+
+	/**
+	 * @param string $property_name
+	 *
+	 * @return mixed
+	 */
+	function __get( $property_name ) {
+
+		$view = $this->view;
+
+		if ( isset( $view->features[ $property_name ] ) ) {
+
+			$value = $view->features[ $property_name ];
+
+		} else {
+
+			$value = parent::__get( $property_name );
+
+		}
+
+		return $value;
+
+	}
+
+	/**
+	 * @param string $property_name
+	 * @param mixed $value
+	 */
+	function __set( $property_name, $value ) {
+
+		$this->view->features[ $property_name ] = $value;
+
+	}
+}
+
+/**
+ * Class WP_Form_View_Base
+ */
+abstract class WP_Form_View_Base extends WP_View_Base {
+
+	/**
+	 * @var string
+	 */
+	var $view_type;
+
+	/**
+	 * @var WP_Form
+	 */
+	var $form;
+
+	/**
+	 * @var WP_Html_Element
+	 */
+	var $wrapper;
+
+	/**
+	 * @var WP_Html_Element
+	 */
+	var $element;
+
+	/**
+	 * @param string $view_type
+	 * @param string $form
+	 * @param array $view_args
+	 *
+	 */
+	function __construct( $view_type, $form, $view_args = array() ) {
+
+		$view_args['view_type'] = $view_type;
+
+		$this->form = $form;
+
+		parent::__construct( $view_args );
+
+		$this->owner = $form;
+
+	}
+
+	/**
+	 * @return array
+	 */
+	static function CLASS_VALUES() {
+		return array(
+				'parameters' => array(
+						'$value',
+						'$parent',
+						'$args',
+				)
+		);
+	}
+
+	/**
+	 * @return array
+	 */
+	static function PROPERTIES() {
+
+		return array(
+				'form' => array( 'type' => 'WP_Form', 'auto_create' => false ),
+		);
+
+	}
+
+	/**
+	 * @param string $view_type
+	 * @param string $form
+	 * @param array $view_args
+	 *
+	 * @return WP_Form_View
+	 *
+	 */
+	static function make_new( $view_type, $form, $view_args = array() ) {
+
+		$form_view = new WP_Form_View( $view_type, $form, $view_args );
+
+		return $form_view;
+
+	}
+
+	/**
+	 * Convenience so users can use a more specific name than get_html().
+	 *
+	 * @return string
+	 */
+	function get_form_html() {
+
+		return $this->get_html();
+
+	}
+
+	/**
+	 * @return string
+	 */
+	function get_element_html() {
+
+		return $this->get_form_fields_html();
+	}
+
+	/**
+	 * @return string
+	 */
+	function get_form_fields_html() {
+
+		$fields_html = array();
+
+		/**
+		 * @var WP_Field_Base $field
+		 */
+		foreach ( $this->form->fields as $field_name => $field ) {
+
+			$fields_html[] = $field->view->get_field_html();
+
+		}
+
+//		$form_field = new WP_Hidden_Field( "wp_metadata_forms", array(
+//			'value' => $this->form->form_name,
+//			'storage' => 'memory',
+//			'view' => 'hidden',
+//			'shared_name' => true,
+//			'form' => $this->form,
+//		));
+//
+//		$fields_html[] = $form_field->get_field_html();
+
+		return implode( "\n", $fields_html );
+
+	}
+
+	/**
+	 * @return bool|string
+	 */
+	function initial_element_id() {
+
+		return str_replace( '_', '-', "{$this->form->form_name}-metadata-form" );
+
+	}
+
+	/**
+	 * @return bool|string
+	 */
+	function initial_element_class() {
+
+		return "metadata-form";
+
+	}
+
+//	/**
+//	 * @return bool|string
+//	 */
+//	function initial_element_id() {
+//
+//		return str_replace( '_', '-', $this->element->get_name() ) . '-' . $this->element->get_class();
+//
+//	}
+
 }

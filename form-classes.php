@@ -295,3 +295,11 @@ class WP_Form extends WP_Metadata_Base {
 	}
 
 }
+
+/**
+ * Class WP_Form_View
+ */
+class WP_Form_View extends WP_Form_View_Base {
+
+}
+

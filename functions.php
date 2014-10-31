@@ -70,17 +70,212 @@ function register_field_type( $type_name, $type_def = array() ) {
 
 }
 
-/**
- * @param string $class_name
- * @param string $class_filepath
- *
- * @return bool Return true if it was registered, false if not.
- */
-function register_autoload_class( $class_name, $class_filepath ) {
+////////////////////////////////////////////////////////
+//////[User Functions]//////////////////////////////////
+////////////////////////////////////////////////////////
 
-	return WP_Metadata::register_autoload_class( $class_name, $class_filepath );
+/**
+ * Returns an object type given a user role
+ *
+ * @param string $user_role
+ *
+ * @return string
+ */
+function wp_get_user_object_type( $user_role ) {
+
+	return $user_role ? "user:{$user_role}" : 'user:any';
 
 }
 
+/**
+ * Registers a form for a user.
+ *
+ * @param string $form_name
+ * @param bool|string $user_role
+ * @param array $field_args
+ */
+function register_user_form( $form_name, $user_role = false, $form_args = array() ) {
 
+	WP_Metadata::register_form( $form_name, wp_get_user_object_type( $user_role ), $form_args );
 
+}
+
+/**
+ * Registers a field for a user.
+ *
+ * @param string $field_name
+ * @param bool|string $user_role
+ * @param array $field_args
+ */
+function register_user_field( $field_name, $user_role = false, $field_args = array() ) {
+
+	WP_Metadata::register_field( $field_name, wp_get_user_object_type( $user_role ), $field_args );
+
+}
+
+/**
+ * @param string $form_name
+ * @param string $user_role
+ * @param array $form_args
+ *
+ * @return WP_Form
+ */
+function get_user_form( $form_name, $user_role, $form_args = array() ) {
+
+	return WP_Metadata::get_form( $form_name, wp_get_user_object_type( $user_role ), $form_args );
+
+}
+
+////////////////////////////////////////////////////////
+//////[Post Functions]//////////////////////////////////
+////////////////////////////////////////////////////////
+
+/**
+ * Registers a form for a post.
+ *
+ * @param string $form_name
+ * @param bool|string $post_type
+ * @param array $form_args
+ */
+function register_post_form( $form_name, $post_type = false, $form_args = array() ) {
+
+	WP_Metadata::register_form( $form_name, WP_Metadata::get_post_object_type_literal( $post_type ), $form_args );
+
+}
+
+/**
+ * Registers a field for a post.
+ *
+ * @param string $field_name
+ * @param bool|string $post_type
+ * @param array $field_args
+ */
+function register_post_field( $field_name, $post_type = false, $field_args = array() ) {
+
+	WP_Metadata::register_field( $field_name, WP_Metadata::get_post_object_type_literal( $post_type ), $field_args );
+
+}
+
+/**
+ * @param string $form_name
+ * @param string $post_type
+ * @param array $form_args
+ *
+ * @return WP_Form
+ */
+function get_post_form( $form_name, $post_type, $form_args = array() ) {
+
+	return WP_Metadata::get_form( $form_name, WP_Metadata::get_post_object_type_literal( $post_type ), $form_args );
+
+}
+
+/**
+ * @param string $post_type
+ * @param bool|array $form_names
+ *
+ * @return array
+ */
+function get_post_forms( $post_type, $form_names = false ) {
+
+	return WP_Metadata::get_forms( WP_Metadata::get_post_object_type_literal( $post_type ), $form_names );
+
+}
+
+////////////////////////////////////////////////////////
+//////[Option Functions]////////////////////////////////
+////////////////////////////////////////////////////////
+
+/**
+ * Registers a form for a option.
+ *
+ * @param string $form_name
+ * @param string $option_group
+ * @param array $form_args
+ */
+function register_option_form( $form_name, $option_group, $form_args = array() ) {
+
+	WP_Metadata::register_form( $form_name, "option:{$option_group}", $form_args );
+
+}
+
+/**
+ * Registers a field for a option.
+ *
+ * @param string $field_name
+ * @param string $option_group
+ * @param array $field_args
+ */
+function register_option_field( $field_name, $option_group, $field_args = array() ) {
+
+	WP_Metadata::register_field( $field_name, "option:{$option_group}", $field_args );
+
+}
+
+/**
+ * @param string $form_name
+ * @param string $option_group
+ * @param string $form_args
+ *
+ * @return WP_Form
+ */
+function get_option_form( $form_name, $option_group, $form_args = array() ) {
+
+	return WP_Metadata::get_form( $form_name, "option:{$option_group}", $form_args );
+
+}
+
+////////////////////////////////////////////////////////
+//////[Comment Functions]///////////////////////////////
+////////////////////////////////////////////////////////
+
+/**
+ * Returns an object type given a comment type
+ *
+ * @param string $comment_type
+ *
+ * @return string
+ */
+function wp_get_comment_object_type( $comment_type ) {
+
+	return $comment_type ? "comment:{$comment_type}" : 'comment:any';
+
+}
+
+/**
+ * Registers a form for a comment.
+ *
+ * @param string $form_name
+ * @param bool|string $comment_type
+ * @param array $form_args
+ */
+function register_comment_form( $form_name, $comment_type = false, $form_args = array() ) {
+
+	WP_Metadata::register_form( $form_name, wp_get_comment_object_type( $comment_type ), $form_args );
+
+}
+
+/**
+ * Registers a field for a comment.
+ *
+ * @param string $field_name
+ * @param bool|string $comment_type
+ * @param array $field_args
+ */
+function register_comment_field( $field_name, $comment_type = false, $field_args = array() ) {
+
+	WP_Metadata::register_field( $field_name, wp_get_comment_object_type( $comment_type ), $field_args );
+
+}
+
+/**
+ * @param string $form_name
+ * @param string $comment_type
+ * @param array $form_args
+ *
+ * @return WP_Form
+ */
+function get_comment_form( $form_name, $comment_type, $form_args = array() ) {
+
+	return WP_Metadata::get_form( $form_name, wp_get_comment_object_type( $comment_type ), $form_args );
+
+}
