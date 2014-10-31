@@ -1,6 +1,6 @@
 /* Base styling for fields and controls */
 
-.metadata-form {
+.metadata-field-group {
     margin-bottom: 20px; /* Matches .postbox, .stuffbox classes */
 }
 

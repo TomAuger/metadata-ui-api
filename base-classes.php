@@ -48,7 +48,7 @@ abstract class WP_Metadata_Base {
 	 *
 	 * This constructor extends PHP in signficant and powerful ways, support annotations to enable
 	 * complex class containment hierarchies to be instantiated directly from the $args passed to
-	 * the main object. This is really beneficial for creating flexible Fields and Forms.
+	 * the main object. This is really beneficial for creating flexible Fields and Field_Groups.
 	 *
 	 * @param array $args
 	 *
@@ -147,7 +147,7 @@ abstract class WP_Metadata_Base {
 		 * to runing $this->initialize(), if needed.  There are some cases where this
 		 * is imporant.
 		 *
-		 * @see WP_Field_Input_Feature->pre_initialize() for an example.
+		 * @see WP_Input_Feature->pre_initialize() for an example.
 		 *
 		 * Runs $this->pre_initialize() method only once per each ancestor class, if
 		 * declared, and then once for the class itself, if declared. This allows
@@ -1159,9 +1159,9 @@ abstract class WP_Field_Base extends WP_Metadata_Base {
 	var $view = false;
 
 	/**
-	 * @var WP_Form
+	 * @var WP_Field_Group
 	 */
-	var $form;
+	var $field_group;
 
 	/**
 	 * @var bool|int
@@ -1188,13 +1188,13 @@ abstract class WP_Field_Base extends WP_Metadata_Base {
 
 		$this->field_name = $field_name;
 
-		if ( isset( $field_args['form'] ) ) {
+		if ( isset( $field_args['group'] ) ) {
 			/**
 			 * This may be needed by subobjects before it is assigned
 			 * in $this->assign_args(), so do now rather than wait.
 			 */
-			$this->form = $field_args['form'];
-			unset( $field_args['form'] );
+			$this->group = $field_args['group'];
+			unset( $field_args['group'] );
 		}
 
 		parent::__construct( $field_args );
@@ -1243,7 +1243,7 @@ abstract class WP_Field_Base extends WP_Metadata_Base {
 
 		return array(
 				'value'   => array( 'type' => 'mixed' ),
-				'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
+				'group'    => array( 'type' => 'WP_Field_Group', 'auto_create' => false ),
 				'storage' => array( 'type' => 'text', 'default' => 'meta' ),
 				'view'    => array( 'type' => 'WP_Field_View_Base' ),
 		);
@@ -1318,9 +1318,9 @@ abstract class WP_Field_Base extends WP_Metadata_Base {
 	/**
 	 * @return mixed
 	 */
-	function form_element_name() {
+	function group_element_name() {
 
-		return $this->form->form_name;
+		return $this->group->field_group_name;
 
 	}
 
@@ -1595,7 +1595,7 @@ abstract class WP_Field_Base extends WP_Metadata_Base {
 
 		if ( class_exists( $view_class ) && $attributes = $this->get_view_input_attributes( $view_class ) ) {
 
-			unset( $attributes['form'] ); // Reserve 'form' for instances of WP_Form.
+			unset( $attributes['group'] ); // Reserve 'group' for instances of WP_Field_Group.
 
 			$attributes = implode( '|', $attributes );
 
@@ -1860,11 +1860,11 @@ abstract class WP_View_Base extends WP_Metadata_Base {
  * Class WP_Field_View_Base
  *
  * @mixin WP_Field_Base
- * @property WP_Field_Input_Feature $input
- * @property WP_Field_Label_Feature $label
- * @property WP_Field_Help_Feature $help
- * @property WP_Field_Message_Feature $message
- * @property WP_Field_Infobox_Feature $infobox
+ * @property WP_Input_Feature $input
+ * @property WP_Label_Feature $label
+ * @property WP_Help_Feature $help
+ * @property WP_Message_Feature $message
+ * @property WP_Infobox_Feature $infobox
  *
  */
 abstract class WP_Field_View_Base extends WP_View_Base {
@@ -2033,7 +2033,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 	 */
 	function initialize( $args ) {
 		/**
-		 * @var WP_Field_Label_Feature $label
+		 * @var WP_Label_Feature $label
 		 */
 		if ( ! empty( $this->features['label'] ) && is_object( $label = $this->features['label'] ) ) {
 			$label->element->set_attribute_value( 'for', $this->features['input']->element->get_id() );
@@ -2207,7 +2207,7 @@ abstract class WP_Field_View_Base extends WP_View_Base {
 		if ( ! isset( $this->features['input'] ) ) {
 
 			// Do this to ensure the return value of input_feature() can be dereferenced. Should never be needed.
-			$this->features['input'] = new WP_Field_Input_Feature( $this->field->view );
+			$this->features['input'] = new WP_Input_Feature( $this->field->view );
 
 		}
 
@@ -2392,7 +2392,7 @@ abstract class WP_Feature_Base extends WP_View_Base {
 	 */
 	function initial_element_name() {
 
-		return 'wp_metadata_forms[' . $this->field->form_element_name() . '][' . $this->field_name() . ']';
+		return 'wp_metadata_field_groups[' . $this->field->field_group_element_name() . '][' . $this->field_name() . ']';
 
 	}
 
@@ -2440,9 +2440,9 @@ abstract class WP_Feature_Base extends WP_View_Base {
 }
 
 /**
- * Class WP_Form_View_Base
+ * Class WP_Field_Group_View_Base
  */
-abstract class WP_Form_View_Base extends WP_View_Base {
+abstract class WP_Field_Group_View_Base extends WP_View_Base {
 
 	/**
 	 * @var string
@@ -2450,9 +2450,9 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	var $view_type;
 
 	/**
-	 * @var WP_Form
+	 * @var WP_Field_Group
 	 */
-	var $form;
+	var $field_group;
 
 	/**
 	 * @var WP_Html_Element
@@ -2466,19 +2466,19 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 
 	/**
 	 * @param string $view_type
-	 * @param string $form
+	 * @param string $field_group
 	 * @param array $view_args
 	 *
 	 */
-	function __construct( $view_type, $form, $view_args = array() ) {
+	function __construct( $view_type, $field_group, $view_args = array() ) {
 
 		$view_args['view_type'] = $view_type;
 
-		$this->form = $form;
+		$this->field_group = $field_group;
 
 		parent::__construct( $view_args );
 
-		$this->owner = $form;
+		$this->owner = $field_group;
 
 	}
 
@@ -2501,24 +2501,24 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	static function PROPERTIES() {
 
 		return array(
-				'form' => array( 'type' => 'WP_Form', 'auto_create' => false ),
+				'field_group' => array( 'type' => 'WP_Field_Group', 'auto_create' => false ),
 		);
 
 	}
 
 	/**
 	 * @param string $view_type
-	 * @param string $form
+	 * @param string $field_group
 	 * @param array $view_args
 	 *
-	 * @return WP_Form_View
+	 * @return WP_Field_Group_View
 	 *
 	 */
-	static function make_new( $view_type, $form, $view_args = array() ) {
+	static function make_new( $view_type, $field_group, $view_args = array() ) {
 
-		$form_view = new WP_Form_View( $view_type, $form, $view_args );
+		$field_group_view = new WP_Field_Group_View( $view_type, $field_group, $view_args );
 
-		return $form_view;
+		return $field_group_view;
 
 	}
 
@@ -2527,7 +2527,7 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	 *
 	 * @return string
 	 */
-	function get_form_html() {
+	function get_field_group_html() {
 
 		return $this->get_html();
 
@@ -2538,34 +2538,34 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	 */
 	function get_element_html() {
 
-		return $this->get_form_fields_html();
+		return $this->get_field_group_fields_html();
 	}
 
 	/**
 	 * @return string
 	 */
-	function get_form_fields_html() {
+	function get_field_group_fields_html() {
 
 		$fields_html = array();
 
 		/**
 		 * @var WP_Field_Base $field
 		 */
-		foreach ( $this->form->fields as $field_name => $field ) {
+		foreach ( $this->field_group->fields as $field_name => $field ) {
 
 			$fields_html[] = $field->view->get_field_html();
 
 		}
 
-//		$form_field = new WP_Hidden_Field( "wp_metadata_forms", array(
-//			'value' => $this->form->form_name,
+//		$field_group_field = new WP_Hidden_Field( "wp_metadata_field_groups", array(
+//			'value' => $this->field_group->field_group_name,
 //			'storage' => 'memory',
 //			'view' => 'hidden',
 //			'shared_name' => true,
-//			'form' => $this->form,
+//			'field_group' => $this->field_group,
 //		));
 //
-//		$fields_html[] = $form_field->get_field_html();
+//		$fields_html[] = $field_group_field->get_field_html();
 
 		return implode( "\n", $fields_html );
 
@@ -2576,7 +2576,7 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	 */
 	function initial_element_id() {
 
-		return str_replace( '_', '-', "{$this->form->form_name}-metadata-form" );
+		return str_replace( '_', '-', "{$this->field_group->field_group_name}-metadata-field-group" );
 
 	}
 
@@ -2585,7 +2585,7 @@ abstract class WP_Form_View_Base extends WP_View_Base {
 	 */
 	function initial_element_class() {
 
-		return "metadata-form";
+		return "metadata-field-group";
 
 	}
 

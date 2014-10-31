@@ -889,7 +889,7 @@ final class WP_Html_Element {
  *
  *			return array(
  *				'value'   => array( 'type' => 'mixed' ),
- *				'form'    => array( 'type' => 'WP_Form', 'auto_create' => false ),
+ *				'field_group'    => array( 'type' => 'WP_Field_Group', 'auto_create' => false ),
  *				'view'    => array( 'type' => 'WP_Field_View_Base' ),
  *			);
  *
@@ -903,9 +903,9 @@ final class WP_Html_Element {
  * first parameter being the name of the property as defined in the class (although you rarely
  * if ever need to instantiate yourself; it'll be done automatically fot you):
  *
- *     $name = 'form';
- *     $args = array( 'type' => 'WP_Form', 'auto_create' => false ),
- *     $property = new WP_Annotated_Property( $name, $form );
+ *     $name = 'field_group';
+ *     $args = array( 'type' => 'WP_Field_Group', 'auto_create' => false ),
+ *     $property = new WP_Annotated_Property( $name, $field_group );
  *
  * The main use of this class within WP_Metadata is in ::get_property_annotations( $class_name )
  * where each sub-array of 'annotation' arrays is passed into an object of type
@@ -969,14 +969,14 @@ final class WP_Annotated_Property {
 	/**
 	 * @var string The prefix used by the declaring class for properties of a contained class.
 	 *
-	 * For example, the WP_Field_Input_Feature class has an $element property designed to contain an
+	 * For example, the WP_Input_Feature class has an $element property designed to contain an
 	 * WP_Html_Element object thus its prefix is 'element' and that allows the Input Feature class
 	 * to be instantiated with an $arg like 'element:size' and thus pass the value of 'size' to the
 	 * __construct() method of WP_Html_Element when instantiating.
 	 *
 	 * @example
 	 *
-	 *    'form', 'field', 'storage', etc.
+	 *    'field_group', 'field', 'storage', etc.
 	 */
 	var $prefix;
 

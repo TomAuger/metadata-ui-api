@@ -1,28 +1,15 @@
 <?php
 /**
- * Ensure that an $args array has an 'object_type' property of class WP_Object_Type
+ * Register field type
  *
- * Defaults to "post:{$post->post_type}"
+ * @param string $type_name
+ * @param string|array $type_def - Classname, or array of $args
  *
- * @param array $args
- *
- * @return array
+ * @return bool Whether the object type $type_name was registered
  */
-function wp_ensure_object_type( $args ) {
+function register_field_type( $type_name, $type_def = array() ) {
 
-	$args = wp_parse_args( $args );
-
-	if ( empty( $args['object_type'] ) ) {
-		global $post;
-
-		$args['object_type'] = isset( $post->post_type ) ? $post->post_type : false;
-	}
-
-	if ( ! $args['object_type'] instanceof WP_Object_Type ) {
-		$args['object_type'] = new WP_Object_Type( $args['object_type'] );
-	}
-
-	return $args;
+	return WP_Metadata::register_field_type( $type_name, $type_def );
 
 }
 
@@ -57,16 +44,29 @@ function register_object_type_class( $class, $class_args = array() ) {
 }
 
 /**
- * Register field type
+ * Ensure that an $args array has an 'object_type' property of class WP_Object_Type
  *
- * @param string $type_name
- * @param string|array $type_def - Classname, or array of $args
+ * Defaults to "post:{$post->post_type}"
  *
- * @return bool Whether the object type $type_name was registered
+ * @param array $args
+ *
+ * @return array
  */
-function register_field_type( $type_name, $type_def = array() ) {
+function wp_ensure_object_type( $args ) {
 
-	return WP_Metadata::register_field_type( $type_name, $type_def );
+	$args = wp_parse_args( $args );
+
+	if ( empty( $args['object_type'] ) ) {
+		global $post;
+
+		$args['object_type'] = isset( $post->post_type ) ? $post->post_type : false;
+	}
+
+	if ( ! $args['object_type'] instanceof WP_Object_Type ) {
+		$args['object_type'] = new WP_Object_Type( $args['object_type'] );
+	}
+
+	return $args;
 
 }
 
@@ -88,15 +88,15 @@ function wp_get_user_object_type( $user_role ) {
 }
 
 /**
- * Registers a form for a user.
+ * Registers a field_group for a user.
  *
- * @param string $form_name
+ * @param string $field_group_name
  * @param bool|string $user_role
  * @param array $field_args
  */
-function register_user_form( $form_name, $user_role = false, $form_args = array() ) {
+function register_user_field_group( $field_group_name, $user_role = false, $field_group_args = array() ) {
 
-	WP_Metadata::register_form( $form_name, wp_get_user_object_type( $user_role ), $form_args );
+	WP_Metadata::register_field_group( $field_group_name, wp_get_user_object_type( $user_role ), $field_group_args );
 
 }
 
@@ -114,15 +114,15 @@ function register_user_field( $field_name, $user_role = false, $field_args = arr
 }
 
 /**
- * @param string $form_name
+ * @param string $field_group_name
  * @param string $user_role
- * @param array $form_args
+ * @param array $field_group_args
  *
- * @return WP_Form
+ * @return WP_Field_Group
  */
-function get_user_form( $form_name, $user_role, $form_args = array() ) {
+function get_user_field_group( $field_group_name, $user_role, $field_group_args = array() ) {
 
-	return WP_Metadata::get_form( $form_name, wp_get_user_object_type( $user_role ), $form_args );
+	return WP_Metadata::get_field_group( $field_group_name, wp_get_user_object_type( $user_role ), $field_group_args );
 
 }
 
@@ -131,15 +131,15 @@ function get_user_form( $form_name, $user_role, $form_args = array() ) {
 ////////////////////////////////////////////////////////
 
 /**
- * Registers a form for a post.
+ * Registers a field_group for a post.
  *
- * @param string $form_name
+ * @param string $field_group_name
  * @param bool|string $post_type
- * @param array $form_args
+ * @param array $field_group_args
  */
-function register_post_form( $form_name, $post_type = false, $form_args = array() ) {
+function register_post_field_group( $field_group_name, $post_type = false, $field_group_args = array() ) {
 
-	WP_Metadata::register_form( $form_name, WP_Metadata::get_post_object_type_literal( $post_type ), $form_args );
+	WP_Metadata::register_field_group( $field_group_name, WP_Metadata::get_post_object_type_literal( $post_type ), $field_group_args );
 
 }
 
@@ -157,27 +157,27 @@ function register_post_field( $field_name, $post_type = false, $field_args = arr
 }
 
 /**
- * @param string $form_name
+ * @param string $field_group_name
  * @param string $post_type
- * @param array $form_args
+ * @param array $field_group_args
  *
- * @return WP_Form
+ * @return WP_Field_Group
  */
-function get_post_form( $form_name, $post_type, $form_args = array() ) {
+function get_post_field_group( $field_group_name, $post_type, $field_group_args = array() ) {
 
-	return WP_Metadata::get_form( $form_name, WP_Metadata::get_post_object_type_literal( $post_type ), $form_args );
+	return WP_Metadata::get_field_group( $field_group_name, WP_Metadata::get_post_object_type_literal( $post_type ), $field_group_args );
 
 }
 
 /**
  * @param string $post_type
- * @param bool|array $form_names
+ * @param bool|array $field_group_names
  *
  * @return array
  */
-function get_post_forms( $post_type, $form_names = false ) {
+function get_post_field_groups( $post_type, $field_group_names = false ) {
 
-	return WP_Metadata::get_forms( WP_Metadata::get_post_object_type_literal( $post_type ), $form_names );
+	return WP_Metadata::get_field_groups( WP_Metadata::get_post_object_type_literal( $post_type ), $field_group_names );
 
 }
 
@@ -186,15 +186,15 @@ function get_post_forms( $post_type, $form_names = false ) {
 ////////////////////////////////////////////////////////
 
 /**
- * Registers a form for a option.
+ * Registers a field_group for a option.
  *
- * @param string $form_name
+ * @param string $field_group_name
  * @param string $option_group
- * @param array $form_args
+ * @param array $field_group_args
  */
-function register_option_form( $form_name, $option_group, $form_args = array() ) {
+function register_option_field_group( $field_group_name, $option_group, $field_group_args = array() ) {
 
-	WP_Metadata::register_form( $form_name, "option:{$option_group}", $form_args );
+	WP_Metadata::register_field_group( $field_group_name, "option:{$option_group}", $field_group_args );
 
 }
 
@@ -212,15 +212,15 @@ function register_option_field( $field_name, $option_group, $field_args = array(
 }
 
 /**
- * @param string $form_name
+ * @param string $field_group_name
  * @param string $option_group
- * @param string $form_args
+ * @param string $field_group_args
  *
- * @return WP_Form
+ * @return WP_Field_Group
  */
-function get_option_form( $form_name, $option_group, $form_args = array() ) {
+function get_option_field_group( $field_group_name, $option_group, $field_group_args = array() ) {
 
-	return WP_Metadata::get_form( $form_name, "option:{$option_group}", $form_args );
+	return WP_Metadata::get_field_group( $field_group_name, "option:{$option_group}", $field_group_args );
 
 }
 
@@ -242,15 +242,15 @@ function wp_get_comment_object_type( $comment_type ) {
 }
 
 /**
- * Registers a form for a comment.
+ * Registers a field_group for a comment.
  *
- * @param string $form_name
+ * @param string $field_group_name
  * @param bool|string $comment_type
- * @param array $form_args
+ * @param array $field_group_args
  */
-function register_comment_form( $form_name, $comment_type = false, $form_args = array() ) {
+function register_comment_field_group( $field_group_name, $comment_type = false, $field_group_args = array() ) {
 
-	WP_Metadata::register_form( $form_name, wp_get_comment_object_type( $comment_type ), $form_args );
+	WP_Metadata::register_field_group( $field_group_name, wp_get_comment_object_type( $comment_type ), $field_group_args );
 
 }
 
@@ -268,14 +268,14 @@ function register_comment_field( $field_name, $comment_type = false, $field_args
 }
 
 /**
- * @param string $form_name
+ * @param string $field_group_name
  * @param string $comment_type
- * @param array $form_args
+ * @param array $field_group_args
  *
- * @return WP_Form
+ * @return WP_Field_Group
  */
-function get_comment_form( $form_name, $comment_type, $form_args = array() ) {
+function get_comment_field_group( $field_group_name, $comment_type, $field_group_args = array() ) {
 
-	return WP_Metadata::get_form( $form_name, wp_get_comment_object_type( $comment_type ), $form_args );
+	return WP_Metadata::get_field_group( $field_group_name, wp_get_comment_object_type( $comment_type ), $field_group_args );
 
 }

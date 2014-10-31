@@ -1,13 +1,13 @@
 <?php
 /**
  * Plugin Name: #metadata
- * Description: Feature-as-a-plugin offering Forms & Fields for WordPress, initially forms for post admin edit but later for users, comments, taxonomy terms, options, etc.
+ * Description: Feature-as-a-plugin offering Field_Groups & Fields for WordPress, initially field_groups for post admin edit but later for users, comments, taxonomy terms, options, etc.
  */
 
 require( dirname( __FILE__ ) . '/functions.php' );
 require( dirname( __FILE__ ) . '/core-classes.php' );
 require( dirname( __FILE__ ) . '/base-classes.php' );
-require( dirname( __FILE__ ) . '/form-classes.php' );
+require( dirname( __FILE__ ) . '/field-group-classes.php' );
 require( dirname( __FILE__ ) . '/field-classes.php' );
 require( dirname( __FILE__ ) . '/feature-classes.php' );
 require( dirname( __FILE__ ) . '/view-classes.php' );
@@ -25,7 +25,7 @@ class WP_Metadata {
 	/**
 	 * @var array
 	 */
-	private static $_form_args = array();
+	private static $_field_group_args = array();
 
 	/**
 	 * @var array
@@ -40,7 +40,7 @@ class WP_Metadata {
 	/**
 	 * @var array
 	 */
-	private static $_object_type_forms = array();
+	private static $_object_type_field_groups = array();
 
 	/**
 	 * @var array
@@ -74,7 +74,7 @@ class WP_Metadata {
 		self::initialize_registries();
 
 		self::register_default_annotations( 'WP_Html_Element', array(
-				'html_tag' => 'div'
+			'html_tag' => 'div'
 		) );
 
 		/*
@@ -92,11 +92,11 @@ class WP_Metadata {
 		self::register_field_view( 'select', 'WP_Select_Field_View' );
 		self::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
 
-		self::register_feature_type( 'input', 'WP_Field_Input_Feature' );
-		self::register_feature_type( 'label', 'WP_Field_Label_Feature' );
-		self::register_feature_type( 'message', 'WP_Field_Message_Feature' );
-		self::register_feature_type( 'help', 'WP_Field_Help_Feature' );
-		self::register_feature_type( 'infobox', 'WP_Field_Infobox_Feature' );
+		self::register_feature_type( 'input', 'WP_Input_Feature' );
+		self::register_feature_type( 'label', 'WP_Label_Feature' );
+		self::register_feature_type( 'message', 'WP_Message_Feature' );
+		self::register_feature_type( 'help', 'WP_Help_Feature' );
+		self::register_feature_type( 'infobox', 'WP_Infobox_Feature' );
 
 
 		//    /**
@@ -289,43 +289,43 @@ class WP_Metadata {
 
 	/**
 	 * @param string|WP_Object_Type $object_type
-	 * @param bool|array $form_names
+	 * @param bool|array $field_group_names
 	 *
 	 * @return array
 	 */
-	static function get_forms( $object_type, $form_names = false ) {
-		$forms = array();
+	static function get_field_groups( $object_type, $field_group_names = false ) {
+		$field_groups = array();
 
-		if ( isset( self::$_object_type_forms[ $object_type ] ) ) {
-			$forms = self::$_object_type_forms[ $object_type ];
+		if ( isset( self::$_object_type_field_groups[ $object_type ] ) ) {
+			$field_groups = self::$_object_type_field_groups[ $object_type ];
 		}
 
-		if ( $form_names ) {
-			if ( is_array( $form_names ) ) {
-				$form_names = array_flip( $form_names );
+		if ( $field_group_names ) {
+			if ( is_array( $field_group_names ) ) {
+				$field_group_names = array_flip( $field_group_names );
 			} else {
-				$form_names = array( $form_names => 0 );
+				$field_group_names = array( $field_group_names => 0 );
 			}
-			$forms = array_intersect_key( $forms, $form_names );
+			$field_groups = array_intersect_key( $field_groups, $field_group_names );
 		}
 
-		foreach ( $forms as $form_name => $form_args ) {
-			$forms[ $form_name ] = self::make_form( $form_name, $object_type, $form_args );
+		foreach ( $field_groups as $field_group_name => $field_group_args ) {
+			$field_groups[ $field_group_name ] = self::make_field_group( $field_group_name, $object_type, $field_group_args );
 		}
 
-		return $forms;
+		return $field_groups;
 	}
 
 	/**
-	 * @param string $form_name
+	 * @param string $field_group_name
 	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
+	 * @param array $field_group_args
 	 *
-	 * @return WP_Form
+	 * @return WP_Field_Group
 	 */
-	static function make_form( $form_name, $object_type, $form_args = array() ) {
+	static function make_field_group( $field_group_name, $object_type, $field_group_args = array() ) {
 
-		return WP_Form::make_new( $form_name, $object_type, $form_args );
+		return WP_Field_Group::make_new( $field_group_name, $object_type, $field_group_args );
 
 	}
 
@@ -335,13 +335,13 @@ class WP_Metadata {
 	 * @param bool $update
 	 */
 	static function _save_post( $post_id, $post, $update ) {
-		if ( count( $forms = self::get_forms_from_POST( $post->post_type ) ) ) {
+		if ( count( $field_groups = self::get_field_groups_from_POST( $post->post_type ) ) ) {
 			/**
-			 * @var WP_Form $form
+			 * @var WP_Field_Group $field_group
 			 */
-			foreach ( $forms as $form_name => $form ) {
-				$form->set_object( $post );
-				$form->update_values();
+			foreach ( $field_groups as $field_group_name => $field_group ) {
+				$field_group->set_object( $post );
+				$field_group->update_values();
 			}
 		}
 	}
@@ -351,27 +351,27 @@ class WP_Metadata {
 	 *
 	 * @return array
 	 */
-	static function get_forms_from_POST( $post_type ) {
-		$forms = array();
-		if ( ! isset( $_POST['wp_metadata_forms'] ) || ! is_array( $_POST['wp_metadata_forms'] ) ) {
-			$forms = array();
+	static function get_field_groups_from_POST( $post_type ) {
+		$field_groups = array();
+		if ( ! isset( $_POST['wp_metadata_field_groups'] ) || ! is_array( $_POST['wp_metadata_field_groups'] ) ) {
+			$field_groups = array();
 		} else {
-			$forms = $_POST['wp_metadata_forms'];
-			foreach ( $forms as $form_name => $form_data ) {
-				$form = self::make_form( $form_name, WP_Metadata::get_post_object_type_literal( $post_type ), array( 'view' => false ) );
+			$field_groups = $_POST['wp_metadata_field_groups'];
+			foreach ( $field_groups as $field_group_name => $field_group_data ) {
+				$field_group = self::make_field_group( $field_group_name, WP_Metadata::get_post_object_type_literal( $post_type ), array( 'view' => false ) );
 				/**
 				 * @var WP_Field_Base $field
 				 */
-				foreach ( $form->fields as $field_name => $field ) {
-					if ( isset( $form_data[ $field_name ] ) ) {
-						$field->set_value( $form_data[ $field_name ] );
+				foreach ( $field_group->fields as $field_name => $field ) {
+					if ( isset( $field_group_data[ $field_name ] ) ) {
+						$field->set_value( $field_group_data[ $field_name ] );
 					}
 				}
-				$forms[ $form_name ] = $form;
+				$field_groups[ $field_group_name ] = $field_group;
 			}
 		}
 
-		return $forms;
+		return $field_groups;
 	}
 
 	/**
@@ -386,15 +386,15 @@ class WP_Metadata {
 			return;
 		}
 
-		$wp_post_types[ $post_type ]->default_form = ! empty( $args->default_form ) ? $args->default_form : 'after_title';
+		$wp_post_types[ $post_type ]->default_field_group = ! empty( $args->default_field_group ) ? $args->default_field_group : 'after_title';
 
 	}
 
 	/**
 	 * Hook handler for 'edit_form_top', 'edit_form_after_title'. 'edit_form_after_editor' and 'edit_form_advanced'.
 	 *
-	 * Displayed the post_type's default form based on the value of post_type_object->default_form that can be set
-	 * as an argument to register_post_type. Valid values for default form include:
+	 * Displayed the post_type's default field_group based on the value of post_type_object->default_field_group that can be set
+	 * as an argument to register_post_type. Valid values for default field_group include:
 	 *
 	 *    'top', 'after_title', 'after_editor', 'advanced', or 'custom_fields'
 	 *
@@ -409,94 +409,94 @@ class WP_Metadata {
 
 		$post_type    = $post->post_type;
 		$object_type  = WP_Metadata::get_post_object_type_literal( $post_type );
-		$current_form = preg_replace( '#^edit_form_(.*)$#', '$1', current_action() );
+		$current_field_group = preg_replace( '#^edit_form_(.*)$#', '$1', current_action() );
 
-		if ( $current_form == get_post_type_object( $post_type )->default_form ) {
-			if ( ! self::form_registered( $current_form, $object_type ) ) {
-				self::register_form( $current_form, $object_type );
+		if ( $current_field_group == get_post_type_object( $post_type )->default_field_group ) {
+			if ( ! self::field_group_registered( $current_field_group, $object_type ) ) {
+				self::register_field_group( $current_field_group, $object_type );
 			}
 
-			$form = self::get_form( $current_form, $object_type );
+			$field_group = self::get_field_group( $current_field_group, $object_type );
 
-			$form->set_object( $post );
-			$form->the_form();
+			$field_group->set_object( $post );
+			$field_group->the_field_group();
 		}
 
 	}
 
 	/**
-	 * @param string $form_name
+	 * @param string $field_group_name
 	 * @param string|WP_Object_Type $object_type
 	 *
 	 * @return bool
 	 */
-	static function form_registered( $form_name, $object_type ) {
+	static function field_group_registered( $field_group_name, $object_type ) {
 
-		return false !== self::get_form_index( $form_name, $object_type );
+		return false !== self::get_field_group_index( $field_group_name, $object_type );
 
 	}
 
 	/**
-	 * Retrieve a form
+	 * Retrieve a field_group
 	 *
-	 * @param string $form_name
+	 * @param string $field_group_name
 	 * @param string|WP_Object_Type $object_type
 	 *
 	 * @return int
 	 */
-	static function get_form_index( $form_name, $object_type ) {
+	static function get_field_group_index( $field_group_name, $object_type ) {
 
-		return isset( self::$_object_type_forms[ $object_type ][ $form_name ] ) ? self::$_object_type_forms[ $object_type ][ $form_name ] : false;
+		return isset( self::$_object_type_field_groups[ $object_type ][ $field_group_name ] ) ? self::$_object_type_field_groups[ $object_type ][ $field_group_name ] : false;
 
 	}
 
 	/**
-	 * @param string $form_name
+	 * @param string $field_group_name
 	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
+	 * @param array $field_group_args
 	 *
-	 * @return int Form Index
+	 * @return int Field_Group Index
 	 */
-	static function register_form( $form_name, $object_type, $form_args = array() ) {
+	static function register_field_group( $field_group_name, $object_type, $field_group_args = array() ) {
 
-		$form_args['form_name']   = $form_name;
-		$form_args['object_type'] = $object_type;
-		$form_args['form_index']  = count( self::$_form_args );
+		$field_group_args['field_group_name']   = $field_group_name;
+		$field_group_args['object_type'] = $object_type;
+		$field_group_args['field_group_index']  = count( self::$_field_group_args );
 
-		self::$_object_type_forms[ $object_type ][ $form_name ] = $form_args['form_index'];
-		self::$_form_args[]                                     = $form_args;
+		self::$_object_type_field_groups[ $object_type ][ $field_group_name ] = $field_group_args['field_group_index'];
+		self::$_field_group_args[]                                     = $field_group_args;
 
-		return $form_args['form_index'];
+		return $field_group_args['field_group_index'];
 
 	}
 
 	/**
-	 * Retrieve a form
+	 * Retrieve a field_group
 	 *
-	 * @param string $form_name
+	 * @param string $field_group_name
 	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
+	 * @param array $field_group_args
 	 *
-	 * @return WP_Form
+	 * @return WP_Field_Group
 	 */
-	static function get_form( $form_name, $object_type, $form_args = array() ) {
+	static function get_field_group( $field_group_name, $object_type, $field_group_args = array() ) {
 
-		$form_index = self::get_form_index( $form_name, $object_type );
-		$form_args  = wp_parse_args( $form_args, self::get_form_args( $form_index ) );
-		$form       = self::make_form( $form_name, $object_type, $form_args );
+		$field_group_index = self::get_field_group_index( $field_group_name, $object_type );
+		$field_group_args  = wp_parse_args( $field_group_args, self::get_field_group_args( $field_group_index ) );
+		$field_group       = self::make_field_group( $field_group_name, $object_type, $field_group_args );
 
-		return $form;
+		return $field_group;
 
 	}
 
 	/**
-	 * @param int $form_index
+	 * @param int $field_group_index
 	 *
 	 * @return bool|array
 	 */
-	static function get_form_args( $form_index ) {
+	static function get_field_group_args( $field_group_index ) {
 
-		return isset( self::$_form_args[ $form_index ] ) ? self::$_form_args[ $form_index ] : false;
+		return isset( self::$_field_group_args[ $field_group_index ] ) ? self::$_field_group_args[ $field_group_index ] : false;
 
 	}
 

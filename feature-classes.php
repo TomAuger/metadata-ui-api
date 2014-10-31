@@ -4,9 +4,9 @@
  */
 
 /**
- * Class WP_Field_Label_Feature
+ * Class WP_Label_Feature
  */
-class WP_Field_Label_Feature extends WP_Feature_Base {
+class WP_Label_Feature extends WP_Feature_Base {
 
 	const FEATURE_TYPE = 'label';
 
@@ -40,9 +40,9 @@ class WP_Field_Label_Feature extends WP_Feature_Base {
 }
 
 /**
- * Class WP_Field_Input_Feature
+ * Class WP_Input_Feature
  */
-class WP_Field_Input_Feature extends WP_Feature_Base {
+class WP_Input_Feature extends WP_Feature_Base {
 
 	const FEATURE_TYPE = 'input';
 
@@ -85,9 +85,9 @@ class WP_Field_Input_Feature extends WP_Feature_Base {
 }
 
 /**
- * Class WP_Field_Help_Feature
+ * Class WP_Help_Feature
  */
-class WP_Field_Help_Feature extends WP_Feature_Base {
+class WP_Help_Feature extends WP_Feature_Base {
 
 	const FEATURE_TYPE = 'help';
 
@@ -105,9 +105,9 @@ class WP_Field_Help_Feature extends WP_Feature_Base {
 }
 
 /**
- * Class WP_Field_Message_Feature
+ * Class WP_Message_Feature
  */
-class WP_Field_Message_Feature extends WP_Feature_Base {
+class WP_Message_Feature extends WP_Feature_Base {
 
 	const FEATURE_TYPE = 'message';
 
@@ -125,9 +125,9 @@ class WP_Field_Message_Feature extends WP_Feature_Base {
 }
 
 /**
- * Class WP_Field_Infobox_Feature
+ * Class WP_Infobox_Feature
  */
-class WP_Field_Infobox_Feature extends WP_Feature_Base {
+class WP_Infobox_Feature extends WP_Feature_Base {
 
 	const FEATURE_TYPE = 'infobox';
 

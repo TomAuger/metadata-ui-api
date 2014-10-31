@@ -1,22 +1,22 @@
 <?php
 
 /**
- * Class WP_Form
+ * Class WP_Field_Group
  *
- * @method void the_form()
- * @method void the_form_fields()
+ * @method void the_field_group()
+ * @method void the_field_group_fields()
  */
-class WP_Form extends WP_Metadata_Base {
+class WP_Field_Group extends WP_Metadata_Base {
 
 	/**
 	 *
 	 */
-//	const PREFIX = 'form';
+//	const PREFIX = 'field_group';
 
 	/**
 	 * @var string
 	 */
-	var $form_name;
+	var $field_group_name;
 
 	/**
 	 * @var string|WP_Object_Type
@@ -31,10 +31,10 @@ class WP_Form extends WP_Metadata_Base {
 	/**
 	 * @var int
 	 */
-	var $form_index;
+	var $field_group_index;
 
 	/**
-	 * @var WP_Form_View_Base
+	 * @var WP_Field_Group_View_Base
 	 */
 	var $view;
 
@@ -49,16 +49,16 @@ class WP_Form extends WP_Metadata_Base {
 	private $_initialized = false;
 
 	/**
-	 * @param string $form_name
+	 * @param string $field_group_name
 	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
+	 * @param array $field_group_args
 	 */
-	function __construct( $form_name, $object_type, $form_args ) {
+	function __construct( $field_group_name, $object_type, $field_group_args ) {
 
-		$form_args['form_name']   = $form_name;
-		$form_args['object_type'] = new WP_Object_Type( $object_type );
+		$field_group_args['field_group_name']   = $field_group_name;
+		$field_group_args['object_type'] = new WP_Object_Type( $object_type );
 
-		parent::__construct( $form_args );
+		parent::__construct( $field_group_args );
 
 	}
 
@@ -81,27 +81,27 @@ class WP_Form extends WP_Metadata_Base {
 	static function PROPERTIES() {
 
 		return array(
-				'view'    => array( 'type' => 'WP_Form_View', 'default' => 'default' ),
+				'view'    => array( 'type' => 'WP_Field_Group_View', 'default' => 'default' ),
 				'fields'  => array( 'type' => 'WP_Field_Base[]' ),
 		);
 
 	}
 
 	/**
-	 * @param string $form_name
+	 * @param string $field_group_name
 	 * @param string|WP_Object_Type $object_type
-	 * @param array $form_args
+	 * @param array $field_group_args
 	 *
-	 * @return WP_Form
+	 * @return WP_Field_Group
 	 *
-	 * @todo Support more than one type of form. Maybe. If needed.
+	 * @todo Support more than one type of field_group. Maybe. If needed.
 	 *
 	 */
-	static function make_new( $form_name, $object_type, $form_args = array() ) {
+	static function make_new( $field_group_name, $object_type, $field_group_args = array() ) {
 
-		$form = new WP_Form( $form_name, $object_type, $form_args );
+		$field_group = new WP_Field_Group( $field_group_name, $object_type, $field_group_args );
 
-		return $form;
+		return $field_group;
 
 	}
 
@@ -110,64 +110,64 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	function initialize_class() {
 
-		$this->register_view( 'default', 'WP_Form_View' );
+		$this->register_view( 'default', 'WP_Field_Group_View' );
 
 	}
 
 	/**
-	 * Register a class to be used as a form_view for the current class.
+	 * Register a class to be used as a field_group_view for the current class.
 	 *
-	 * $wp_form->register_view( 'post_admin', 'WP_Post_Adminview' );
+	 * $wp_field_group->register_view( 'post_admin', 'WP_Post_Adminview' );
 	 *
 	 * @param string $view_type  The name of the view that is unique for this class.
 	 * @param string $class_name The class name for the View object.
 	 */
 	function register_view( $view_type, $class_name ) {
 
-		WP_Metadata::register_view( 'form', $view_type, $class_name, get_class( $this ) );
+		WP_Metadata::register_view( 'field_group', $view_type, $class_name, get_class( $this ) );
 
 	}
 
 	/**
-	 * @param array $form_args
+	 * @param array $field_group_args
 	 */
-	function initialize( $form_args ) {
+	function initialize( $field_group_args ) {
 
 		if ( ! is_object( $this->view ) ) {
 
-			$this->set_form_view( 'default' );
+			$this->set_field_group_view( 'default' );
 
 		}
 
-		$this->initialize_form_fields( $form_args['object_type'] );
+		$this->initialize_field_group_fields( $field_group_args['object_type'] );
 
 	}
 
 	/**
 	 * @param string $view_type
 	 */
-	function set_form_view( $view_type ) {
+	function set_field_group_view( $view_type ) {
 
-		if ( ! $this->form_view_exists( $view_type ) ) {
+		if ( ! $this->field_group_view_exists( $view_type ) ) {
 			$this->view = false;
 		} else {
-			$form_view_class = $this->get_view_class( $view_type );
+			$field_group_view_class = $this->get_view_class( $view_type );
 
-			$this->view = new $form_view_class( $view_type, $this );
+			$this->view = new $field_group_view_class( $view_type, $this );
 		}
 
 	}
 
 	/**
-	 * Does the named form view exist
+	 * Does the named field_group view exist
 	 *
 	 * @param string $view_type The name of the view that is unique for this class.
 	 *
 	 * @return bool
 	 */
-	function form_view_exists( $view_type ) {
+	function field_group_view_exists( $view_type ) {
 
-		return WP_Metadata::view_exists( 'form', $view_type, get_class( $this ) );
+		return WP_Metadata::view_exists( 'field_group', $view_type, get_class( $this ) );
 
 	}
 
@@ -180,7 +180,7 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	function get_view_class( $view_type ) {
 
-		return WP_Metadata::get_view_class( 'form', $view_type, get_class( $this ) );
+		return WP_Metadata::get_view_class( 'field_group', $view_type, get_class( $this ) );
 
 	}
 
@@ -188,7 +188,7 @@ class WP_Form extends WP_Metadata_Base {
 	 * @param string $object_type
 	 * @param bool|array $field_names
 	 */
-	function initialize_form_fields( $object_type, $field_names = false ) {
+	function initialize_field_group_fields( $object_type, $field_names = false ) {
 
 		$this->fields = array();
 
@@ -198,7 +198,7 @@ class WP_Form extends WP_Metadata_Base {
 
 		foreach ( $field_names as $field_name ) {
 			$field = WP_Metadata::get_field( $field_name, $object_type, array(
-					'form' => $this,
+					'field_group' => $this,
 			) );
 
 			if ( is_object( $field ) ) {
@@ -213,7 +213,7 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	function add_field( $field ) {
 
-		$field->form                        = $this;
+		$field->field_group                        = $this;
 		$this->fields[ $field->field_name ] = $field;
 
 	}
@@ -225,7 +225,7 @@ class WP_Form extends WP_Metadata_Base {
 	 */
 	function get_default_args( $args = array() ) {
 		$args                 = parent::get_default_args( $args );
-		$args['element_name'] = str_replace( '-', '_', $this->form_name );
+		$args['element_name'] = str_replace( '-', '_', $this->field_group_name );
 
 		return $args;
 
@@ -297,9 +297,9 @@ class WP_Form extends WP_Metadata_Base {
 }
 
 /**
- * Class WP_Form_View
+ * Class WP_Field_Group_View
  */
-class WP_Form_View extends WP_Form_View_Base {
+class WP_Field_Group_View extends WP_Field_Group_View_Base {
 
 }
 
