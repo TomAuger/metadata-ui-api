@@ -86,17 +86,35 @@ class WP_Metadata {
 		self::register_field_type( 'url', 'WP_Url_Field' );
 		self::register_field_type( 'date', 'WP_Date_Field' );
 		self::register_field_type( 'hidden', 'WP_Hidden_Field' );
+		
+		/**
+		 * Allow plugin / theme developers to unregister defaults and 
+		 * register their own field types easily.
+		 */
+		do_action( 'metatdata_register_field_type' );
 
 		self::register_field_view( 'text', 'WP_Text_Field_View' );
 		self::register_field_view( 'textarea', 'WP_Textarea_Field_View' );
 		self::register_field_view( 'select', 'WP_Select_Field_View' );
 		self::register_field_view( 'hidden', 'WP_Hidden_Field_View' );
+		
+		/**
+		 * Allow plugin / theme developers to unregister defaults and 
+		 * register their own field views easily.
+		 */
+		do_action( 'metatdata_register_field_view' );
 
 		self::register_feature_type( 'input', 'WP_Field_Input_Feature' );
 		self::register_feature_type( 'label', 'WP_Field_Label_Feature' );
 		self::register_feature_type( 'message', 'WP_Field_Message_Feature' );
 		self::register_feature_type( 'help', 'WP_Field_Help_Feature' );
 		self::register_feature_type( 'infobox', 'WP_Field_Infobox_Feature' );
+		
+		/**
+		 * Allow plugin / theme developers to unregister defaults and 
+		 * register their own feature types easily.
+		 */
+		do_action( 'metatdata_register_feature_type' );
 
 
 		//    /**
